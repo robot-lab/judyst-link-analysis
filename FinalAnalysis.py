@@ -80,22 +80,23 @@ print(rejectedLinks)
 
 def GetLinkGraph(checkedLinks):
     '''
-    Gets Link Graph, returning tuple (vertices = [], adjacencyMatrix = [[]])
+    Gets Link Graph, returning tuple (vertices = [], edgeList = [(citingDecisionID, citedDecisionID), (),...])
     argument: checkedLinks is a dictionary with clean links list as element and string with court decision ID (uid) as a key.
     '''
     vertices = list(set(sorted(checkedLinks) + [link for citingDecisionID in sorted(checkedLinks) for link in checkedLinks[citingDecisionID]]))
     vertices.sort()
-    adjacencyMatrix = []
+    edgeList = []
     for citingDecisionID in vertices:
-        adjacencyMatrix.append([True if citingDecisionID in checkedLinks and citedDecisionID in checkedLinks[citingDecisionID] else False for citedDecisionID in vertices])
-    return (vertices, adjacencyMatrix)
+        if citingDecisionID in checkedLinks:
+            for citedDecisionID in vertices:
+                if citedDecisionID in checkedLinks[citingDecisionID]:
+                     edgeList.append((citingDecisionID, citedDecisionID))
+    return (vertices, edgeList)
 
 reponse2 = GetLinkGraph(checkedLinks)
 vertices = reponse2[0]
-adjacencyMatrix = reponse2[1]
+edgeList = reponse2[1]
 print("Vertices: ")
 print(vertices)
-print("adjacencyMatrix: ")
-print(adjacencyMatrix)
-print("M[11][1]: ")
-print(adjacencyMatrix[11][1])
+print("edgeList: ")
+print(edgeList)
