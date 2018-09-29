@@ -22,13 +22,12 @@ def GetResolutionHeaders():
 
 def LoadResolutionTexts(result, folderName = "Decision Files"):
 	for key in result:
+		i = 0
 		a = result[key]
 		logo = urllib.request.urlopen(a["link"]).read()
-		folderName = os.path.join(os.path.abspath(os.path.dirname(getsourcefile(lambda:0))))
-		print(folderName)
-
-		fileName = os.path.join(folderName, key + ".pdf")
-		f = open(fileName,"wb")
+		key = key.replace('/','\\:')
+		fileName = key + ".pdf"
+		f = open(fileName, "wb")
 		f.write(logo)
 		f.close()
 
