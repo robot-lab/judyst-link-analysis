@@ -1,6 +1,7 @@
 import urllib.request
 import re
 import unicodedata
+
 html = urllib.request.urlopen("http://www.ksrf.ru/ru/Decision/Pages/default.aspx")
 htmlForParse = html.read()
 htmlForParse =  htmlForParse.decode('utf-8', 'replace')

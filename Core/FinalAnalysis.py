@@ -35,6 +35,7 @@ import re
 yearPattern = re.compile(r'(?<=\s)\d{4}(?=\s)')
 numberPattern = re.compile(r'\d+(-[А-Яа-я]+)+')
 
+
 def GetCleanLinks(collectedLinks, courtSiteContent):
     '''
     Gets clean links.
@@ -70,15 +71,9 @@ def GetCleanLinks(collectedLinks, courtSiteContent):
                 rejectedLinks[courtDecisionID].append(link)
     return (checkedLinks, rejectedLinks)
 
-response = GetCleanLinks(collectedLinks, courtSiteContent)
-checkedLinks = response[0]
-rejectedLinks = response[1]
-print("Checked links: ")
-print(checkedLinks)
-print("Rejected links: ")
-print(rejectedLinks)
 
-def GetLinkGraph(checkedLinks):
+
+def GetLinkGraph(checkedLinks):     
     '''
     Gets Link Graph, returning tuple (vertices = [], adjacencyMatrix = [[]])
     argument: checkedLinks is a dictionary with clean links list as element and string with court decision ID (uid) as a key.
@@ -90,12 +85,26 @@ def GetLinkGraph(checkedLinks):
         adjacencyMatrix.append([True if citingDecisionID in checkedLinks and citedDecisionID in checkedLinks[citingDecisionID] else False for citedDecisionID in vertices])
     return (vertices, adjacencyMatrix)
 
-reponse2 = GetLinkGraph(checkedLinks)
-vertices = reponse2[0]
-adjacencyMatrix = reponse2[1]
-print("Vertices: ")
-print(vertices)
-print("adjacencyMatrix: ")
-print(adjacencyMatrix)
-print("M[11][1]: ")
-print(adjacencyMatrix[11][1])
+
+if __name__ == '__main__':
+    response = GetCleanLinks(collectedLinks, courtSiteContent)
+    checkedLinks = response[0]
+    rejectedLinks = response[1]
+    print("Checked links: ")
+    print(checkedLinks)
+    print("Rejected links: ")
+    print(rejectedLinks)
+
+
+
+
+if __name__ == '__main__':
+    reponse2 = GetLinkGraph(checkedLinks)
+    vertices = reponse2[0]
+    adjacencyMatrix = reponse2[1]
+    print("Vertices: ")
+    print(vertices)
+    print("adjacencyMatrix: ")
+    print(adjacencyMatrix)
+    print("M[11][1]: ")
+    print(adjacencyMatrix[11][1])
