@@ -14,17 +14,14 @@ def VisualizeLinkGraph(graph, nodeSize = 2000, fontSize = 9, pictureSize = (20, 
     pictureSize - tuple of size of the graph's picture in inches
     '''
     nodes = graph[0]
-    adjMatr = graph[1]
+    edges = graph[1]
 
     #filling the graph
     nxGraph = nx.DiGraph()    
     for node in nodes:
         nxGraph.add_node(node, node_size = nodeSize)
 
-    for i in range(len(adjMatr)):
-        for j in range(len(adjMatr[0])):
-            if (adjMatr[i][j]):
-                nxGraph.add_edge(nodes[i], nodes[j])
+    nxGraph.add_edges_from(edges)
 
     #drawing the graph
     plt.figure(figsize = pictureSize)

@@ -1,21 +1,34 @@
 import urllib.request
 import re
 import unicodedata
+import os.path
+from inspect import getsourcefile
 
-html = urllib.request.urlopen("http://www.ksrf.ru/ru/Decision/Pages/default.aspx")
-htmlForParse = html.read()
-htmlForParse =  htmlForParse.decode('utf-8', 'replace')
-print(htmlForParse)
+def GetResolutionHeaders():
+	html = urllib.request.urlopen("http://www.ksrf.ru/ru/Decision/Pages/default.aspx")
+	htmlForParse = html.read()
+	htmlForParse =  htmlForParse.decode('utf-8', 'replace')
+	# print(htmlForParse)
+	pdfLinks = re.findall(r'(http://doc.ksrf.ru/decision/KSRFDecision\d{6}\b\.pdf|http://doc.ksrf.ru/decision/KSRFDecision\d{5}\b\.pdf)', htmlForParse)
+	date = re.findall(r'\d\d\.\d\d\.\d{4}', htmlForParse)
+	uid = re.findall(r'(\d{4}-О/\d{4})|(\d{3}-О/\d{4})|(\d{2}-О/\d{4})|(\d{1}-О/\d{4})|(\d{3}-ПРП/\d{4})|(\d{2}-ПРП/\d{4})|(\d{1}-ПРП/\d{4})|(ПР-\d{1}/\d{4})|(\d{3}-П/\d{4})|(\d{2}-П/\d{4})|(\d{1}-П/\d{4})|(\d{3}-Р/\d{4})|(\d{2}-Р/\d{4})|(\d{1}-Р/\d{4})|(\d{4}-О-Р/\d{4})|(\d{3}-О-Р/\d{4})|(\d{2}-О-Р/\d{4})|(\d{1}-О-Р/\d{4})', htmlForParse) #|(ПР-\d{1}/\d{4})
+	uid = [[uid[i][j] for j in range(len(uid[i])) if uid[i][j] != '' ] for i in range(len(uid))]
+	uid = [uid[i][0] for i in range(len(uid))]
+	result = {}
+	for i in range(0,len(uid)):
+		result[uid[i]] = {'date': date[i], 'link': pdfLinks[i]}
+	print(result)
+	return result
 
-pdfLinks = re.findall(r'(http://doc.ksrf.ru/decision/KSRFDecision\d{6}\b\.pdf|http://doc.ksrf.ru/decision/KSRFDecision\d{5}\b\.pdf)', htmlForParse)
-date = re.findall(r'\d\d\.\d\d\.\d{4}', htmlForParse)
-uid = re.findall(r'(\d{4}-О/\d{4})|(ПР-\d{1}/\d{4})', htmlForParse)
-print( uid)
-# \d{2}-/2018
-print(pdfLinks)
-print(date)
-#format {'uid': {'date': 'date string', 'url': 'link to pdf file'}}
-# logo = urllib.urlopen("http://doc.ksrf.ru/decision/KSRFDecision343971.pdf").read()
-# f = open("l.pdf", "wb")
-# f.write(logo)
-# f.close()
+def LoadResolutionTexts(result, folderName = "Decision Files"):
+	for key in result:
+		i = 0
+		a = result[key]
+		logo = urllib.request.urlopen(a["link"]).read()
+		key = key.replace('/','\\:')
+		fileName = key + ".pdf"
+		f = open(fileName, "wb")
+		f.write(logo)
+		f.close()
+
+LoadResolutionTexts(GetResolutionHeaders())
