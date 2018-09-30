@@ -14,7 +14,7 @@ def GetResolutionHeaders():
         court_site_content[decision_id] = {}
         court_site_content[decision_id]['date'] = d[0].text_content()
         court_site_content[decision_id]['title'] = d[1].text_content()
-        court_site_content[decision_id]['link'] = \
+        court_site_content[decision_id]['url'] = \
             d[2].getchildren()[0].get('href')
     return court_site_content
 
@@ -24,7 +24,7 @@ def LoadResolutionTexts(court_site_content, folderName='Decision Files'):
         os.mkdir(folderName)
     for decision_id in sorted(court_site_content):
         logo = urllib.request.urlopen(
-                court_site_content[decision_id]['link']).read()
+                court_site_content[decision_id]['url']).read()
         path_to_pdf = os.path.join(folderName,
                                    decision_id.replace('/', '_') + '.pdf')
         path_to_txt = os.path.join(folderName,
@@ -34,7 +34,7 @@ def LoadResolutionTexts(court_site_content, folderName='Decision Files'):
         with open(path_to_pdf, "rb") as pdf_file, \
                 open(path_to_txt, 'wb') as txt_file:
             pdfminer.high_level.extract_text_to_fp(pdf_file, txt_file)
-        court_site_content[decision_id]['link'] = path_to_txt
+        court_site_content[decision_id]['url'] = path_to_txt
         os.remove(path_to_pdf)
     return court_site_content
 

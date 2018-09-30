@@ -11,7 +11,7 @@ def GetCleanLinks(collectedLinks, courtSiteContent):
     collectedLinks: a dictionary with dirty links list as element and
     string with court decision ID (uid) as a key.
     courtSiteContent: a dictionary with dictionary such as
-    {'date': 'date_str', 'title': 'title_str', 'link': 'link_str'}
+    {'date': 'date_str', 'title': 'title_str', 'url': 'link_str'}
     as element and string with court decision ID (uid) as a key.
     '''
     rejectedLinks = {}
@@ -68,97 +68,97 @@ if __name__ == '__main__':
     courtSiteContent['1-П/2002'] = {
         'date': '15.01.2002',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision30284.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision30284.pdf'
         }
     courtSiteContent['8-П/2003'] = {
         'date': '14.05.2003',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision30345.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision30345.pdf'
         }
     courtSiteContent['8-П/2005'] = {
         'date': '14.07.2005',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision30352.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision30352.pdf'
         }
     courtSiteContent['10-П/2007'] = {
         'date': '12.07.2007',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision19712.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision19712.pdf'
         }
     courtSiteContent['4-П/2010'] = {
         'date': '26.02.2010',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision36802.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision36802.pdf'
         }
     courtSiteContent['11-П/2012'] = {
         'date': '14.05.2012',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision99813.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision99813.pdf'
         }
     courtSiteContent['7-П/2016'] = {
         'date': '10.03.2016',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision225558.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision225558.pdf'
         }
     courtSiteContent['1-П/2001'] = {
         'date': '25.01.2001',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision30415.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision30415.pdf'
         }
     courtSiteContent['7-П/1995'] = {
         'date': '06.06.1995',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision30417.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision30417.pdf'
         }
     courtSiteContent['14-П/1996'] = {
         'date': '13.06.1996',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision30276.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision30276.pdf'
         }
     courtSiteContent['14-П/1999'] = {
         'date': '28.10.1999',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision30307.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision30307.pdf'
         }
     courtSiteContent['14-П/2000'] = {
         'date': '22.11.2000',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision30294.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision30294.pdf'
         }
     courtSiteContent['12-П/2003'] = {
         'date': '14.07.2003',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision30381.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision30381.pdf'
         }
     courtSiteContent['6-П/2015'] = {
         'date': '31.03.2015',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision191663.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision191663.pdf'
         }
     courtSiteContent['11-П/2002'] = {
         'date': '19.06.2002',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision30304.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision30304.pdf'
         }
     courtSiteContent['244-О-П/2008'] = {
         'date': '20.03.2008',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision17279.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision17279.pdf'
         }
     courtSiteContent['738-О-О/2008'] = {
         'date': '06.10.2008',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision17779.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision17779.pdf'
         }
     courtSiteContent['1469-О/2015'] = {
         'date': '23.06.2015',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision203108.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision203108.pdf'
         }
     courtSiteContent['364-О/2005'] = {
         'date': '04.10.2005',
         'title': 'бла-бла',
-        'link': 'http://doc.ksrf.ru/decision/KSRFDecision31253.pdf'
+        'url': 'http://doc.ksrf.ru/decision/KSRFDecision31253.pdf'
         }
 
     collectedLinks['35-П/2018'] = [
