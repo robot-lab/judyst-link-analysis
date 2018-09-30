@@ -1,34 +1,40 @@
-import urllib.request
-import re
-import unicodedata
 import os.path
-from inspect import getsourcefile
+import urllib.request
+import pdfminer.high_level  # python -m pip install pdfminer.six
+import lxml.html as html # python -m pip install lxml
 
 def GetResolutionHeaders():
-	html = urllib.request.urlopen("http://www.ksrf.ru/ru/Decision/Pages/default.aspx")
-	htmlForParse = html.read()
-	htmlForParse =  htmlForParse.decode('utf-8', 'replace')
-	# print(htmlForParse)
-	pdfLinks = re.findall(r'(http://doc.ksrf.ru/decision/KSRFDecision\d{6}\b\.pdf|http://doc.ksrf.ru/decision/KSRFDecision\d{5}\b\.pdf)', htmlForParse)
-	date = re.findall(r'\d\d\.\d\d\.\d{4}', htmlForParse)
-	uid = re.findall(r'(\d{4}-О/\d{4})|(\d{3}-О/\d{4})|(\d{2}-О/\d{4})|(\d{1}-О/\d{4})|(\d{3}-ПРП/\d{4})|(\d{2}-ПРП/\d{4})|(\d{1}-ПРП/\d{4})|(ПР-\d{1}/\d{4})|(\d{3}-П/\d{4})|(\d{2}-П/\d{4})|(\d{1}-П/\d{4})|(\d{3}-Р/\d{4})|(\d{2}-Р/\d{4})|(\d{1}-Р/\d{4})|(\d{4}-О-Р/\d{4})|(\d{3}-О-Р/\d{4})|(\d{2}-О-Р/\d{4})|(\d{1}-О-Р/\d{4})', htmlForParse) #|(ПР-\d{1}/\d{4})
-	uid = [[uid[i][j] for j in range(len(uid[i])) if uid[i][j] != '' ] for i in range(len(uid))]
-	uid = [uid[i][0] for i in range(len(uid))]
-	result = {}
-	for i in range(0,len(uid)):
-		result[uid[i]] = {'date': date[i], 'link': pdfLinks[i]}
-	print(result)
-	return result
+    page = html.parse('http://www.ksrf.ru/ru/Decision/Pages/default.aspx')
+    decisions = page.getroot().find_class('ms-alternating') + \
+                    page.getroot().find_class('ms-vb') 
+    court_site_content = {} 
+    for d in decisions: 
+        decision_id = d[2].text_content() 
+        court_site_content[decision_id] = {} 
+        court_site_content[decision_id]['date'] = d[0].text_content() 
+        court_site_content[decision_id]['title'] = d[1].text_content() 
+        court_site_content[decision_id]['link'] = \
+            d[2].getchildren()[0].get('href')
+    return court_site_content
 
-def LoadResolutionTexts(result, folderName = "Decision Files"):
-	for key in result:
-		i = 0
-		a = result[key]
-		logo = urllib.request.urlopen(a["link"]).read()
-		key = key.replace('/','\\:')
-		fileName = key + ".pdf"
-		f = open(fileName, "wb")
-		f.write(logo)
-		f.close()
-
-LoadResolutionTexts(GetResolutionHeaders())
+def LoadResolutionTexts(court_site_content, folderName = 'Decision Files'):
+    if not os.path.exists(folderName):
+        os.mkdir(folderName)
+    for decision_id in sorted(court_site_content):
+        logo = urllib.request.urlopen(
+                court_site_content[decision_id]['link']).read()
+        path_to_pdf = os.path.join(folderName, decision_id.replace('/','_') + '.pdf')
+        path_to_txt = os.path.join(folderName, decision_id.replace('/','_') + '.txt')
+        with open(path_to_pdf, "wb") as pdf_file:
+             pdf_file.write(logo)
+        with open(path_to_pdf, "rb") as pdf_file, \
+                open(path_to_txt, 'wb') as txt_file:
+            pdfminer.high_level.extract_text_to_fp(pdf_file, txt_file)
+        court_site_content[decision_id]['link'] = path_to_txt
+        os.remove(path_to_pdf)
+    return court_site_content
+    
+if __name__=='__main__':
+    court_site_content = GetResolutionHeaders()
+    court_site_content= LoadResolutionTexts(court_site_content)
+    print(court_site_content)
