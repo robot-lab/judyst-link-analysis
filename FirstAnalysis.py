@@ -1,14 +1,12 @@
 import re
+pattern = re.compile(r'[Оо].[\s\d]+[яфмаисонд]\w+[\s\d]+года[\s\d]+№[\s\d]+[-\w]+')
 
 def GetRudeLinks(filename):
     file = open(filename,'r')
     R = file.read()
     file.close()
-    n = R.find('Мнение судьи Конст')
-    R = R[0:n] #to do:optimize
-
-    pattern = re.compile(r'[Оо].[ \d]+[яфмаисонд]\w+[ \d]+года[ \d]+№[ \d]+[^ ),]+')
-    result = pattern.findall(R)
+    Slice = re.split(r'[Мм]нение\s[Сс]удьи\s[Кк]онст',R,maxsplit=1)
+    result = pattern.findall(Slice[0])
     return result    
 
 def GetRudeLinksForMultipleDocuments(dictoftexts):
