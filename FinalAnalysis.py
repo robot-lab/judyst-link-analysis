@@ -11,7 +11,7 @@ def GetCleanLinks(collectedLinks, courtSiteContent):
     collectedLinks: a dictionary with dirty links list as element and
     string with court decision ID (uid) as a key.
     courtSiteContent: a dictionary with dictionary such as
-    {'date': 'date_str', 'title': 'бла-бла', 'link': 'link_str'}
+    {'date': 'date_str', 'title': 'title_str', 'link': 'link_str'}
     as element and string with court decision ID (uid) as a key.
     '''
     rejectedLinks = {}
