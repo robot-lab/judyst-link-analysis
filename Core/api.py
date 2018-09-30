@@ -14,7 +14,6 @@ import visualizer
 
 #other imports-----------------------------------------------------------------
 import json
-import file
 from datetime import date
 from dateutil import parser
 
