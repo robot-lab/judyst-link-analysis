@@ -1,5 +1,6 @@
 import re
 import os 
+
 def FirstAnalysis(str, ALL):
     file = open(str,'r')
     R = file.read()

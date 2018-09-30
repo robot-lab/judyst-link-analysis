@@ -31,4 +31,13 @@ def LoadResolutionTexts(result, folderName = "Decision Files"):
 		f.write(logo)
 		f.close()
 
-LoadResolutionTexts(GetResolutionHeaders())
+def LoadResolutionTextsPass(resolutionsHeaders, folderName = "Decition Files"):
+	i = 1
+	for key in resolutionsHeaders:
+		resolutionsHeaders[key]['link'] = str(i) + '.txt'
+		i +=1
+	return resolutionsHeaders
+
+
+if (__name__ == "__main__"):
+	LoadResolutionTexts(GetResolutionHeaders())

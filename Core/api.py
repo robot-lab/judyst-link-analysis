@@ -8,7 +8,7 @@
 # imports Core modules---------------------------------------------------------
 import FinalAnalysis
 import FirstAnalysis
-#import law
+import law
 import visualizer
 
 
@@ -49,18 +49,29 @@ def ProcessPeriod(firstDate, lastDate,
     
     if (firstDate > lastDate):
         raise "date error: The first date is later than the last date. "
+
+    decitions = law.GetResolutionHeaders();    
+    law.LoadResolutionTextsPass(decitions)
+    rudeLinks = FirstAnalysis.GetRudeLinksForMultipleDocuments(decitions)
     
+    commonGraph = ([], [])
+    for rudeLink in rudeLinks:        
+        links, errLinks = FinalAnalysis.GetCleanLinks(
+            FinalAnalysis.collectedLinks,
+            FinalAnalysis.courtSiteContent)        
+        graph = FinalAnalysis.GetLinkGraph(links)
+        for node in graph[0]:
+            if node in commonGraph[0]:
+                continue
+            commonGraph[0].append(node)
+        for edge in graph[1]:
+            commonGraph[1].append(edge)
 
 
-    links, errLinks = FinalAnalysis.GetCleanLinks(
-         FinalAnalysis.collectedLinks,
-         FinalAnalysis.courtSiteContent)
-
-    graph = FinalAnalysis.GetLinkGraph(links)
     graphFile = open(graphOutFileName, 'w', encoding='utf-8')
-    graphFile.write(json.dumps(graph))
+    graphFile.write(json.dumps(commonGraph))
     graphFile.close()
-    visualizer.VisualizeLinkGraph(graph)
+    visualizer.VisualizeLinkGraph(commonGraph)
 #end of ProcessPeriod----------------------------------------------------------
 
 
