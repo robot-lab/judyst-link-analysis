@@ -10,11 +10,7 @@ def GetCleanLinks(collected_links, court_site_content):
     arguments:
     collected_links: a dictionary with dirty links list as element and
     string with court decision ID (uid) as a key.
-<<<<<<< HEAD:Core/FinalAnalysis.py
-    courtSiteContent: a dictionary with dictionary such as
-=======
     court_site_content: a dictionary with dictionary such as
->>>>>>> 9ed6a63d415bab8b45cffacfb164cb3bb43beeec:FinalAnalysis.py
     {'date': 'date_str', 'title': 'title_str', 'url': 'link_str'}
     as element and string with court decision ID (uid) as a key.
     '''

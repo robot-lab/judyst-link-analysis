@@ -65,6 +65,11 @@ def LoadGraph(file_name):
     return graph
 
 
+def LoadAndVisualize(filename = 'graph.json'):
+    graph = LoadGraph(filename)
+    visualizer.VisualizeLinkGraph(graph, 20, 1, (20,20))
+
+
 #api methods-------------------------------------------------------------------
 
 
@@ -137,6 +142,11 @@ def ProcessPeriod(firstDate, lastDate,
 #end of ProcessPeriod----------------------------------------------------------
 
 
+
+
+
+
+
 def StartProcessWith(uid, depth):
     '''
     Start processing decisions from the decision which uid was given and repeat
@@ -147,5 +157,6 @@ def StartProcessWith(uid, depth):
 
 
 if __name__ == "__main__":
-    ProcessPeriod("17.07.2018", "17.07.2018")
+    #ProcessPeriod("17.07.2018", "17.07.2018")
+    LoadAndVisualize()
     #CollectHeaders()
