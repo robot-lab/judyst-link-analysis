@@ -133,7 +133,7 @@ def ProcessPeriod(firstDate, lastDate,
     graphFile = open(graphOutFileName, 'w', encoding='utf-8')
     graphFile.write(json.dumps(commonGraph))
     graphFile.close()
-    visualizer.VisualizeLinkGraph(commonGraph)
+    visualizer.VisualizeLinkGraph(commonGraph, 20, 1, (40,40))
 #end of ProcessPeriod----------------------------------------------------------
 
 
