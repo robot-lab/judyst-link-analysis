@@ -2,12 +2,23 @@ import os.path
 import urllib.request
 import pdfminer.high_level  # python -m pip install pdfminer.six
 import lxml.html as html  # python -m pip install lxml
-
+import selenium.webdriver as webdriver
+import time
 
 def GetResolutionHeaders():
-    page = html.parse('http://www.ksrf.ru/ru/Decision/Pages/default.aspx')
-    decisions = page.getroot().find_class('ms-alternating') + \
-        page.getroot().find_class('ms-vb')
+    driver = webdriver.Firefox()
+    driver.get("http://www.ksrf.ru/ru/Decision/Pages/default.aspx")
+    #driver.execute_script(r"javascript:__doPostBack('ctl00$m$g_8da72b0e_36c3_43d7_9458_469b90467bbc$gView','Page$2')")
+    time.sleep(5)
+    page = html.document_fromstring(driver.page_source)
+    td_list = page.find_class('UserSectionFooter ms-WPBody srch-WPBody')[0].getchildren()[0].getchildren()[0].getchildren()[0].getchildren()[0].getchildren()
+    print(type(td_list))
+    print(td_list[-1].text_content())
+    print(td_list[-1].getchildren()[0].get('href'))
+    
+
+    decisions = page.find_class('ms-alternating') + \
+        page.find_class('ms-vb')
     court_site_content = {}
     for d in decisions:
         decision_id = d[2].text_content()
