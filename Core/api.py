@@ -1,3 +1,4 @@
+# coding=utf-8
 # Coded by Aleksandr Rodionov
 # rexarrior@yandex.ru
 
@@ -16,13 +17,33 @@ import visualizer
 import json
 from datetime import date
 from dateutil import parser
-
+from os import path as path
 
 #methods-----------------------------------------------------------------------
 
 
 
 #internal methods--------------------------------------------------------------
+decitionsFolderName = "Decition files"
+headersFileName = path.join(decitionsFolderName, 'DecitionHeaders.json')
+
+def CollectHeaders():
+    headers = law.GetResolutionHeaders(countOfPage=100)
+    decitionsHeadersFile = open(headersFileName, 'w')
+    decitionsHeadersFile.write(json.dumps(headers))
+    decitionsHeadersFile.close()
+    return headers
+
+
+
+def LoadHeaders():
+    headersFile = open(headersFileName, 'r')
+    text = headersFile.read()
+    headersFile.close()
+    return json.loads(text)
+
+
+
 
 
 
@@ -30,10 +51,8 @@ from dateutil import parser
 #api methods-------------------------------------------------------------------
 
 
-
-
 def ProcessPeriod(firstDate, lastDate,
- graphOutFileName = 'graph.json', showPicture = True):
+ graphOutFileName='graph.json', showPicture=True, isNeedReloadHeaders=False):
     '''
     Process decitions from the date specified as firstDate to
     the date specified as lastDate. 
@@ -50,15 +69,37 @@ def ProcessPeriod(firstDate, lastDate,
     if (firstDate > lastDate):
         raise "date error: The first date is later than the last date. "
 
-    decitions = law.GetResolutionHeaders();    
-    law.LoadResolutionTextsPass(decitions)
-    rudeLinks = FirstAnalysis.GetRudeLinksForMultipleDocuments(decitions)
+   
+    decitionsHeaders = {}
+    if (isNeedReloadHeaders or not path.exists(headersFileName)):
+       decitionsHeaders = CollectHeaders()
+    else:
+        decitionsHeaders = LoadHeaders()
     
-    commonGraph = ([], [])
-    for rudeLink in rudeLinks:        
+    usingHeaders = {}
+    for key in decitionsHeaders:
+        currDecitionDate = parser.parse(decitionsHeaders[key]['date']).date()
+        if (currDecitionDate > firstDate and currDecitionDate < lastDate):
+            usingHeaders[key] = decitionsHeaders[key] 
+
+    
+
+    for key in usingHeaders:
+        if (not path.exists(usingHeaders[key]['url'])):
+            law.LoadResolutionTexts({key: usingHeaders[key]})
+    
+    
+    rudeLinksDict = FirstAnalysis.GetRudeLinksForMultipleDocuments(usingHeaders)
+    
+    #tmp1 = FirstAnalysis.GetRudeLinks(decitions['35-П/2018']['url'])
+    #tmp2 = FinalAnalysis.GetCleanLinks({'35-П/2018' : tmp1}, decitions)
+
+    commonGraph  = ([], [])
+
+    for key in rudeLinksDict:        
         links, errLinks = FinalAnalysis.GetCleanLinks(
-            FinalAnalysis.collectedLinks,
-            FinalAnalysis.courtSiteContent)        
+         {key : rudeLinksDict[key]}, decitionsHeaders)        
+
         graph = FinalAnalysis.GetLinkGraph(links)
         for node in graph[0]:
             if node in commonGraph[0]:
@@ -85,7 +126,7 @@ def StartProcessWith(uid, depth):
 
 
 if __name__ == "__main__":
-    ProcessPeriod("01.01.2000", "10.01.2000")
-        
+    ProcessPeriod("01.01.2018", "31.12.2018")
+    #print(CollectHeaders()   )
 
 
