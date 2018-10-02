@@ -41,7 +41,7 @@ def GetResolutionHeaders(drive_page_source):
 def LoadResolutionTexts(court_site_content, folderName='Decision Files'):
     if not os.path.exists(folderName):
         os.mkdir(folderName)
-    for decision_id in sorted(court_site_content):
+    for decision_id in court_site_content:
         logo = urllib.request.urlopen(
                 court_site_content[decision_id]['url']).read()
         path_to_pdf = os.path.join(folderName,

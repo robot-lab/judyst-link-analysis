@@ -1,30 +1,32 @@
 import re
 
+pattern = re.compile(
+    r'[Оо].[\s\d]+[яфмаисонд]\w+[\s\d]+года[\s\d]+№[\s\d]+[-\w]+')
 
-def GetRudeLinks(filename):
+
+def GetRudeLinks(filename, key):
     file = open(filename, 'r', encoding="utf-8")
-    R = file.read()
+    text = file.read()
     file.close()
-    n = R.find('Мнение судьи Конст')
-    R = R[0:n]  # to do:optimize
-
-    pattern = re.compile(
-        r'[Оо][Tт][\s\d]+[яфмаисонд]\w+[\s\d]+года[\s\d]+№[\s\d]+[-\w]+')
-    result = pattern.findall(R)
+    Slice = re.split(r'/', key)
+    key = Slice[0]
+    Opinion = re.search('№ ' + key, text)
+    result = pattern.findall(text, endpos=Opinion.start())
     return result
 
 
 def GetRudeLinksForMultipleDocuments(dictoftexts):
     dictofrudelinks = {}
-    for key in sorted(dictoftexts):
-        dictofrudelinks[key] = GetRudeLinks(dictoftexts[key]['url'])
+    for key in dictoftexts:
+        dictofrudelinks[key] = GetRudeLinks(dictoftexts[key]['url'], key)
     return dictofrudelinks
 
+
 if (__name__ == '__main__'):
-    dictoftexts = {'35-П/2018': {
-                        'date': 'str',
-                        'url': r'Decision Files\2043-О_2018.txt',
-                        'title': 'Full title'
-                        }
-                   }
+    dictoftexts = {
+        '35-П/2018': {
+            'date': 'str',
+            'url': r'C:\Users\GameOS\Desktop\Grub\input1.txt',
+            'title': 'Full title'}
+            }
     print(GetRudeLinksForMultipleDocuments(dictoftexts))
