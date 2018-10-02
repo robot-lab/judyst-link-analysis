@@ -5,17 +5,22 @@ import lxml.html as html  # python -m pip install lxml
 import selenium.webdriver as webdriver
 import time
 
+
 def SEEHERE():
     driver = webdriver.Firefox()
     driver.get("http://www.ksrf.ru/ru/Decision/Pages/default.aspx")
-    #driver.execute_script(r"javascript:__doPostBack('ctl00$m$g_8da72b0e_36c3_43d7_9458_469b90467bbc$gView','Page$2')")
+    # driver.execute_script(r"javascript:__doPostBack('ctl00$m$g_8da72b0e_36c3_43d7_9458_469b90467bbc$gView','Page$2')")
     time.sleep(5)
     page = html.document_fromstring(driver.page_source)
-    td_list = page.find_class('UserSectionFooter ms-WPBody srch-WPBody')[0].getchildren()[0].getchildren()[0].getchildren()[0].getchildren()[0].getchildren()
+    td_list = page.find_class('UserSectionFooter ms-WPBody srch-WPBody')[0]. \
+        getchildren()[0]. \
+        getchildren()[0]. \
+        getchildren()[0]. \
+        getchildren()[0]. \
+        getchildren()
     print(type(td_list))
     print(td_list[-1].text_content())
     print(td_list[-1].getchildren()[0].get('href'))
-    
 
 
 def GetResolutionHeaders(drive_page_source):
@@ -53,6 +58,8 @@ def LoadResolutionTexts(court_site_content, folderName='Decision Files'):
     return court_site_content
 
 if __name__ == '__main__':
-    court_site_content = GetResolutionHeaders()
+    driver = webdriver.Firefox()
+    driver.get("http://www.ksrf.ru/ru/Decision/Pages/default.aspx")
+    court_site_content = GetResolutionHeaders(driver.page_source)
     court_site_content = LoadResolutionTexts(court_site_content)
     print(court_site_content)
