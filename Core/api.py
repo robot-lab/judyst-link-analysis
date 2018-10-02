@@ -24,14 +24,20 @@ from os import path as path
 
 
 #internal methods--------------------------------------------------------------
-decitionsFolderName = "Decition files"
-headersFileName = path.join(decitionsFolderName, 'DecitionHeaders.json')
+decisionsFolderName = "Decision files"
+headersFileName = path.join(decisionsFolderName, 'DecisionHeaders.json')
+
+
+def SaveHeaders(headers):
+    decisionsHeadersFile = open(headersFileName, 'w')
+    decisionsHeadersFile.write(json.dumps(headers))
+    decisionsHeadersFile.close()
+    
+
 
 def CollectHeaders():
-    headers = law.GetResolutionHeaders(countOfPage=100)
-    decitionsHeadersFile = open(headersFileName, 'w')
-    decitionsHeadersFile.write(json.dumps(headers))
-    decitionsHeadersFile.close()
+    headers = law.GetResolutionHeaders(countOfPage=1570)
+    SaveHeaders(headers)
     return headers
 
 
@@ -44,8 +50,19 @@ def LoadHeaders():
 
 
 
+def CheckFilesForHeaders(headers):
+    for uid in headers:
+        filename = law.GetdecisionFileNameByUid(uid, decisionsFolderName, ext='txt')
+        if (path.exists(filename)):
+            headers[uid]['url'] = filename
 
 
+
+def LoadGraph(file_name):
+    graphfile = open(file_name)
+    graph = json.loads(graphfile.read())
+    graphfile.close()
+    return graph
 
 
 #api methods-------------------------------------------------------------------
@@ -54,7 +71,7 @@ def LoadHeaders():
 def ProcessPeriod(firstDate, lastDate,
  graphOutFileName='graph.json', showPicture=True, isNeedReloadHeaders=False):
     '''
-    Process decitions from the date specified as firstDate to
+    Process decisions from the date specified as firstDate to
     the date specified as lastDate. 
     Write a graph of result of the processing and, if it was specified,
     draw graph and show it to user.   
@@ -70,35 +87,39 @@ def ProcessPeriod(firstDate, lastDate,
         raise "date error: The first date is later than the last date. "
 
    
-    decitionsHeaders = {}
+    decisionsHeaders = {}
     if (isNeedReloadHeaders or not path.exists(headersFileName)):
-       decitionsHeaders = CollectHeaders()
+        decisionsHeaders = CollectHeaders()
     else:
-        decitionsHeaders = LoadHeaders()
+        decisionsHeaders = LoadHeaders()
     
     usingHeaders = {}
-    for key in decitionsHeaders:
-        currDecitionDate = parser.parse(decitionsHeaders[key]['date']).date()
-        if (currDecitionDate > firstDate and currDecitionDate < lastDate):
-            usingHeaders[key] = decitionsHeaders[key] 
+    for key in decisionsHeaders:
+        currdecisionDate = parser.parse(decisionsHeaders[key]['date']).date()
+        if (currdecisionDate >= firstDate and currdecisionDate <= lastDate):
+            usingHeaders[key] = decisionsHeaders[key] 
+    CheckFilesForHeaders(usingHeaders)
 
     
 
     for key in usingHeaders:
         if (not path.exists(usingHeaders[key]['url'])):
-            law.LoadResolutionTexts({key: usingHeaders[key]})
+            law.LoadResolutionTexts({key: usingHeaders[key]}, decisionsFolderName)
+
+    decisionsHeaders.update(usingHeaders)
     
+    SaveHeaders(decisionsHeaders)
     
     rudeLinksDict = FirstAnalysis.GetRudeLinksForMultipleDocuments(usingHeaders)
     
-    #tmp1 = FirstAnalysis.GetRudeLinks(decitions['35-П/2018']['url'])
-    #tmp2 = FinalAnalysis.GetCleanLinks({'35-П/2018' : tmp1}, decitions)
+    #tmp1 = FirstAnalysis.GetRudeLinks(decisions['35-П/2018']['url'])
+    #tmp2 = FinalAnalysis.GetCleanLinks({'35-П/2018' : tmp1}, decisions)
 
     commonGraph  = ([], [])
 
     for key in rudeLinksDict:        
         links, errLinks = FinalAnalysis.GetCleanLinks(
-         {key : rudeLinksDict[key]}, decitionsHeaders)        
+         {key : rudeLinksDict[key]}, decisionsHeaders)        
 
         graph = FinalAnalysis.GetLinkGraph(links)
         for node in graph[0]:
@@ -118,7 +139,7 @@ def ProcessPeriod(firstDate, lastDate,
 
 def StartProcessWith(uid, depth):
     '''
-    Start processing decitions from the decition which uid was given and repeat
+    Start processing decisions from the decision which uid was given and repeat
     this behavior recursively for given depth.
     '''
     if (depth < 0):
@@ -126,7 +147,5 @@ def StartProcessWith(uid, depth):
 
 
 if __name__ == "__main__":
-    ProcessPeriod("01.01.2018", "31.12.2018")
-    #print(CollectHeaders()   )
-
-
+    ProcessPeriod("17.07.2018", "17.07.2018")
+    #CollectHeaders()

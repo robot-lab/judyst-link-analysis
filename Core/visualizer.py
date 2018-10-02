@@ -32,4 +32,3 @@ def VisualizeLinkGraph(graph, nodeSize = 2000, fontSize = 9, pictureSize = (20, 
     nx.draw_networkx_edges(nxGraph, pos)
     plt.show()
     
-
