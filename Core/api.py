@@ -157,6 +157,7 @@ def StartProcessWith(uid, depth):
 
 
 if __name__ == "__main__":
-    #ProcessPeriod("17.07.2018", "17.07.2018")
-    LoadAndVisualize()
+   # ProcessPeriod("01.07.2018", "30.12.2018")
+    ProcessPeriod("17.07.2018", "17.07.2018")
+  #  LoadAndVisualize()
     #CollectHeaders()
