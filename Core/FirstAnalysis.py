@@ -1,4 +1,5 @@
 import re
+import sys
 pattern = re.compile(
     r'[Оо].[\s\d]+[яфмаисонд]\w+[\s\d]+года[\s\d]+№[\s\d]+[-\w]+')
 
@@ -10,9 +11,9 @@ def GetRudeLinks(filename, key):
     Slice = re.split(r'/', key)
     key = Slice[0]
     Opinion = re.search('№ ' + key, text)
-    result = pattern.findall(text, endpos=Opinion.start())
+    endpos = Opinion.start() if Opinion != None else sys.maxsize
+    result = pattern.findall(text, endpos= endpos)
     return result
-
 
 def GetRudeLinksForMultipleDocuments(dictoftexts):
     dictofrudelinks = {}
