@@ -5,21 +5,31 @@ import lxml.html as html  # python -m pip install lxml
 from selenium import webdriver
   
 
-def GetWebDriver(pathToChromeWebDriver='Core\\Selenium\\chromedriver.exe', pageUri = "http://www.ksrf.ru/ru/Decision/Pages/default.aspx"):
+def GetWebDriver(pathToChromeWebDriver='Core\\Selenium\\chromedriver.exe',
+         pageUri = "http://www.ksrf.ru/ru/Decision/Pages/default.aspx"):
     driver = webdriver.Chrome(pathToChromeWebDriver)
     driver.get(pageUri)
     return driver
 
 
-def GetOpenPageScriptTemplate(pathToJsScript = "Core\\Selenium\\script.js"):
-    scriptFile = open(pathToJsScript, 'r')
-    script = scriptFile.read()
-    scriptFile.close()
-    return script
 
+def GetOpenPageScriptTemplate(driver, templateKey='NUMBER'):
+    page = html.document_fromstring(driver.page_source)
+    td_list = page.find_class('UserSectionFooter ms-WPBody srch-WPBody')[0]. \
+        getchildren()[0]. \
+        getchildren()[0]. \
+        getchildren()[0]. \
+        getchildren()[0]. \
+        getchildren()
+    
+    template = td_list[-1].getchildren()[0].get('href')
+    template = template.split(':')[1]
+    template = template.split(',')[0] + ',\'Page$' + templateKey + '\');'
+    
+    return template
 
-def GetOpenPageScript(scriptTemplate, pageNum):
-    return scriptTemplate + str(pageNum) + ');'
+def GetOpenPageScript(scriptTemplate, pageNum, templateKey='NUMBER'):
+    return scriptTemplate.replace(templateKey, str(pageNum))
 
 
 def GetPageHtmlByNum(driver, openPagetScriptTemplate, pageNum):
@@ -35,7 +45,7 @@ def GetPageHtmlByNum(driver, openPagetScriptTemplate, pageNum):
 def GetResolutionHeaders(countOfPage = 100):
     court_site_content = {}
     driver = GetWebDriver()
-    template = GetOpenPageScriptTemplate()
+    template = GetOpenPageScriptTemplate(driver)
     page = html.document_fromstring(driver.page_source)
 
     #repeated_uids = []
