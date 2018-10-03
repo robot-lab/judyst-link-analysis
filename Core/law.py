@@ -49,7 +49,7 @@ def GetResolutionHeaders(countOfPage = 100):
     page = html.document_fromstring(driver.page_source)
 
     #repeated_uids = []
-    for i in range(2,countOfPage + 1):
+    for i in range(2,countOfPage + 2):
         decisions = page.find_class('ms-alternating') + \
                 page.find_class('ms-vb')
         for d in decisions:

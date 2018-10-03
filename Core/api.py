@@ -36,7 +36,7 @@ def SaveHeaders(headers):
 
 
 def CollectHeaders():
-    headers = law.GetResolutionHeaders(countOfPage=1570)
+    headers = law.GetResolutionHeaders(countOfPage=1569)
     SaveHeaders(headers)
     return headers
 
