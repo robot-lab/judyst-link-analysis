@@ -28,37 +28,60 @@ decisionsFolderName = "Decision files"
 headersFileName = path.join(decisionsFolderName, 'DecisionHeaders.json')
 
 
-def SaveHeaders(headers):
-    decisionsHeadersFile = open(headersFileName, 'w')
+def SaveHeaders(headers, filename):
+    '''
+    Pack the heareds with json and store it to file of the filename
+    '''
+    decisionsHeadersFile = open(filename, 'w')
     decisionsHeadersFile.write(json.dumps(headers))
     decisionsHeadersFile.close()
     
 
 
-def CollectHeaders():
-    headers = law.GetResolutionHeaders(countOfPage=1569)
-    SaveHeaders(headers)
+def CollectHeaders( headersfilename, countOfPage = 1569):
+    headers = law.GetResolutionHeaders(countOfPage)
+    SaveHeaders(headers, headersFileName)
     return headers
 
 
 
-def LoadHeaders():
-    headersFile = open(headersFileName, 'r')
+def LoadHeaders(filename):
+    '''
+    Load the stored earlier headers of the documents,
+    unpack it with json and return as
+    {uid:{'date':'date', title:'title', url:'web uri or filename'}}
+
+    '''
+    headersFile = open(filename, 'r')
     text = headersFile.read()
     headersFile.close()
     return json.loads(text)
 
 
-
-def CheckFilesForHeaders(headers):
+def CheckFilesForHeaders(headers, folder):
+    '''
+    Find files of the documents of the given headers
+    and replace the header 'url':'web uri' by 'url':'filename' when
+    the file have finded. 
+    '''
     for uid in headers:
-        filename = law.GetdecisionFileNameByUid(uid, decisionsFolderName, ext='txt')
+        filename = law.GetdecisionFileNameByUid(uid, folder, ext='txt')
         if (path.exists(filename)):
             headers[uid]['url'] = filename
+    
 
+def LoadFilesForHeaders(headers, folder):
+    for key in headers:
+        if (not path.exists(headers[key]['url'])):
+            law.LoadResolutionTexts({key: headers[key]}, folder)
 
 
 def LoadGraph(file_name):
+    '''
+    Load the stored earlier graph from the given filename,
+    unpack it with JSON and return as  
+    [[nodes], [edges: [from, to]]
+    '''
     graphfile = open(file_name)
     graph = json.loads(graphfile.read())
     graphfile.close()
@@ -66,10 +89,27 @@ def LoadGraph(file_name):
 
 
 def LoadAndVisualize(filename = 'graph.json'):
+    '''
+    Load the stored earlier graph from the given filename and
+    Visualize it with Visualizer module. 
+    '''
     graph = LoadGraph(filename)
     visualizer.VisualizeLinkGraph(graph, 20, 1, (20,20))
 
 
+
+def GetHeadersBetweenDates(headers, firstDate, lastDate):
+    '''
+    Do a selection from the headers for that whisch was publicated later,
+    than the first date,
+    And earlier than the last date.
+    '''
+    usingHeaders = {}
+    for key in headers:
+        currdecisionDate = parser.parse(headers[key]['date']).date()
+        if (currdecisionDate >= firstDate and currdecisionDate <= lastDate):
+            usingHeaders[key] = headers[key] 
+    return usingHeaders
 #api methods-------------------------------------------------------------------
 
 
@@ -94,50 +134,29 @@ def ProcessPeriod(firstDate, lastDate,
    
     decisionsHeaders = {}
     if (isNeedReloadHeaders or not path.exists(headersFileName)):
-        decisionsHeaders = CollectHeaders()
+        decisionsHeaders = CollectHeaders(headersFileName)
     else:
-        decisionsHeaders = LoadHeaders()
+        decisionsHeaders = LoadHeaders(headersFileName)
     
-    usingHeaders = {}
-    for key in decisionsHeaders:
-        currdecisionDate = parser.parse(decisionsHeaders[key]['date']).date()
-        if (currdecisionDate >= firstDate and currdecisionDate <= lastDate):
-            usingHeaders[key] = decisionsHeaders[key] 
-    CheckFilesForHeaders(usingHeaders)
-
     
+    usingHeaders = GetHeadersBetweenDates(decisionsHeaders, firstDate, lastDate)
 
-    for key in usingHeaders:
-        if (not path.exists(usingHeaders[key]['url'])):
-            law.LoadResolutionTexts({key: usingHeaders[key]}, decisionsFolderName)
+    CheckFilesForHeaders(usingHeaders, decisionsFolderName)
+
+    LoadFilesForHeaders(usingHeaders, decisionsFolderName)
 
     decisionsHeaders.update(usingHeaders)
     
-    SaveHeaders(decisionsHeaders)
+    SaveHeaders(decisionsHeaders, headersFileName)
     
     rudeLinksDict = FirstAnalysis.GetRudeLinksForMultipleDocuments(usingHeaders)
-    
-    #tmp1 = FirstAnalysis.GetRudeLinks(decisions['35-П/2018']['url'])
-    #tmp2 = FinalAnalysis.GetCleanLinks({'35-П/2018' : tmp1}, decisions)
-
-    commonGraph  = ([], [])
-
-    for key in rudeLinksDict:        
-        links, errLinks = FinalAnalysis.GetCleanLinks(
-         {key : rudeLinksDict[key]}, decisionsHeaders)        
-
-        graph = FinalAnalysis.GetLinkGraph(links)
-        for node in graph[0]:
-            if node in commonGraph[0]:
-                continue
-            commonGraph[0].append(node)
-        for edge in graph[1]:
-            commonGraph[1].append(edge)
-
+    links, errLinks = FinalAnalysis.GetCleanLinks(rudeLinksDict, decisionsHeaders) 
+    commonGraph = FinalAnalysis.GetLinkGraph(links) 
 
     graphFile = open(graphOutFileName, 'w', encoding='utf-8')
     graphFile.write(json.dumps(commonGraph))
     graphFile.close()
+
     visualizer.VisualizeLinkGraph(commonGraph, 20, 1, (40,40))
 #end of ProcessPeriod----------------------------------------------------------
 
@@ -158,6 +177,6 @@ def StartProcessWith(uid, depth):
 
 if __name__ == "__main__":
    # ProcessPeriod("01.07.2018", "30.12.2018")
-    ProcessPeriod("17.07.2018", "17.07.2018")
+    ProcessPeriod("17.07.2018", "17.07.2018", isNeedReloadHeaders=False)
   #  LoadAndVisualize()
     #CollectHeaders()

@@ -17,7 +17,7 @@ def GetRudeLinks(filename, key):
 
 def GetRudeLinksForMultipleDocuments(dictoftexts):
     dictofrudelinks = {}
-    for key in sorted(dictoftexts):
+    for key in dictoftexts:
         dictofrudelinks[key] = GetRudeLinks(dictoftexts[key]['url'], key)
     return dictofrudelinks
 
