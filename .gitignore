@@ -110,3 +110,6 @@ venv.bak/
 #  test graph
 graph.json
 
+
+.DS_Store
+
