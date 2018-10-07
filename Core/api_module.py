@@ -4,9 +4,9 @@
 
 
 # imports Core modules--------------------------------------------------
-import FinalAnalysis
-import FirstAnalysis
-import law
+import final_analysis
+import rough_analysis
+import web_crawler
 import visualizer
 
 
@@ -24,7 +24,7 @@ decisionsFolderName = "Decision files"
 headersFileName = path.join(decisionsFolderName, 'DecisionHeaders.json')
 
 
-def SaveHeaders(headers, filename):
+def save_headers(headers, filename):
     '''
     Pack the heareds with json and store it to file of the filename
     '''
@@ -33,13 +33,13 @@ def SaveHeaders(headers, filename):
     decisionsHeadersFile.close()
 
 
-def CollectHeaders(headersfilename, countOfPage=1):
-    headers = law.GetResolutionHeaders(countOfPage)
-    SaveHeaders(headers, headersFileName)
+def collect_headers(headersfilename, countOfPage=1):
+    headers = web_crawler.get_resolution_headers(countOfPage)
+    save_headers(headers, headersFileName)
     return headers
 
 
-def LoadHeaders(filename):
+def load_headers(filename):
     '''
     Load the stored earlier headers of the documents,
     unpack it with json and return as
@@ -52,26 +52,27 @@ def LoadHeaders(filename):
     return json.loads(text)
 
 
-def CheckFilesForHeaders(headers, folder):
+def check_files_for_headers(headers, folder):
     '''
     Find files of the documents of the given headers
     and replace the header 'url':'web uri' by 'url':'filename' when
     the file have finded.
     '''
     for uid in headers:
-        filename = law.GetdecisionFileNameByUid(uid, folder, ext='txt')
+        filename = web_crawler.get_decision_filename_by_uid(uid, folder,
+                                                            ext='txt')
         if (path.exists(filename)):
             headers[uid]['path to text file'] = filename
 
 
-def LoadFilesForHeaders(headers, folder):
+def load_files_for_headers(headers, folder):
     for key in headers:
         if 'path to text file' not in headers[key] \
                 or not path.exists(headers[key]['path to text file']):
-            law.LoadResolutionTexts({key: headers[key]}, folder)
+            web_crawler.load_resolution_texts({key: headers[key]}, folder)
 
 
-def LoadGraph(file_name):
+def load_graph(file_name):
     '''
     Load the stored earlier graph from the given filename,
     unpack it with JSON and return as
@@ -83,16 +84,16 @@ def LoadGraph(file_name):
     return graph
 
 
-def LoadAndVisualize(filename='graph.json'):
+def load_and_visualize(filename='graph.json'):
     '''
     Load the stored earlier graph from the given filename and
     Visualize it with Visualizer module.
     '''
-    graph = LoadGraph(filename)
-    visualizer.VisualizeLinkGraph(graph, 20, 1, (20, 20))
+    graph = load_graph(filename)
+    visualizer.visualize_link_graph(graph, 20, 1, (20, 20))
 
 
-def GetHeadersBetweenDates(headers, firstDate, lastDate):
+def get_headers_between_dates(headers, firstDate, lastDate):
     '''
     Do a selection from the headers for that whisch was publicated later,
     than the first date,
@@ -108,8 +109,8 @@ def GetHeadersBetweenDates(headers, firstDate, lastDate):
 # api methods-----------------------------------------------------------
 
 
-def ProcessPeriod(firstDate, lastDate, graphOutFileName='graph.json',
-                  showPicture=True, isNeedReloadHeaders=False):
+def process_period(firstDate, lastDate, graphOutFileName='graph.json',
+                   showPicture=True, isNeedReloadHeaders=False):
     '''
     Process decisions from the date specified as firstDate to
     the date specified as lastDate.
@@ -128,38 +129,38 @@ def ProcessPeriod(firstDate, lastDate, graphOutFileName='graph.json',
 
     decisionsHeaders = {}
     if (isNeedReloadHeaders or not path.exists(headersFileName)):
-        decisionsHeaders = CollectHeaders(headersFileName)
+        decisionsHeaders = collect_headers(headersFileName)
     else:
-        decisionsHeaders = LoadHeaders(headersFileName)
+        decisionsHeaders = load_headers(headersFileName)
 
-    usingHeaders = GetHeadersBetweenDates(decisionsHeaders, firstDate,
-                                          lastDate)
+    usingHeaders = get_headers_between_dates(decisionsHeaders, firstDate,
+                                             lastDate)
 
-    CheckFilesForHeaders(usingHeaders, decisionsFolderName)
+    check_files_for_headers(usingHeaders, decisionsFolderName)
 
-    LoadFilesForHeaders(usingHeaders, decisionsFolderName)
+    load_files_for_headers(usingHeaders, decisionsFolderName)
 
     decisionsHeaders.update(usingHeaders)
 
-    SaveHeaders(decisionsHeaders, headersFileName)
+    save_headers(decisionsHeaders, headersFileName)
 
     rudeLinksDict = \
-        FirstAnalysis.GetRudeLinksForMultipleDocuments(usingHeaders)
+        rough_analysis.get_rude_links_for_multiple_docs(usingHeaders)
 
-    links = FinalAnalysis.GetCleanLinks(rudeLinksDict,
-                                        decisionsHeaders)[0]
+    links = final_analysis.get_clean_links(rudeLinksDict,
+                                           decisionsHeaders)[0]
 
-    commonGraph = FinalAnalysis.GetLinkGraph(links)
+    commonGraph = final_analysis.get_link_graph(links)
 
     graphFile = open(graphOutFileName, 'w', encoding='utf-8')
     graphFile.write(json.dumps(commonGraph))
     graphFile.close()
 
-    visualizer.VisualizeLinkGraph(commonGraph, 20, 1, (40, 40))
+    visualizer.visualize_link_graph(commonGraph, 20, 1, (40, 40))
 # end of ProcessPeriod--------------------------------------------------
 
 
-def StartProcessWith(uid, depth):
+def start_process_with(uid, depth):
     '''
     Start processing decisions from the decision which uid was given and repeat
     this behavior recursively for given depth.
@@ -173,5 +174,5 @@ if __name__ == "__main__":
     # ProcessPeriod("17.07.2018", "17.07.2018", isNeedReloadHeaders=False)
     # LoadAndVisualize()
     # CollectHeaders()
-    ProcessPeriod("18.07.2018", "23.07.2018", showPicture=True,
-                  isNeedReloadHeaders=True)
+    process_period("18.07.2018", "23.07.2018", showPicture=True,
+                   isNeedReloadHeaders=True)

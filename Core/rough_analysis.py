@@ -5,7 +5,7 @@ pattern = re.compile(
     r'[Оо].[\s\d]+[яфмаисонд]\w+[\s\d]+года[\s\d]+№[\s\d]+[-\w]+')
 
 
-def GetRudeLinks(pathToTextFile, decisionID):
+def get_rude_links(pathToTextFile, decisionID):
     file = open(pathToTextFile, 'r', encoding="utf-8")
     text = file.read()
     file.close()
@@ -16,12 +16,12 @@ def GetRudeLinks(pathToTextFile, decisionID):
     return result
 
 
-def GetRudeLinksForMultipleDocuments(headers):
+def get_rude_links_for_multiple_docs(headers):
     rudeLinks = {}
     for decisionID in headers:
         if 'not unique' in headers[decisionID]:
             continue
-        rudeLinks[decisionID] = GetRudeLinks(
+        rudeLinks[decisionID] = get_rude_links(
             headers[decisionID]['path to text file'], decisionID)
     return rudeLinks
 
@@ -34,4 +34,4 @@ if (__name__ == '__main__'):
             'path to text file': r'C:\Users\GameOS\Desktop\Grub\input1.txt',
             'title': 'Full title'}
             }
-    print(GetRudeLinksForMultipleDocuments(dictoftexts))
+    print(get_rude_links_for_multiple_docs(dictoftexts))

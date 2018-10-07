@@ -4,7 +4,7 @@ yearPattern = re.compile(r'(?<=\s)\d{4}(?=\s)')
 numberPattern = re.compile(r'\d+(-[А-Яа-я]+)+')
 
 
-def GetCleanLinks(collectedLinks, courtSiteContent):
+def get_clean_links(collectedLinks, courtSiteContent):
     '''
     Gets clean links.
     arguments:
@@ -42,7 +42,7 @@ def GetCleanLinks(collectedLinks, courtSiteContent):
     return (checkedLinks, rejectedLinks)
 
 
-def GetLinkGraph(checkedLinks):
+def get_link_graph(checkedLinks):
     '''
     Gets Link Graph, returning tuple (vertices = [],
     edges = [(citing_decision_id, cited_decision_id), (),...]).
@@ -184,7 +184,7 @@ if __name__ == '__main__':
         'от 4 октября 2005 года № 364-О'
         ]
 
-    response = GetCleanLinks(collectedLinks, courtSiteContent)
+    response = get_clean_links(collectedLinks, courtSiteContent)
     checkedLinks = response[0]
     rejectedLinks = response[1]
     print("Checked links: ")
@@ -192,7 +192,7 @@ if __name__ == '__main__':
     print("Rejected links: ")
     print(rejectedLinks)
 
-    reponse2 = GetLinkGraph(checkedLinks)
+    reponse2 = get_link_graph(checkedLinks)
     vertices = reponse2[0]
     edges = reponse2[1]
     print("Vertices: ")

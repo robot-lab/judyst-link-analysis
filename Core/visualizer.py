@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 # methods---------------------------------------------------------------
 
 
-def VisualizeLinkGraph(graph, nodeSize=2000, fontSize=9, pictureSize=(20, 20)):
+def visualize_link_graph(graph, nodeSize=2000, fontSize=9,
+                         pictureSize=(20, 20)):
     '''
     Visualize and show the graph of decision links.
     nodeSize - int, size of node on the graph's picture

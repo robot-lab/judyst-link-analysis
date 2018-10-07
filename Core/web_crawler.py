@@ -13,8 +13,9 @@ from selenium import webdriver
 # License: Apache License 2.0
 
 
-def GetWebDriver(pathToChromeWebDriver='Core\\Selenium\\chromedriver.exe',
-                 pageUri="http://www.ksrf.ru/ru/Decision/Pages/default.aspx"):
+def get_web_driver(pathToChromeWebDriver='Core\\Selenium\\chromedriver.exe',
+                   pageUri="http://www.ksrf.ru/ru/Decision/Pages/default.aspx"
+                   ):
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
     driver = webdriver.Chrome(pathToChromeWebDriver, chrome_options=options)
@@ -22,7 +23,7 @@ def GetWebDriver(pathToChromeWebDriver='Core\\Selenium\\chromedriver.exe',
     return driver
 
 
-def GetOpenPageScriptTemplate(driver, templateKey='NUMBER'):
+def get_open_page_script_template(driver, templateKey='NUMBER'):
     page = html.document_fromstring(driver.page_source)
     template = page.find_class('UserSectionFooter ms-WPBody srch-WPBody')[0]. \
         find('td/table/tbody/tr/td/a').get('href')
@@ -31,22 +32,22 @@ def GetOpenPageScriptTemplate(driver, templateKey='NUMBER'):
     return template
 
 
-def GetOpenPageScript(scriptTemplate, pageNum, templateKey='NUMBER'):
+def get_open_page_script(scriptTemplate, pageNum, templateKey='NUMBER'):
     return scriptTemplate.replace(templateKey, str(pageNum))
 
 
-def GetPageHtmlByNum(driver, openPagetScriptTemplate, pageNum):
-    script = GetOpenPageScript(openPagetScriptTemplate, pageNum)
+def get_page_html_by_num(driver, openPagetScriptTemplate, pageNum):
+    script = get_open_page_script(openPagetScriptTemplate, pageNum)
     driver.execute_script(script)
     return driver.page_source
 
 
-def GetResolutionHeaders(countOfPage=1):
+def get_resolution_headers(countOfPage=1):
     # TO DO: check for that page is refreshed check for that
     # page is refreshed (i have an idea)
     courtSiteContent = {}
-    driver = GetWebDriver()
-    template = GetOpenPageScriptTemplate(driver)
+    driver = get_web_driver()
+    template = get_open_page_script_template(driver)
     page = html.document_fromstring(driver.page_source)
     for i in range(2, countOfPage + 2):
         decisions = page.find_class('ms-alternating') + \
@@ -73,16 +74,17 @@ def GetResolutionHeaders(countOfPage=1):
                         [courtSiteContent[decisionID], headerElements]
                     courtSiteContent[decisionID] = \
                         ('not unique', notUniqueHeaders)
-        page = html.document_fromstring(GetPageHtmlByNum(driver, template, i))
+        page = html.document_fromstring(get_page_html_by_num(
+                                                        driver, template, i))
 
     return courtSiteContent
 
 
-def GetdecisionFileNameByUid(uid, foldername, ext='txt'):
+def get_decision_filename_by_uid(uid, foldername, ext='txt'):
     return os.path.join(foldername, uid.replace('/', '_') + '.' + ext)
 
 
-def LoadResolutionTexts(courtSiteContent, folderName='Decision files'):
+def load_resolution_texts(courtSiteContent, folderName='Decision files'):
     if not os.path.exists(folderName):
         os.mkdir(folderName)
     for decisionID in courtSiteContent:
@@ -90,8 +92,8 @@ def LoadResolutionTexts(courtSiteContent, folderName='Decision files'):
             continue
         logo = urllib.request.urlopen(
                 courtSiteContent[decisionID]['url']).read()
-        pathToPDF = GetdecisionFileNameByUid(decisionID, folderName, 'pdf')
-        pathToTXT = GetdecisionFileNameByUid(decisionID, folderName, 'txt')
+        pathToPDF = get_decision_filename_by_uid(decisionID, folderName, 'pdf')
+        pathToTXT = get_decision_filename_by_uid(decisionID, folderName, 'txt')
         with open(pathToPDF, "wb") as PDFFIle:
             PDFFIle.write(logo)
         with open(pathToPDF, "rb") as PDFFIle, \
@@ -115,4 +117,4 @@ if __name__ == '__main__':
     # file.write(json.dumps(repeated))
     # file.close()
 
-    GetResolutionHeaders(666)
+    get_resolution_headers(666)
