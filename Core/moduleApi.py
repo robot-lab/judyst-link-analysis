@@ -3,27 +3,23 @@
 # rexarrior@yandex.ru
 
 
-
-
-
-# imports Core modules---------------------------------------------------------
+# imports Core modules--------------------------------------------------
 import FinalAnalysis
 import FirstAnalysis
 import law
 import visualizer
 
 
-#other imports-----------------------------------------------------------------
+# other imports---------------------------------------------------------
 import json
 from datetime import date
 from dateutil import parser
 from os import path as path
 
-#methods-----------------------------------------------------------------------
+# methods---------------------------------------------------------------
 
 
-
-#internal methods--------------------------------------------------------------
+# internal methods------------------------------------------------------
 decisionsFolderName = "Decision files"
 headersFileName = path.join(decisionsFolderName, 'DecisionHeaders.json')
 
@@ -35,14 +31,12 @@ def SaveHeaders(headers, filename):
     decisionsHeadersFile = open(filename, 'w')
     decisionsHeadersFile.write(json.dumps(headers))
     decisionsHeadersFile.close()
-    
 
 
-def CollectHeaders( headersfilename, countOfPage = 1569):
+def CollectHeaders(headersfilename, countOfPage=1569):
     headers = law.GetResolutionHeaders(countOfPage)
     SaveHeaders(headers, headersFileName)
     return headers
-
 
 
 def LoadHeaders(filename):
@@ -62,13 +56,13 @@ def CheckFilesForHeaders(headers, folder):
     '''
     Find files of the documents of the given headers
     and replace the header 'url':'web uri' by 'url':'filename' when
-    the file have finded. 
+    the file have finded.
     '''
     for uid in headers:
         filename = law.GetdecisionFileNameByUid(uid, folder, ext='txt')
         if (path.exists(filename)):
             headers[uid]['url'] = filename
-    
+
 
 def LoadFilesForHeaders(headers, folder):
     for key in headers:
@@ -79,7 +73,7 @@ def LoadFilesForHeaders(headers, folder):
 def LoadGraph(file_name):
     '''
     Load the stored earlier graph from the given filename,
-    unpack it with JSON and return as  
+    unpack it with JSON and return as
     [[nodes], [edges: [from, to]]
     '''
     graphfile = open(file_name)
@@ -88,14 +82,13 @@ def LoadGraph(file_name):
     return graph
 
 
-def LoadAndVisualize(filename = 'graph.json'):
+def LoadAndVisualize(filename='graph.json'):
     '''
     Load the stored earlier graph from the given filename and
-    Visualize it with Visualizer module. 
+    Visualize it with Visualizer module.
     '''
     graph = LoadGraph(filename)
-    visualizer.VisualizeLinkGraph(graph, 20, 1, (20,20))
-
+    visualizer.VisualizeLinkGraph(graph, 20, 1, (20, 20))
 
 
 def GetHeadersBetweenDates(headers, firstDate, lastDate):
@@ -108,62 +101,59 @@ def GetHeadersBetweenDates(headers, firstDate, lastDate):
     for key in headers:
         currdecisionDate = parser.parse(headers[key]['date']).date()
         if (currdecisionDate >= firstDate and currdecisionDate <= lastDate):
-            usingHeaders[key] = headers[key] 
+            usingHeaders[key] = headers[key]
     return usingHeaders
-#api methods-------------------------------------------------------------------
+
+# api methods-----------------------------------------------------------
 
 
-def ProcessPeriod(firstDate, lastDate,
- graphOutFileName='graph.json', showPicture=True, isNeedReloadHeaders=False):
+def ProcessPeriod(firstDate, lastDate, graphOutFileName='graph.json',
+                  showPicture=True, isNeedReloadHeaders=False):
     '''
     Process decisions from the date specified as firstDate to
-    the date specified as lastDate. 
+    the date specified as lastDate.
     Write a graph of result of the processing and, if it was specified,
-    draw graph and show it to user.   
-    ''' 
-    
+    draw graph and show it to user.
+    '''
+
     if not(firstDate is date):
         firstDate = parser.parse(firstDate).date()
 
     if not(lastDate is date):
         lastDate = parser.parse(lastDate).date()
-    
+
     if (firstDate > lastDate):
         raise "date error: The first date is later than the last date. "
 
-   
     decisionsHeaders = {}
     if (isNeedReloadHeaders or not path.exists(headersFileName)):
         decisionsHeaders = CollectHeaders(headersFileName)
     else:
         decisionsHeaders = LoadHeaders(headersFileName)
-    
-    
-    usingHeaders = GetHeadersBetweenDates(decisionsHeaders, firstDate, lastDate)
+
+    usingHeaders = GetHeadersBetweenDates(decisionsHeaders, firstDate,
+                                          lastDate)
 
     CheckFilesForHeaders(usingHeaders, decisionsFolderName)
 
     LoadFilesForHeaders(usingHeaders, decisionsFolderName)
 
     decisionsHeaders.update(usingHeaders)
-    
+
     SaveHeaders(decisionsHeaders, headersFileName)
-    
-    rudeLinksDict = FirstAnalysis.GetRudeLinksForMultipleDocuments(usingHeaders)
-    links, errLinks = FinalAnalysis.GetCleanLinks(rudeLinksDict, decisionsHeaders) 
-    commonGraph = FinalAnalysis.GetLinkGraph(links) 
+
+    rudeLinksDict = \
+        FirstAnalysis.GetRudeLinksForMultipleDocuments(usingHeaders)
+    (links, errLinks) = FinalAnalysis.GetCleanLinks(rudeLinksDict,
+                                                    decisionsHeaders)
+    commonGraph = FinalAnalysis.GetLinkGraph(links)
 
     graphFile = open(graphOutFileName, 'w', encoding='utf-8')
     graphFile.write(json.dumps(commonGraph))
     graphFile.close()
 
-    visualizer.VisualizeLinkGraph(commonGraph, 20, 1, (40,40))
-#end of ProcessPeriod----------------------------------------------------------
-
-
-
-
-
+    visualizer.VisualizeLinkGraph(commonGraph, 20, 1, (40, 40))
+# end of ProcessPeriod--------------------------------------------------
 
 
 def StartProcessWith(uid, depth):
@@ -176,7 +166,9 @@ def StartProcessWith(uid, depth):
 
 
 if __name__ == "__main__":
-   # ProcessPeriod("01.07.2018", "30.12.2018")
-    ProcessPeriod("17.07.2018", "17.07.2018", isNeedReloadHeaders=False)
-  #  LoadAndVisualize()
-    #CollectHeaders()
+    # ProcessPeriod("01.07.2018", "30.12.2018")
+    # ProcessPeriod("17.07.2018", "17.07.2018", isNeedReloadHeaders=False)
+    # LoadAndVisualize()
+    # CollectHeaders()
+    ProcessPeriod("18.07.2018", "23.07.2018", showPicture=False,
+                  isNeedReloadHeaders=True)

@@ -15,7 +15,9 @@ from selenium import webdriver
 
 def GetWebDriver(pathToChromeWebDriver='Core\\Selenium\\chromedriver.exe',
                  pageUri="http://www.ksrf.ru/ru/Decision/Pages/default.aspx"):
-    driver = webdriver.Chrome(pathToChromeWebDriver)
+    options = webdriver.ChromeOptions()
+    options.add_argument('headless')
+    driver = webdriver.Chrome(pathToChromeWebDriver, chrome_options=options)
     driver.get(pageUri)
     return driver
 
@@ -39,7 +41,7 @@ def GetPageHtmlByNum(driver, openPagetScriptTemplate, pageNum):
     return driver.page_source
 
 
-def GetResolutionHeaders(countOfPage=100):
+def GetResolutionHeaders(countOfPage=1):
     # TO DO: check for that page is refreshed check for that
     # page is refreshed (i have an idea)
     courtSiteContent = {}
