@@ -76,7 +76,7 @@ def get_resolution_headers(countOfPage=1):
                         ('not unique', notUniqueHeaders)
         page = html.document_fromstring(get_page_html_by_num(
                                                         driver, template, i))
-
+    driver.quit()
     return courtSiteContent
 
 

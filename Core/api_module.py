@@ -14,20 +14,21 @@ import visualizer
 import json
 from datetime import date
 from dateutil import parser
-from os import path as path
-
+import os.path
 # methods---------------------------------------------------------------
 
 
 # internal methods------------------------------------------------------
 decisionsFolderName = "Decision files"
-headersFileName = path.join(decisionsFolderName, 'DecisionHeaders.json')
+headersFileName = os.path.join(decisionsFolderName, 'DecisionHeaders.json')
 
 
 def save_headers(headers, filename):
     '''
     Pack the heareds with json and store it to file of the filename
     '''
+    if not os.path.exists(os.path.dirname(filename)):
+        os.mkdir(os.path.dirname(filename))
     decisionsHeadersFile = open(filename, 'w')
     decisionsHeadersFile.write(json.dumps(headers))
     decisionsHeadersFile.close()
@@ -61,14 +62,14 @@ def check_files_for_headers(headers, folder):
     for uid in headers:
         filename = web_crawler.get_decision_filename_by_uid(uid, folder,
                                                             ext='txt')
-        if (path.exists(filename)):
+        if (os.path.exists(filename)):
             headers[uid]['path to text file'] = filename
 
 
 def load_files_for_headers(headers, folder):
     for key in headers:
         if 'path to text file' not in headers[key] \
-                or not path.exists(headers[key]['path to text file']):
+                or not os.path.exists(headers[key]['path to text file']):
             web_crawler.load_resolution_texts({key: headers[key]}, folder)
 
 
@@ -128,7 +129,7 @@ def process_period(firstDate, lastDate, graphOutFileName='graph.json',
         raise "date error: The first date is later than the last date. "
 
     decisionsHeaders = {}
-    if (isNeedReloadHeaders or not path.exists(headersFileName)):
+    if (isNeedReloadHeaders or not os.path.exists(headersFileName)):
         decisionsHeaders = collect_headers(headersFileName)
     else:
         decisionsHeaders = load_headers(headersFileName)
