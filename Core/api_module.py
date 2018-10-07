@@ -158,8 +158,8 @@ def process_period(firstDate, lastDate, graphOutFileName='graph.json',
     graphFile = open(graphOutFileName, 'w', encoding='utf-8')
     graphFile.write(json.dumps(commonGraph))
     graphFile.close()
-
-    visualizer.visualize_link_graph(commonGraph, 20, 1, (40, 40))
+    if showPicture:
+        visualizer.visualize_link_graph(commonGraph, 20, 1, (40, 40))
 # end of ProcessPeriod--------------------------------------------------
 
 
@@ -179,6 +179,6 @@ if __name__ == "__main__":
     # LoadAndVisualize()
     # CollectHeaders()
     start_time = time.time()
-    process_period("18.07.2018", "18.07.2018", showPicture=False,
+    process_period("18.07.2018", "18.07.2018", showPicture=True,
                    isNeedReloadHeaders=False)
     print("--- {0} seconds ---".format(time.time() - start_time))
