@@ -33,7 +33,7 @@ def SaveHeaders(headers, filename):
     decisionsHeadersFile.close()
 
 
-def CollectHeaders(headersfilename, countOfPage=1569):
+def CollectHeaders(headersfilename, countOfPage=1):
     headers = law.GetResolutionHeaders(countOfPage)
     SaveHeaders(headers, headersFileName)
     return headers
@@ -61,12 +61,13 @@ def CheckFilesForHeaders(headers, folder):
     for uid in headers:
         filename = law.GetdecisionFileNameByUid(uid, folder, ext='txt')
         if (path.exists(filename)):
-            headers[uid]['url'] = filename
+            headers[uid]['path to text file'] = filename
 
 
 def LoadFilesForHeaders(headers, folder):
     for key in headers:
-        if (not path.exists(headers[key]['url'])):
+        if 'path to text file' not in headers[key] \
+                or not path.exists(headers[key]['path to text file']):
             law.LoadResolutionTexts({key: headers[key]}, folder)
 
 
@@ -144,8 +145,10 @@ def ProcessPeriod(firstDate, lastDate, graphOutFileName='graph.json',
 
     rudeLinksDict = \
         FirstAnalysis.GetRudeLinksForMultipleDocuments(usingHeaders)
-    (links, errLinks) = FinalAnalysis.GetCleanLinks(rudeLinksDict,
-                                                    decisionsHeaders)
+
+    links = FinalAnalysis.GetCleanLinks(rudeLinksDict,
+                                        decisionsHeaders)[0]
+
     commonGraph = FinalAnalysis.GetLinkGraph(links)
 
     graphFile = open(graphOutFileName, 'w', encoding='utf-8')
@@ -170,5 +173,5 @@ if __name__ == "__main__":
     # ProcessPeriod("17.07.2018", "17.07.2018", isNeedReloadHeaders=False)
     # LoadAndVisualize()
     # CollectHeaders()
-    ProcessPeriod("18.07.2018", "23.07.2018", showPicture=False,
+    ProcessPeriod("18.07.2018", "23.07.2018", showPicture=True,
                   isNeedReloadHeaders=True)

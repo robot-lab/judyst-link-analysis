@@ -1,3 +1,6 @@
+#Decision Files
+Decision Files/*
+
 geckodriver.exe
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -17,6 +17,7 @@ def GetCleanLinks(collectedLinks, courtSiteContent):
     rejectedLinks = {}
     checkedLinks = {}
     for courtDecisionID in collectedLinks:
+        checkedLinks[courtDecisionID] = []
         for link in collectedLinks[courtDecisionID]:
             spam = re.split(r'(№|N)', link)
             number = numberPattern.search(spam[-1])
@@ -26,8 +27,6 @@ def GetCleanLinks(collectedLinks, courtSiteContent):
                 while years:
                     gottenID = number[0].upper() + '/' + years.pop()
                     if gottenID in courtSiteContent:
-                        if courtDecisionID not in checkedLinks:
-                            checkedLinks[courtDecisionID] = []
                         if gottenID not in checkedLinks[courtDecisionID]:
                             checkedLinks[courtDecisionID].append(gottenID)
                         eggs = True
