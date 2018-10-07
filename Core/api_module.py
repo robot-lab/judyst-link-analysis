@@ -34,7 +34,7 @@ def save_headers(headers, filename):
     decisionsHeadersFile.close()
 
 
-def collect_headers(headersfilename, countOfPage=1):
+def collect_headers(headersfilename, countOfPage=1570):
     headers = web_crawler.get_resolution_headers(countOfPage)
     save_headers(headers, headersFileName)
     return headers
@@ -102,6 +102,8 @@ def get_headers_between_dates(headers, firstDate, lastDate):
     '''
     usingHeaders = {}
     for key in headers:
+        if 'not unique' in headers[key]:
+            continue
         currdecisionDate = parser.parse(headers[key]['date']).date()
         if (currdecisionDate >= firstDate and currdecisionDate <= lastDate):
             usingHeaders[key] = headers[key]
@@ -171,9 +173,12 @@ def start_process_with(uid, depth):
 
 
 if __name__ == "__main__":
+    import time
     # ProcessPeriod("01.07.2018", "30.12.2018")
     # ProcessPeriod("17.07.2018", "17.07.2018", isNeedReloadHeaders=False)
     # LoadAndVisualize()
     # CollectHeaders()
-    process_period("18.07.2018", "23.07.2018", showPicture=True,
-                   isNeedReloadHeaders=True)
+    start_time = time.time()
+    process_period("18.07.2018", "18.07.2018", showPicture=False,
+                   isNeedReloadHeaders=False)
+    print("--- {0} seconds ---".format(time.time() - start_time))
