@@ -15,6 +15,7 @@ import json
 from datetime import date
 from dateutil import parser
 import os.path
+import queue
 # methods---------------------------------------------------------------
 
 
@@ -163,13 +164,51 @@ def process_period(firstDate, lastDate, graphOutFileName='graph.json',
 # end of ProcessPeriod--------------------------------------------------
 
 
-def start_process_with(uid, depth):
+def start_process_with(uid, depth, headers=None,
+                       graphOutFileName='graph.json',
+                       isShowPicture=True, isNeedReloadHeaders=False,
+                       visualizerParameters=(20, 1, (40, 40))):
     '''
     Start processing decisions from the decision which uid was given and repeat
     this behavior recursively for given depth.
     '''
     if (depth < 0):
         raise "argument error: depth of the recursion must be large than 0."
+
+    if (isNeedReloadHeaders or
+       (not os.path.exists(headersFileName) and headers is None)):
+        headers = collect_headers(headersFileName)
+    else:
+        headers = load_headers(headersFileName)
+    if (uid not in headers):
+        raise "Unknown uid"
+    check_files_for_headers(headers, decisionsFolderName)
+    load_files_for_headers(headers, decisionsFolderName)
+
+    toProcess = {uid: headers[uid]}
+    processed = {}
+    allLinks = {}
+    while depth > 0 and len(toProcess) > 0:
+        depth -= 1
+        rude = rough_analysis.get_rude_links_for_multiple_docs(toProcess)
+        clean = final_analysis.get_clean_links(rude, headers)[0]
+        allLinks.update(clean)
+        processed.update(toProcess)
+        toProcess = {}
+        for uid in clean:
+            for uid2 in clean[uid]:
+                if (uid2 not in processed):
+                    toProcess[uid2] = headers[uid2]
+    graph = final_analysis.get_link_graph(allLinks)
+    graphFile = open(graphOutFileName, 'w')
+    graphFile.write(json.dumps(graph))
+    graphFile.close()
+    if (isShowPicture):
+        visualizer.visualize_link_graph(graph,
+                                        visualizerParameters[0],
+                                        visualizerParameters[1],
+                                        visualizerParameters[2])
+# end of start_process_with---------------------------------------------
 
 
 if __name__ == "__main__":
@@ -179,6 +218,7 @@ if __name__ == "__main__":
     # LoadAndVisualize()
     # CollectHeaders()
     start_time = time.time()
-    process_period("17.07.2018", "17.07.2018", showPicture=True,
-                   isNeedReloadHeaders=False)
+    # process_period("17.07.2018", "17.07.2018", showPicture=True,
+    #               isNeedReloadHeaders=False)
+    start_process_with('33-П/2018', 2)
     print("--- {0} seconds ---".format(time.time() - start_time))
