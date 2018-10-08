@@ -122,10 +122,10 @@ def process_period(firstDate, lastDate, graphOutFileName='graph.json',
     '''
 
     if not(firstDate is date):
-        firstDate = parser.parse(firstDate).date()
+        firstDate = parser.parse(firstDate, dayfirst=True).date()
 
     if not(lastDate is date):
-        lastDate = parser.parse(lastDate).date()
+        lastDate = parser.parse(lastDate, dayfirst=True).date()
 
     if (firstDate > lastDate):
         raise "date error: The first date is later than the last date. "
@@ -179,6 +179,6 @@ if __name__ == "__main__":
     # LoadAndVisualize()
     # CollectHeaders()
     start_time = time.time()
-    process_period("18.07.2018", "18.07.2018", showPicture=True,
+    process_period("17.07.2018", "17.07.2018", showPicture=True,
                    isNeedReloadHeaders=False)
     print("--- {0} seconds ---".format(time.time() - start_time))
