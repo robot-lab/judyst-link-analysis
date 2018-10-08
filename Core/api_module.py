@@ -9,13 +9,11 @@ import rough_analysis
 import web_crawler
 import visualizer
 
-
 # other imports---------------------------------------------------------
 import json
 from datetime import date
 from dateutil import parser
 import os.path
-import queue
 # methods---------------------------------------------------------------
 
 
