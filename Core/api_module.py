@@ -18,8 +18,8 @@ import os.path
 
 
 # internal methods------------------------------------------------------
-DECITIONS_FOLDER_NAME = "Decision files"
-HEADERS_FILE_NAME = os.path.join(DECITIONS_FOLDER_NAME, 'DecisionHeaders.json')
+DECISIONS_FOLDER_NAME = "Decision files"
+HEADERS_FILE_NAME = os.path.join(DECISIONS_FOLDER_NAME, 'DecisionHeaders.json')
 
 
 def save_headers(headers, filename):
@@ -138,9 +138,9 @@ def process_period(firstDate, lastDate, graphOutFileName='graph.json',
     usingHeaders = get_headers_between_dates(decisionsHeaders, firstDate,
                                              lastDate)
 
-    check_files_for_headers(usingHeaders, DECITIONS_FOLDER_NAME)
+    check_files_for_headers(usingHeaders, DECISIONS_FOLDER_NAME)
 
-    load_files_for_headers(usingHeaders, DECITIONS_FOLDER_NAME)
+    load_files_for_headers(usingHeaders, DECISIONS_FOLDER_NAME)
 
     decisionsHeaders.update(usingHeaders)
 
@@ -180,8 +180,8 @@ def start_process_with(uid, depth, headers=None,
         headers = load_headers(HEADERS_FILE_NAME)
     if (uid not in headers):
         raise "Unknown uid"
-    check_files_for_headers(headers, DECITIONS_FOLDER_NAME)
-    load_files_for_headers(headers, DECITIONS_FOLDER_NAME)
+    check_files_for_headers(headers, DECISIONS_FOLDER_NAME)
+    load_files_for_headers(headers, DECISIONS_FOLDER_NAME)
 
     toProcess = {uid: headers[uid]}
     processed = {}
