@@ -18,8 +18,8 @@ import os.path
 
 
 # internal methods------------------------------------------------------
-decisionsFolderName = "Decision files"
-headersFileName = os.path.join(decisionsFolderName, 'DecisionHeaders.json')
+DECITIONS_FOLDER_NAME = "Decision files"
+HEADERS_FILE_NAME = os.path.join(DECITIONS_FOLDER_NAME, 'DecisionHeaders.json')
 
 
 def save_headers(headers, filename):
@@ -33,9 +33,9 @@ def save_headers(headers, filename):
     decisionsHeadersFile.close()
 
 
-def collect_headers(headersfilename, countOfPage=1570):
+def collect_headers(HEADERS_FILE_NAME, countOfPage=1570):
     headers = web_crawler.get_resolution_headers(countOfPage)
-    save_headers(headers, headersFileName)
+    save_headers(headers, HEADERS_FILE_NAME)
     return headers
 
 
@@ -130,21 +130,21 @@ def process_period(firstDate, lastDate, graphOutFileName='graph.json',
         raise "date error: The first date is later than the last date. "
 
     decisionsHeaders = {}
-    if (isNeedReloadHeaders or not os.path.exists(headersFileName)):
-        decisionsHeaders = collect_headers(headersFileName)
+    if (isNeedReloadHeaders or not os.path.exists(HEADERS_FILE_NAME)):
+        decisionsHeaders = collect_headers(HEADERS_FILE_NAME)
     else:
-        decisionsHeaders = load_headers(headersFileName)
+        decisionsHeaders = load_headers(HEADERS_FILE_NAME)
 
     usingHeaders = get_headers_between_dates(decisionsHeaders, firstDate,
                                              lastDate)
 
-    check_files_for_headers(usingHeaders, decisionsFolderName)
+    check_files_for_headers(usingHeaders, DECITIONS_FOLDER_NAME)
 
-    load_files_for_headers(usingHeaders, decisionsFolderName)
+    load_files_for_headers(usingHeaders, DECITIONS_FOLDER_NAME)
 
     decisionsHeaders.update(usingHeaders)
 
-    save_headers(decisionsHeaders, headersFileName)
+    save_headers(decisionsHeaders, HEADERS_FILE_NAME)
 
     rudeLinksDict = \
         rough_analysis.get_rude_links_for_multiple_docs(usingHeaders)
@@ -174,14 +174,14 @@ def start_process_with(uid, depth, headers=None,
         raise "argument error: depth of the recursion must be large than 0."
 
     if (isNeedReloadHeaders or
-       (not os.path.exists(headersFileName) and headers is None)):
-        headers = collect_headers(headersFileName)
+       (not os.path.exists(HEADERS_FILE_NAME) and headers is None)):
+        headers = collect_headers(HEADERS_FILE_NAME)
     else:
-        headers = load_headers(headersFileName)
+        headers = load_headers(HEADERS_FILE_NAME)
     if (uid not in headers):
         raise "Unknown uid"
-    check_files_for_headers(headers, decisionsFolderName)
-    load_files_for_headers(headers, decisionsFolderName)
+    check_files_for_headers(headers, DECITIONS_FOLDER_NAME)
+    load_files_for_headers(headers, DECITIONS_FOLDER_NAME)
 
     toProcess = {uid: headers[uid]}
     processed = {}
