@@ -1,10 +1,10 @@
 import re
 
-year_pattern = re.compile(r'(?<=\s)\d{4}(?=\s)')
-number_pattern = re.compile(r'\d+(-[А-Яа-я]+)+')
+yearPattern = re.compile(r'(?<=\s)\d{4}(?=\s)')
+numberPattern = re.compile(r'\d+(-[А-Яа-я]+)+')
 
 
-def GetCleanLinks(collected_links, court_site_content):
+def get_clean_links(collectedLinks, courtSiteContent):
     '''
     Gets clean links.
     arguments:
@@ -14,153 +14,153 @@ def GetCleanLinks(collected_links, court_site_content):
     {'date': 'date_str', 'title': 'title_str', 'url': 'link_str'}
     as element and string with court decision ID (uid) as a key.
     '''
-    rejected_links = {}
-    checked_links = {}
-    for court_decision_id in collected_links:
-        for link in collected_links[court_decision_id]:
+    rejectedLinks = {}
+    checkedLinks = {}
+    for courtDecisionID in collectedLinks:
+        checkedLinks[courtDecisionID] = []
+        for link in collectedLinks[courtDecisionID]:
             spam = re.split(r'(№|N)', link)
-            number = number_pattern.search(spam[-1])
-            years = year_pattern.findall(spam[0])
+            number = numberPattern.search(spam[-1])
+            years = yearPattern.findall(spam[0])
             if years and number:
                 eggs = False
                 while years:
-                    gotten_id = number[0] + '/' + years.pop()
-                    if gotten_id in court_site_content:
-                        if court_decision_id not in checked_links:
-                            checked_links[court_decision_id] = []
-                        if gotten_id not in checked_links[court_decision_id]:
-                            checked_links[court_decision_id].append(gotten_id)
+                    gottenID = number[0].upper() + '/' + years.pop()
+                    if gottenID in courtSiteContent:
+                        if gottenID not in checkedLinks[courtDecisionID]:
+                            checkedLinks[courtDecisionID].append(gottenID)
                         eggs = True
                         years.clear()
                 if not eggs:
-                    if court_decision_id not in rejected_links:
-                        rejected_links[court_decision_id] = []
-                    rejected_links[court_decision_id].append(link)
+                    if courtDecisionID not in rejectedLinks:
+                        rejectedLinks[courtDecisionID] = []
+                    rejectedLinks[courtDecisionID].append(link)
             else:
-                if court_decision_id not in rejected_links:
-                    rejected_links[court_decision_id] = []
-                rejected_links[court_decision_id].append(link)
-    return (checked_links, rejected_links)
+                if courtDecisionID not in rejectedLinks:
+                    rejectedLinks[courtDecisionID] = []
+                rejectedLinks[courtDecisionID].append(link)
+    return (checkedLinks, rejectedLinks)
 
 
-def GetLinkGraph(checked_links):
+def get_link_graph(checkedLinks):
     '''
     Gets Link Graph, returning tuple (vertices = [],
     edges = [(citing_decision_id, cited_decision_id), (),...]).
     argument: checked_links is a dictionary with clean links list
     as element and string with court decision ID (uid) as a key.
     '''
-    vertices = list(set(list(checked_links.keys()) +
-                        [link for citing_decision_id in checked_links
-                         for link in checked_links[citing_decision_id]]))
+    vertices = list(set(list(checkedLinks.keys()) +
+                        [link for citingDecisionID in checkedLinks
+                         for link in checkedLinks[citingDecisionID]]))
     edges = []
-    for citing_decision_id in vertices:
-        if citing_decision_id in checked_links:
-            for cited_decision_id in vertices:
-                if cited_decision_id in checked_links[citing_decision_id]:
-                    edges.append((citing_decision_id, cited_decision_id))
+    for citingDecisionID in vertices:
+        if citingDecisionID in checkedLinks:
+            for citedDecisionID in vertices:
+                if citedDecisionID in checkedLinks[citingDecisionID]:
+                    edges.append((citingDecisionID, citedDecisionID))
+                    # TO DO: add weight to the edges
     return (vertices, edges)
 
 if __name__ == '__main__':
-    court_site_content = {}
-    collected_links = {}
-    court_site_content['1-П/2002'] = {
+    courtSiteContent = {}
+    collectedLinks = {}
+    courtSiteContent['1-П/2002'] = {
         'date': '15.01.2002',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision30284.pdf'
         }
-    court_site_content['8-П/2003'] = {
+    courtSiteContent['8-П/2003'] = {
         'date': '14.05.2003',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision30345.pdf'
         }
-    court_site_content['8-П/2005'] = {
+    courtSiteContent['8-П/2005'] = {
         'date': '14.07.2005',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision30352.pdf'
         }
-    court_site_content['10-П/2007'] = {
+    courtSiteContent['10-П/2007'] = {
         'date': '12.07.2007',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision19712.pdf'
         }
-    court_site_content['4-П/2010'] = {
+    courtSiteContent['4-П/2010'] = {
         'date': '26.02.2010',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision36802.pdf'
         }
-    court_site_content['11-П/2012'] = {
+    courtSiteContent['11-П/2012'] = {
         'date': '14.05.2012',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision99813.pdf'
         }
-    court_site_content['7-П/2016'] = {
+    courtSiteContent['7-П/2016'] = {
         'date': '10.03.2016',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision225558.pdf'
         }
-    court_site_content['1-П/2001'] = {
+    courtSiteContent['1-П/2001'] = {
         'date': '25.01.2001',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision30415.pdf'
         }
-    court_site_content['7-П/1995'] = {
+    courtSiteContent['7-П/1995'] = {
         'date': '06.06.1995',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision30417.pdf'
         }
-    court_site_content['14-П/1996'] = {
+    courtSiteContent['14-П/1996'] = {
         'date': '13.06.1996',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision30276.pdf'
         }
-    court_site_content['14-П/1999'] = {
+    courtSiteContent['14-П/1999'] = {
         'date': '28.10.1999',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision30307.pdf'
         }
-    court_site_content['14-П/2000'] = {
+    courtSiteContent['14-П/2000'] = {
         'date': '22.11.2000',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision30294.pdf'
         }
-    court_site_content['12-П/2003'] = {
+    courtSiteContent['12-П/2003'] = {
         'date': '14.07.2003',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision30381.pdf'
         }
-    court_site_content['6-П/2015'] = {
+    courtSiteContent['6-П/2015'] = {
         'date': '31.03.2015',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision191663.pdf'
         }
-    court_site_content['11-П/2002'] = {
+    courtSiteContent['11-П/2002'] = {
         'date': '19.06.2002',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision30304.pdf'
         }
-    court_site_content['244-О-П/2008'] = {
+    courtSiteContent['244-О-П/2008'] = {
         'date': '20.03.2008',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision17279.pdf'
         }
-    court_site_content['738-О-О/2008'] = {
+    courtSiteContent['738-О-О/2008'] = {
         'date': '06.10.2008',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision17779.pdf'
         }
-    court_site_content['1469-О/2015'] = {
+    courtSiteContent['1469-О/2015'] = {
         'date': '23.06.2015',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision203108.pdf'
         }
-    court_site_content['364-О/2005'] = {
+    courtSiteContent['364-О/2005'] = {
         'date': '04.10.2005',
         'title': 'бла-бла',
         'url': 'http://doc.ksrf.ru/decision/KSRFDecision31253.pdf'
         }
 
-    collected_links['35-П/2018'] = [
+    collectedLinks['35-П/2018'] = [
         'от 15 января 2002 года № 1-П',
         'от 14 мая 2003 6 года №8-П',
         'от 14 июля 2005 года № 8-П',
@@ -184,15 +184,15 @@ if __name__ == '__main__':
         'от 4 октября 2005 года № 364-О'
         ]
 
-    response = GetCleanLinks(collected_links, court_site_content)
-    checked_links = response[0]
-    rejected_links = response[1]
+    response = get_clean_links(collectedLinks, courtSiteContent)
+    checkedLinks = response[0]
+    rejectedLinks = response[1]
     print("Checked links: ")
-    print(checked_links)
+    print(checkedLinks)
     print("Rejected links: ")
-    print(rejected_links)
+    print(rejectedLinks)
 
-    reponse2 = GetLinkGraph(checked_links)
+    reponse2 = get_link_graph(checkedLinks)
     vertices = reponse2[0]
     edges = reponse2[1]
     print("Vertices: ")
