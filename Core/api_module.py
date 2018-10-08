@@ -182,3 +182,4 @@ if __name__ == "__main__":
     process_period("17.07.2018", "17.07.2018", showPicture=True,
                    isNeedReloadHeaders=False)
     print("--- {0} seconds ---".format(time.time() - start_time))
+    print(1)
