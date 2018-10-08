@@ -1,1 +1,3 @@
 language: python
+install:
+  python -m pip install networkx selenium pdfminer lxml urllib
