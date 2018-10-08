@@ -1,3 +1,5 @@
 language: python
+python:
+  "3.6"
 install:
-  python -m pip install networkx selenium pdfminer lxml urllib
+  python -m pip install networkx selenium pdfminer lxml
