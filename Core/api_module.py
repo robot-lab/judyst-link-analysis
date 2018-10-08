@@ -185,7 +185,7 @@ def start_process_with(uid, depth, headers=None,
 
     toProcess = {uid: headers[uid]}
     processed = {}
-    allLinks = {}
+    allLinks = {uid:[]}
     while depth > 0 and len(toProcess) > 0:
         depth -= 1
         rude = rough_analysis.get_rude_links_for_multiple_docs(toProcess)
@@ -218,5 +218,5 @@ if __name__ == "__main__":
     start_time = time.time()
     # process_period("17.07.2018", "17.07.2018", showPicture=True,
     #               isNeedReloadHeaders=False)
-    start_process_with('33-П/2018', 2)
+    start_process_with('33-П/2018', 0)
     print("--- {0} seconds ---".format(time.time() - start_time))
