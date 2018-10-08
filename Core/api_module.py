@@ -185,7 +185,7 @@ def start_process_with(uid, depth, headers=None,
 
     toProcess = {uid: headers[uid]}
     processed = {}
-    allLinks = {uid:[]}
+    allLinks = {uid: []}
     while depth > 0 and len(toProcess) > 0:
         depth -= 1
         rude = rough_analysis.get_rude_links_for_multiple_docs(toProcess)
