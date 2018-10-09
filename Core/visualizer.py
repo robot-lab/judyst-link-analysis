@@ -6,6 +6,8 @@ import networkx as nx
 # License: BSD license
 
 import matplotlib.pyplot as plt
+# License: matplotlib licence
+# http://matplotlib.sourceforge.net/users/license.html
 
 # methods---------------------------------------------------------------
 

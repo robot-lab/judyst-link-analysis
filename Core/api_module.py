@@ -10,10 +10,14 @@ import web_crawler
 import visualizer
 
 # other imports---------------------------------------------------------
+import os.path
 import json
 from datetime import date
+
 from dateutil import parser
-import os.path
+# License: Apache Software License, BSD License (Dual License)
+
+
 # methods---------------------------------------------------------------
 
 
@@ -33,7 +37,7 @@ def save_headers(headers, filename):
     decisionsHeadersFile.close()
 
 
-def collect_headers(HEADERS_FILE_NAME, countOfPage=1570):
+def collect_headers(HEADERS_FILE_NAME, countOfPage=3):
     headers = web_crawler.get_resolution_headers(countOfPage)
     save_headers(headers, HEADERS_FILE_NAME)
     return headers
@@ -120,10 +124,10 @@ def process_period(firstDate, lastDate, graphOutFileName='graph.json',
     draw graph and show it to user.
     '''
 
-    if not(firstDate is date):
+    if not isinstance(firstDate, date):
         firstDate = parser.parse(firstDate, dayfirst=True).date()
 
-    if not(lastDate is date):
+    if not isinstance(lastDate, date):
         lastDate = parser.parse(lastDate, dayfirst=True).date()
 
     if (firstDate > lastDate):
@@ -216,7 +220,8 @@ if __name__ == "__main__":
     # LoadAndVisualize()
     # CollectHeaders()
     start_time = time.time()
-    # process_period("17.07.2018", "17.07.2018", showPicture=True,
-    #               isNeedReloadHeaders=False)
-    start_process_with('33-П/2018', 0)
+    process_period("17.07.2018", "17.07.2018", showPicture=True,
+                   isNeedReloadHeaders=True)
+    # start_process_with('33-П/2018', 2)
     print("--- {0} seconds ---".format(time.time() - start_time))
+    input()
