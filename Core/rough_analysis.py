@@ -25,7 +25,7 @@ def get_rude_links(pathToTextFile):
             date = datePattern.search(oneYearLinks)[0]
             numbers = numberPattern.findall(oneYearLinks)
             for number in numbers:
-                roughLinks.append('о' + date + ' ' + number)
+                roughLinks.append('о' + date + ' ' + number.upper())
     return roughLinks
 
 

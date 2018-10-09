@@ -53,7 +53,7 @@ def get_resolution_headers(countOfPage=1):
         decisions = page.find_class('ms-alternating') + \
                 page.find_class('ms-vb')
         for d in decisions:
-            decisionID = d[2].text_content().upper()
+            decisionID = d[2].text_content().replace(' ', '').upper()
             date = d[0].text_content()
             title = d[1].text_content()
             url = d[2].getchildren()[0].get('href')
