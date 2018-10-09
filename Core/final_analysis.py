@@ -19,7 +19,7 @@ def get_clean_links(collectedLinks, courtSiteContent):
     for courtDecisionID in collectedLinks:
         checkedLinks[courtDecisionID] = []
         for link in collectedLinks[courtDecisionID]:
-            spam = re.split(r'(№|N)', link)
+            spam = re.split(r'№', link)
             number = numberPattern.search(spam[-1])
             years = yearPattern.findall(spam[0])
             if years and number:
