@@ -221,7 +221,7 @@ if __name__ == "__main__":
     # CollectHeaders()
     start_time = time.time()
     process_period("17.07.2018", "17.07.2018", showPicture=True,
-                   isNeedReloadHeaders=True)
+                   isNeedReloadHeaders=False)
     # start_process_with('33-П/2018', 2)
     print("--- {0} seconds ---".format(time.time() - start_time))
     input()
