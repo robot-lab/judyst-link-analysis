@@ -120,10 +120,10 @@ def process_period(firstDate, lastDate, graphOutFileName='graph.json',
     draw graph and show it to user.
     '''
 
-    if not(firstDate is date):
+    if not isinstance(firstDate, date):
         firstDate = parser.parse(firstDate, dayfirst=True).date()
 
-    if not(lastDate is date):
+    if not isinstance(lastDate, date):
         lastDate = parser.parse(lastDate, dayfirst=True).date()
 
     if (firstDate > lastDate):
@@ -218,6 +218,6 @@ if __name__ == "__main__":
     start_time = time.time()
     # process_period("17.07.2018", "17.07.2018", showPicture=True,
     #               isNeedReloadHeaders=False)
-    start_process_with('33-П/2018', 0)
+    start_process_with('33-П/2018', 8)
     print("--- {0} seconds ---".format(time.time() - start_time))
     print(1)

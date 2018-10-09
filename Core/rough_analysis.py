@@ -11,7 +11,7 @@ def get_rude_links(pathToTextFile):
     text = file.read()
     file.close()
     opinion = opinionPattern.search(text)
-    if opinion:
+    if opinion is not None:
         result = linkPattern.findall(text, endpos=opinion.start())
     else:
         result = linkPattern.findall(text)
