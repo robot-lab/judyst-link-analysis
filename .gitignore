@@ -1,3 +1,8 @@
+run.cmd
+#Decision Files
+Decision Files/*
+
+geckodriver.exe
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -102,3 +107,13 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# VS code
+.vscode
+
+#  test graph
+graph.json
+
+
+.DS_Store
+
