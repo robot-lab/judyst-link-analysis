@@ -107,7 +107,8 @@ def get_headers_between_dates(headers, firstDate, lastDate):
     for key in headers:
         if 'not unique' in headers[key]:
             continue
-        currdecisionDate = parser.parse(headers[key]['date']).date()
+        currdecisionDate = parser.parse(headers[key]['date'],
+                                        dayfirst=True).date()
         if (currdecisionDate >= firstDate and currdecisionDate <= lastDate):
             usingHeaders[key] = headers[key]
     return usingHeaders
@@ -220,8 +221,8 @@ if __name__ == "__main__":
     # LoadAndVisualize()
     # CollectHeaders()
     start_time = time.time()
-    process_period("17.07.2018", "17.07.2018", showPicture=True,
+    process_period("18.06.1980", "18.07.2020", showPicture=False,
                    isNeedReloadHeaders=False)
-    # start_process_with('33-П/2018', 2)
+    #  start_process_with('1671-О-Р/2018', 10)
     print("--- {0} seconds ---".format(time.time() - start_time))
-    input()
+    input('press any key to close...')

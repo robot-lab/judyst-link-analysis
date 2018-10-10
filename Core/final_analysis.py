@@ -27,8 +27,7 @@ def get_clean_links(collectedLinks, courtSiteContent):
                 while years:
                     gottenID = number[0].upper() + '/' + years.pop()
                     if gottenID in courtSiteContent:
-                        if gottenID not in checkedLinks[courtDecisionID]:
-                            checkedLinks[courtDecisionID].append(gottenID)
+                        checkedLinks[courtDecisionID].append(gottenID)
                         eggs = True
                         years.clear()
                 if not eggs:
@@ -45,7 +44,7 @@ def get_clean_links(collectedLinks, courtSiteContent):
 def get_link_graph(checkedLinks):
     '''
     Gets Link Graph, returning tuple (vertices = [],
-    edges = [(citing_decision_id, cited_decision_id), (),...]).
+    edges = [(citing_decision_id, cited_decision_id, weight), (),...]).
     argument: checked_links is a dictionary with clean links list
     as element and string with court decision ID (uid) as a key.
     '''
@@ -57,8 +56,9 @@ def get_link_graph(checkedLinks):
         if citingDecisionID in checkedLinks:
             for citedDecisionID in vertices:
                 if citedDecisionID in checkedLinks[citingDecisionID]:
-                    edges.append((citingDecisionID, citedDecisionID))
-                    # TO DO: add weight to the edges
+                    weight = checkedLinks[citingDecisionID]. \
+                            count(citedDecisionID)
+                    edges.append((citingDecisionID, citedDecisionID, weight))
     return (vertices, edges)
 
 if __name__ == '__main__':
