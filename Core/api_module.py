@@ -107,7 +107,8 @@ def get_headers_between_dates(headers, firstDate, lastDate):
     for key in headers:
         if 'not unique' in headers[key]:
             continue
-        currdecisionDate = parser.parse(headers[key]['date']).date()
+        currdecisionDate = parser.parse(headers[key]['date'],
+                                        dayfirst=True).date()
         if (currdecisionDate >= firstDate and currdecisionDate <= lastDate):
             usingHeaders[key] = headers[key]
     return usingHeaders
