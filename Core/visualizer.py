@@ -28,7 +28,7 @@ def visualize_link_graph(graph, nodeSize=2000, fontSize=9,
     for node in nodes:
         nxGraph.add_node(node, node_size=nodeSize)
 
-    nxGraph.add_edges_from(edges)
+    nxGraph.add_weighted_edges_from(edges)
 
     # drawing the graph
     plt.figure(figsize=pictureSize)
