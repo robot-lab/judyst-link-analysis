@@ -14,7 +14,7 @@ setup(
     ],
     dependency_links=[
         r'https://github.com/robot-lab/judyst-web-crawler/tree/secondIteration/dist/\
-        web_crawler-0.1-py3-none-any.whl'
+        web_crawler-0.1-py3-none-any.whl#egg=web_crawler==0.1'
     ],
     entry_points={
         'console_scripts':
