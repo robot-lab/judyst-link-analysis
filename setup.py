@@ -14,7 +14,12 @@ setup(
         'web_crawler==0.1'
     ],
     dependency_links=[
+<<<<<<< HEAD
         r'xз'
+=======
+        r'https://github.com/robot-lab/judyst-web-crawler/tree/secondIteration/dist/\
+        web_crawler-0.1-py3-none-any.whl#egg=web_crawler-0.1'
+>>>>>>> dfe8a09879614862548ddcfd5cdbfcd47669604a
     ],
     entry_points={
         'console_scripts':
