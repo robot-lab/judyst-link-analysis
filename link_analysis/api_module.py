@@ -13,8 +13,9 @@ import web_crawler.ksrf as web_crawler
 import os.path
 import json
 from datetime import date
-from dateutil import parser
 
+from dateutil import parser
+# License: Apache Software License, BSD License (Dual License)
 
 # methods---------------------------------------------------------------
 
