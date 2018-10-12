@@ -10,10 +10,11 @@ setup(
     install_requires=[
         'networkx==2.2',
         'matplotlib==3.0.0',
+        'python-dateutil==2.7.3',
         'web_crawler==0.1'
     ],
     dependency_links=[
-        'git+https://github.com/robot-lab/judyst-web-crawler.git@secondIteration#egg=web_crawler==0.1'  # DOESN'T WORK
+        r'xз'
     ],
     entry_points={
         'console_scripts':

@@ -7,8 +7,7 @@
 import link_analysis.final_analysis as final_analysis
 import link_analysis.rough_analysis as rough_analysis
 import link_analysis.visualizer as visualizer
-
-import web_crawler  # DON"T KNOW HO TO IMPORT http://qaru.site/questions/15428/importing-files-from-different-folder
+import web_crawler.ksrf as web_crawler
 
 # other imports---------------------------------------------------------
 import os.path
