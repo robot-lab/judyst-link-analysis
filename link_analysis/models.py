@@ -87,12 +87,17 @@ class RoughLink(Link):  # stub
 
 
 class CleanLink(Link):  # stub
-    pass
+    def __init__(self, headerFrom, headerTo, citationsNumber):
+        self.header_from = headerFrom
+        self.header_to = headerTo
+        self.citations_number = citationsNumber
 
 
 class HeadersFilter():
     """
-    Arguments contains conditions for which headers will be selected.
+    Arguments contains conditions for which headers will be selected.\n
+    firstDate and lastDate: ints that together implements
+    line segment [int, int]\n
     """
     def __init__(self, docTypes, firstDate, lastDate):
         if isinstance(docTypes, set):
@@ -128,11 +133,46 @@ class HeadersFilter():
 
 
 class GraphVerticesFilter(HeadersFilter):
+    """
+    Arguments contains conditions for which vertices will be selected.\n
+    firstDate and lastDate: ints that together implements
+    line segment [int, int]\n
+    indegreeBetweenNums and outdegreeBetweenNums: tuples that implements
+    own line segment [int, int]
+    """
     def __init__(self, docTypes, firstDate, lastDate,
                  indegreeBetweenNums, outdegreeBetweenNums):
         HeadersFilter.__init__(self, docTypes, firstDate, lastDate)
         self.indegree_between_nums = indegreeBetweenNums
         self.outdegree_between_nums = outdegreeBetweenNums
+
+
+class GraphEdgesFilter():
+    """
+    Arguments contains conditions for which edges will be selected.\n
+    weightsBetween: tuple that implements line segment [int, int]
+    """
+    def __init__(self, headersFilterFrom, headerFilterTo, weightsBetween):
+        self.headers_filter_from = headersFilterFrom
+        self.headers_filter_to = headerFilterTo
+        self.weights_between = weightsBetween
+
+    def check_edge(self, edge):
+        """edge: class CleanLink"""
+        if (self.headers_filter_from.check_header(edge.header_from) and
+            self.headers_filter_to.check_header(edge.header_to) and
+            (self.weights_between[0] <= edge.citations_number <=
+                self.weights_between[1])):
+            return True
+        else:
+            return False
+
+    def get_filtered_edges(self, edges):
+        result = []
+        for edge in edges:
+            if self.check_edge(edge):
+                result.append(edge)
+        return result
 
 
 class LinkGraph:
