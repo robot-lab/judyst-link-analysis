@@ -90,6 +90,43 @@ class CleanLink(Link):  # stub
     pass
 
 
+class HeadersFilter():
+    """
+    Arguments contains conditions for which headers will be selected.
+    """
+    def __init__(self, docTypes, firstDate, lastDate):
+        if isinstance(docTypes, set):
+            self.doc_types = docTypes
+        elif isinstance(docTypes, list):
+            self.doc_types = set(docTypes)
+        else:
+            self.doc_types = {docTypes}
+        if isinstance(firstDate, datetime.date):
+            self.first_date = firstDate
+        else:
+            raise TypeError("Variable 'firstDate' is not instance "
+                            "of datetime.date")
+        if isinstance(lastDate, datetime.date):
+            self.last_date = lastDate
+        else:
+            raise TypeError("Variable 'lastDate' is not instance "
+                            "of datetime.date")
+
+    def check_header(self, header):
+        if (header.document_type in self.doc_types and
+                self.first_date <= header.date <= self.last_date):
+            return True
+        else:
+            return False
+
+    def get_filtered_headers(self, headersDic):
+        resultDict = {}
+        for key in headersDic:
+            if self.check_header(headersDic[key]):
+                resultDict[key] = headersDic[key]
+        return resultDict
+
+
 class LinkGraph:
     def __init__(self):
         self.vertices = []  # list of Header class instances
