@@ -77,23 +77,82 @@ class DuplicateHeader(DocumentHeader):
             self.header_list.append(h)
 
 
-class Link:  # stub
-    def __init__(self, fromID):
-        self.from_id = fromID
-
-
-class RoughLink(Link):  # stub
-    pass
-
-
-class CleanLink(Link):  # stub
-    def __init__(self, headerFrom, headerTo, citationsNumber):
+class Link:
+    def __init__(self, headerFrom):
         self.header_from = headerFrom
-        self.header_to = headerTo
-        self.citations_number = citationsNumber
+
+    def __eq__(self, other):
+        return self.header_from == other.header_from
+
+    def __ne__(self, other):
+        return not self.header_from == other.header_from
 
     def __hash__(self):
-        return hash(tuple(hash(self.header_from), hash(self.header_to)))
+        return hash(self.header_from)
+
+
+class RoughLink(Link):
+    def __init__(self, headerFrom, context, body, position):
+        Link.__init__(self, headerFrom)
+        self.context = context
+        self.body = body
+        self.position = position
+
+    def __eq__(self, other):
+        return (Link.__eq__(self, other) and
+                self.context == other.context and
+                self.body == other.body and
+                self.position == other.position)
+
+    def __ne__(self, other):
+        return (not Link.__eq__(self, other) or
+                not self.context == other.context or
+                not self.body == other.body or
+                not self.position == other.position)
+
+    def __hash__(self):
+        return hash(tuple([Link.__hash__(self),
+                    hash(self.context),
+                    hash(self.body),
+                    hash(self.position)]))
+
+
+class CleanLink(Link):
+    """
+    positionsAndContexts: list of tuple(int, str)
+    """
+    def __init__(self, headerFrom, headerTo, citationsNumber,
+                 positionsAndContexts):
+        """
+        positionsAndContexts: tuple or list of tuples, "
+        or set of tuples(int, str)
+        """
+        Link.__init__(self, headerFrom)
+        self.header_to = headerTo
+        self.citations_number = citationsNumber
+        if isinstance(positionsAndContexts, list):
+            self.positions_and_contexts = positionsAndContexts
+        elif isinstance(positionsAndContexts, tuple):
+            self.positions_and_contexts = [positionsAndContexts]
+        else:
+            self.positions_and_contexts = list(positionsAndContexts)
+
+    def __eq__(self, other):
+        return (Link.__eq__(self, other) and
+                self.header_to == other.header_to and
+                self.citations_number == other.citations_number and
+                (cllctCntr(self.positions_and_contexts) ==
+                 cllctCntr(other.positions_and_contexts)))
+
+    def __ne__(self, other):
+        return (not Link.__eq__(self, other) or
+                not self.header_to == other.header_to or
+                not self.citations_number == other.citations_number or
+                not (cllctCntr(self.positions_and_contexts) ==
+                     cllctCntr(other.positions_and_contexts)))
+
+    def __hash__(self):
+        return hash(tuple([Link.__hash__(self), hash(self.header_to)]))
 
 
 class HeadersFilter():
@@ -130,6 +189,24 @@ class HeadersFilter():
         else:
             self.last_date = datetime.date.max
 
+    def __eq__(self, other):
+        return (self.doc_types == other.doc_types and
+                self.first_date == other.first_date and
+                self.last_date == other.last_date)
+
+    def __ne__(self, other):
+        return (not self.doc_types == other.doc_types or
+                not self.first_date == other.first_date or
+                not self.last_date == other.last_date)
+
+    def __hash__(self):
+        if self.doc_types is not None:
+            docTypeHash = hash(tuple(self.doc_types))
+        else:
+            docTypeHash = hash(None)
+        return hash(tuple([docTypeHash, hash(self.first_date),
+                    hash(self.last_date)]))
+
     def check_header(self, header):
         if ((self.doc_types is None or
              header.document_type in self.doc_types) and
@@ -139,6 +216,9 @@ class HeadersFilter():
             return False
 
     def get_filtered_headers(self, headersDic):
+        if (self.doc_types is None and self.first_date is None and
+                self.last_date is None):
+            return headersDic.copy()
         resultDict = {}
         for key in headersDic:
             if self.check_header(headersDic[key]):
@@ -160,6 +240,23 @@ class GraphVerticesFilter(HeadersFilter):
         self.indegree_between_nums = indegreeBetweenNums
         self.outdegree_between_nums = outdegreeBetweenNums
 
+    def __eq__(self, other):
+        return (HeadersFilter.__eq__(self, other) and
+                self.indegree_between_nums == other.indegree_between_nums and
+                self.outdegree_between_nums == other.outdegree_between_nums)
+
+    def __ne__(self, other):
+        return (not HeadersFilter.__eq__(self, other) or
+                not (self.indegree_between_nums ==
+                     other.indegree_between_nums) or
+                not (self.outdegree_between_nums ==
+                     other.outdegree_between_nums))
+
+    def __hash__(self):
+        return hash(tuple([HeadersFilter.__hash__(self),
+                    hash(self.indegree_between_nums),
+                    hash(self.outdegree_between_nums)]))
+
 
 class GraphEdgesFilter():
     """
@@ -171,6 +268,21 @@ class GraphEdgesFilter():
         self.headers_filter_from = headersFilterFrom
         self.headers_filter_to = headerFilterTo
         self.weights_between = weightsBetween
+
+    def __eq__(self, other):
+        return (self.headers_filter_from == other.headers_filter_from and
+                self.headers_filter_to == other.headers_filter_to and
+                self.weights_between == other.weights_between)
+
+    def __ne__(self, other):
+        return (not self.headers_filter_from == other.headers_filter_from or
+                not self.headers_filter_to == other.headers_filter_to or
+                not self.weights_between == other.weights_between)
+
+    def __hash__(self):
+        return hash(tuple([hash(self.headers_filter_from),
+                    hash(self.headers_filter_to),
+                    hash(self.weights_between)]))
 
     def check_edge(self, edge):
         """edge: class CleanLink"""
@@ -221,7 +333,7 @@ class LinkGraph:
         if True:  # DEBUG
             raise Exception('We finally needed the graph hash. It takes '
                             f'{time.time()-start_time} seconds')  # DEBUG
-        return hash(tuple(vHash, eHash))
+        return hash(tuple([vHash, eHash]))
 
     def add_vertex(self, vertex):
         if not isinstance(vertex, Header):
@@ -249,7 +361,7 @@ class LinkGraph:
                 indegree += 1
         return (indegree, outdegree)
 
-    def get_subgraph(self, verticesFilter=None, edgesFilter=None):  # stub
+    def get_subgraph(self, verticesFilter=None, edgesFilter=None):
         subgraph = LinkGraph()
         if verticesFilter is not None:
             if not isinstance(verticesFilter, GraphVerticesFilter):
@@ -291,6 +403,13 @@ class LinkGraph:
                         edge.header_to in subgraph.vertices):
                     subgraph.edges.add(edge)
         return subgraph
+
+    def get_vertices_as_IDs_list(self):
+        return list(v.id for v in self.vertices)
+
+    def get_edges_as_list_of_tuples(self):
+        return list((e.header_from.id, e.header_to.id, e.citations_number)
+                    for e in self.edges)
 
     def get_itearable_link_graph(self):  # stub
         pass
