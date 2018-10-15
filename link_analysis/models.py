@@ -92,6 +92,9 @@ class CleanLink(Link):  # stub
         self.header_to = headerTo
         self.citations_number = citationsNumber
 
+    def __hash__(self):
+        return hash(tuple(hash(self.header_from), hash(self.header_to)))
+
 
 class HeadersFilter():
     """
@@ -184,52 +187,53 @@ class GraphEdgesFilter():
             return False
 
     def get_filtered_edges(self, edges):
-        result = []
-        for edge in edges:
-            if self.check_edge(edge):
-                result.append(edge)
+        """
+        edges: list or set of instances of class CleanLink\n
+        returns set of instances of class CleanLink
+        """
+        result = {edge for edge in edges if self.check_edge(edge)}
         return result
 
 
 class LinkGraph:
     """
-    self.vertices: list of Header class instances\n
-    self.edges: list of CleanLink class instances
+    self.vertices: set of Header class instances\n
+    self.edges: set of CleanLink class instances
     """
     def __init__(self):
-        self.vertices = []
-        self.edges = []
+        self.vertices = set()
+        self.edges = set()
 
     def __eq__(self, other):
-        return (cllctCntr(self.edges) == cllctCntr(other.edges) and
-                cllctCntr(self.vertices) == cllctCntr(other.vertices))
+        return (self.vertices == other.vertices and
+                self.edges == other.edges)
 
     def __ne__(self, other):
-        return (
-            not cllctCntr(self.edges) == cllctCntr(other.edges) or
-            not cllctCntr(self.vertices) == cllctCntr(other.vertices))
+        return (not self.vertices == other.vertices or
+                not self.edges == other.edges)
 
     def __hash__(self):
-        sHash = hash(tuple(hash(h) for h in sorted(self.vertices,
-                                                   key=lambda x: x.id)))
-        sHash += hash(tuple(hash(cl) for cl in sorted(
-                                                    self.edges,
-                                                    key=lambda x: x.from_id)))
-        return sHash
+        import time  # DEBUG
+        start_time = time.time()  # DEBUG
+        vHash = hash(tuple(sorted(self.vertices, key=lambda h: hash(h))))
+        eHash = hash(tuple(sorted(self.edges, key=lambda e: hash(e))))
+        # It will be interesting to know:
+        if True:  # DEBUG
+            raise Exception('We finally needed the graph hash. It takes '
+                            f'{time.time()-start_time} seconds')  # DEBUG
+        return hash(tuple(vHash, eHash))
 
     def add_vertex(self, vertex):
         if not isinstance(vertex, Header):
             raise TypeError("Variable 'vertex' is not instance "
                             "of class Header")
-        if vertex not in self.vertices:
-            self.vertices.append(vertex)
+        self.vertices.add(vertex)
 
     def add_edge(self, edge):
         if not isinstance(edge, CleanLink):
             raise TypeError("Variable 'edge' is not instance "
                             "of class CleanLink")
-        if edge not in self.edges:
-            self.edges.append(edge)
+        self.edges.add(edge)
 
     def get_vertex_degrees(self, vertex):
         """
@@ -238,8 +242,12 @@ class LinkGraph:
         """
         indegree = 0
         outdegree = 0
-        # TO DO: counting of degrees
-        return "DO IT"
+        for edge in self.edges:
+            if hash(edge.header_from) == hash(vertex):
+                outdegree += 1
+            if hash(edge.header_to) == hash(vertex):
+                indegree += 1
+        return (indegree, outdegree)
 
     def get_subgraph(self, verticesFilter=None, edgesFilter=None):  # stub
         subgraph = LinkGraph()
@@ -253,22 +261,38 @@ class LinkGraph:
                 restEggs = False
                 if (verticesFilter.indegree_between_nums is not None or
                         verticesFilter.outdegree_between_nums is not None):
-                            degrees = self.get_vertex_degrees(vertex)
+                    degrees = self.get_vertex_degrees(vertex)
                 if (verticesFilter.indegree_between_nums is None or
                    (verticesFilter.indegree_between_nums[0] <= degrees[0] <=
                         verticesFilter.indegree_between_nums[1])):
-                            indegreeEggs = True
+                    indegreeEggs = True
                 if (verticesFilter.outdegree_between_nums is None or
                    (verticesFilter.outdegree_between_nums[0] <= degrees[1] <=
                         verticesFilter.outdegree_between_nums[1])):
-                            outdegreeEggs = True
+                    outdegreeEggs = True
                 if verticesFilter.check_header(vertex):
                     restEggs = True
                 if (indegreeEggs and outdegreeEggs and restEggs):
-                    subgraph.vertices.append(vertex)
-        # TO DO: choosing edges
+                    subgraph.vertices.add(vertex)
+        else:
+            subgraph.vertices = self.vertices.copy()
+        if edgesFilter is not None:
+            if not isinstance(edgesFilter, GraphEdgesFilter):
+                raise TypeError("Variable 'edgesFilter' is not instance "
+                                "of class GraphEdgesFilter")
+            for edge in self.edges:
+                if (edge.header_from in subgraph.vertices and
+                    edge.header_to in subgraph.vertices and
+                        edgesFilter.check_edge(edge)):
+                    subgraph.edges.add(edge)
+        else:
+            for edge in self.edges:
+                if (edge.header_from in subgraph.vertices and
+                        edge.header_to in subgraph.vertices):
+                    subgraph.edges.add(edge)
+        return subgraph
 
-    def get_itearable_lin_graph(self):  # stub
+    def get_itearable_link_graph(self):  # stub
         pass
 
 
@@ -277,23 +301,25 @@ class IterableLinkGraph(LinkGraph):  # stub
 
 
 if __name__ == "__main__":
-    date = datetime.date(2018, 12, 11)
-    h1 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-                "https://goto.ru", "path-to")
-    h2 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-                "https://goto.ru")
-    h3 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-                "https://goto.ru")
-    h4 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-                "https://goto.ru")
-    h5 = DuplicateHeader("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-                         "https://goto.ru")
-    h5.append("КСРФ/О-О", "Заголовк", datetime.date(1990, 1, 2),
-              "https://goto.ru")
-    h6 = DuplicateHeader("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-                         "https://goto.ru")
-    a = LinkGraph()
-    b = LinkGraph()
-    a.add_vertex(h2)
-    b.add_vertex(h3)
+    # date = datetime.date(2018, 12, 11)
+    # h1 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
+    #             "https://goto.ru", "path-to")
+    # h2 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
+    #             "https://goto.ru")
+    # h3 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
+    #             "https://goto.ru")
+    # h4 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
+    #             "https://goto.ru")
+    # h5 = DuplicateHeader("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
+    #                      "https://goto.ru")
+    # h5.append("КСРФ/О-О", "Заголовк", datetime.date(1990, 1, 2),
+    #           "https://goto.ru")
+    # h6 = DuplicateHeader("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
+    #                      "https://goto.ru")
+    # a = LinkGraph()
+    # b = LinkGraph()
+    # a.add_vertex(h2)
+    # b.add_vertex(h3)
+    A = LinkGraph()
+    # B = {A:1}
     input('press any key...')
