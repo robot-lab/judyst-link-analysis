@@ -127,6 +127,14 @@ class HeadersFilter():
         return resultDict
 
 
+class GraphVerticesFilter(HeadersFilter):
+    def __init__(self, docTypes, firstDate, lastDate,
+                 indegreeBetweenNums, outdegreeBetweenNums):
+        HeadersFilter.__init__(self, docTypes, firstDate, lastDate)
+        self.indegree_between_nums = indegreeBetweenNums
+        self.outdegree_between_nums = outdegreeBetweenNums
+
+
 class LinkGraph:
     def __init__(self):
         self.vertices = []  # list of Header class instances
