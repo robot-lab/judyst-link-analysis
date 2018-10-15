@@ -99,26 +99,37 @@ class HeadersFilter():
     firstDate and lastDate: ints that together implements
     line segment [int, int]\n
     """
-    def __init__(self, docTypes, firstDate, lastDate):
-        if isinstance(docTypes, set):
-            self.doc_types = docTypes
-        elif isinstance(docTypes, list):
-            self.doc_types = set(docTypes)
+    def __init__(self, docTypes=None, firstDate=None, lastDate=None):
+
+        if docTypes is not None:
+            if isinstance(docTypes, set):
+                self.doc_types = docTypes
+            elif isinstance(docTypes, list):
+                self.doc_types = set(docTypes)
+            else:
+                self.doc_types = {docTypes}
+
+        if firstDate is not None:
+            if isinstance(firstDate, datetime.date):
+                self.first_date = firstDate
+            else:
+                raise TypeError("Variable 'firstDate' is not instance "
+                                "of datetime.date")
         else:
-            self.doc_types = {docTypes}
-        if isinstance(firstDate, datetime.date):
-            self.first_date = firstDate
+            self.first_date = datetime.date.min
+
+        if lastDate is not None:
+            if isinstance(lastDate, datetime.date):
+                self.last_date = lastDate
+            else:
+                raise TypeError("Variable 'lastDate' is not instance "
+                                "of datetime.date")
         else:
-            raise TypeError("Variable 'firstDate' is not instance "
-                            "of datetime.date")
-        if isinstance(lastDate, datetime.date):
-            self.last_date = lastDate
-        else:
-            raise TypeError("Variable 'lastDate' is not instance "
-                            "of datetime.date")
+            self.last_date = datetime.date.max
 
     def check_header(self, header):
-        if (header.document_type in self.doc_types and
+        if ((self.doc_types is None or
+             header.document_type in self.doc_types) and
                 self.first_date <= header.date <= self.last_date):
             return True
         else:
@@ -140,8 +151,8 @@ class GraphVerticesFilter(HeadersFilter):
     indegreeBetweenNums and outdegreeBetweenNums: tuples that implements
     own line segment [int, int]
     """
-    def __init__(self, docTypes, firstDate, lastDate,
-                 indegreeBetweenNums, outdegreeBetweenNums):
+    def __init__(self, docTypes=None, firstDate=None, lastDate=None,
+                 indegreeBetweenNums=None, outdegreeBetweenNums=None):
         HeadersFilter.__init__(self, docTypes, firstDate, lastDate)
         self.indegree_between_nums = indegreeBetweenNums
         self.outdegree_between_nums = outdegreeBetweenNums
@@ -152,17 +163,22 @@ class GraphEdgesFilter():
     Arguments contains conditions for which edges will be selected.\n
     weightsBetween: tuple that implements line segment [int, int]
     """
-    def __init__(self, headersFilterFrom, headerFilterTo, weightsBetween):
+    def __init__(self, headersFilterFrom=None, headerFilterTo=None,
+                 weightsBetween=None):
         self.headers_filter_from = headersFilterFrom
         self.headers_filter_to = headerFilterTo
         self.weights_between = weightsBetween
 
     def check_edge(self, edge):
         """edge: class CleanLink"""
-        if (self.headers_filter_from.check_header(edge.header_from) and
-            self.headers_filter_to.check_header(edge.header_to) and
-            (self.weights_between[0] <= edge.citations_number <=
-                self.weights_between[1])):
+        if ((self.headers_filter_from is None or
+             self.headers_filter_from.check_header(edge.header_from)
+             ) and
+            (self.headers_filter_to is None or
+             self.headers_filter_to.check_header(edge.header_to)
+             ) and
+            (self.weights_between is None or (self.weights_between[0] <=
+             edge.citations_number <= self.weights_between[1]))):
             return True
         else:
             return False
@@ -176,9 +192,13 @@ class GraphEdgesFilter():
 
 
 class LinkGraph:
+    """
+    self.vertices: list of Header class instances\n
+    self.edges: list of CleanLink class instances
+    """
     def __init__(self):
-        self.vertices = []  # list of Header class instances
-        self.edges = []  # list of CleaLink class instances
+        self.vertices = []
+        self.edges = []
 
     def __eq__(self, other):
         return (cllctCntr(self.edges) == cllctCntr(other.edges) and
@@ -211,8 +231,42 @@ class LinkGraph:
         if edge not in self.edges:
             self.edges.append(edge)
 
-    def get_subgraph(self, headerFilter, edgeFilter):  # stub
-        pass
+    def get_vertex_degrees(self, vertex):
+        """
+        vertex: class Header\n
+        returns tuple degrees=(indegree, outdegree)
+        """
+        indegree = 0
+        outdegree = 0
+        # TO DO: counting of degrees
+        return "DO IT"
+
+    def get_subgraph(self, verticesFilter=None, edgesFilter=None):  # stub
+        subgraph = LinkGraph()
+        if verticesFilter is not None:
+            if not isinstance(verticesFilter, GraphVerticesFilter):
+                raise TypeError("Variable 'verticesFilter' is not instance "
+                                "of class GraphVerticesFilter")
+            for vertex in self.vertices:
+                indegreeEggs = False
+                outdegreeEggs = False
+                restEggs = False
+                if (verticesFilter.indegree_between_nums is not None or
+                        verticesFilter.outdegree_between_nums is not None):
+                            degrees = self.get_vertex_degrees(vertex)
+                if (verticesFilter.indegree_between_nums is None or
+                   (verticesFilter.indegree_between_nums[0] <= degrees[0] <=
+                        verticesFilter.indegree_between_nums[1])):
+                            indegreeEggs = True
+                if (verticesFilter.outdegree_between_nums is None or
+                   (verticesFilter.outdegree_between_nums[0] <= degrees[1] <=
+                        verticesFilter.outdegree_between_nums[1])):
+                            outdegreeEggs = True
+                if verticesFilter.check_header(vertex):
+                    restEggs = True
+                if (indegreeEggs and outdegreeEggs and restEggs):
+                    subgraph.vertices.append(vertex)
+        # TO DO: choosing edges
 
     def get_itearable_lin_graph(self):  # stub
         pass
