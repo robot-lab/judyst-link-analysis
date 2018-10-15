@@ -1,4 +1,5 @@
 import datetime
+from collections import Counter as cllctCntr
 
 
 class DocumentHeader:
@@ -16,17 +17,17 @@ class DocumentHeader:
 
 
 class Header(DocumentHeader):
-    def __init__(self, id, document_type, title, date, source_url,
-                 text_location=None):
+    def __init__(self, id, docType, title, date, sourceUrl,
+                 textLocation=None):
         DocumentHeader.__init__(self, id)
-        self.document_type = document_type
+        self.document_type = docType
         self.title = title
         if isinstance(date, datetime.date):
             self.date = date
         else:
             raise TypeError("Variable 'date' is not instance of datetime.date")
-        self.source_url = source_url
-        self.text_location = text_location
+        self.source_url = sourceUrl
+        self.text_location = textLocation
 
     def __eq__(self, other):
         return (DocumentHeader.__eq__(self, other) and
@@ -49,29 +50,91 @@ class Header(DocumentHeader):
 
 
 class DuplicateHeader(DocumentHeader):
-    def __init__(self, id, document_type, title, date, source_url,
-                 text_location=None):
+    def __init__(self, id, docType, title, date, sourceUrl,
+                 textLocation=None):
         DocumentHeader.__init__(self, id)
-        self.header_list = [Header(id, document_type, title,
-                            date, source_url, text_location=None)]
+        self.header_list = [Header(id, docType, title,
+                            date, sourceUrl, textLocation=None)]
 
     def __eq__(self, other):
-        return (DocumentHeader.__eq__(self, other) and
-                set(self.header_list) == set(other.header_list))
+        return (
+            DocumentHeader.__eq__(self, other) and
+            cllctCntr(self.header_list) == cllctCntr(other.header_list))
 
     def __ne__(self, other):
-        return (not DocumentHeader.__eq__(self, other) or
-                not set(self.header_list) == set(other.header_list))
+        return (
+            not DocumentHeader.__eq__(self, other) or
+            not cllctCntr(self.header_list) == cllctCntr(other.header_list))
 
     def __hash__(self):
         return DocumentHeader.__hash__(self)
 
-    def append(self, document_type, title, date, source_url,
-               text_location=None):
-        h = Header(self.id, document_type, title, date, source_url,
-                   text_location)
+    def append(self, docType, title, date, sourceUrl,
+               textLocation=None):
+        h = Header(self.id, docType, title, date, sourceUrl,
+                   textLocation)
         if h not in self.header_list:
             self.header_list.append(h)
+
+
+class Link:  # stub
+    def __init__(self, fromID):
+        self.from_id = fromID
+
+
+class RoughLink(Link):  # stub
+    pass
+
+
+class CleanLink(Link):  # stub
+    pass
+
+
+class LinkGraph:
+    def __init__(self):
+        self.vertices = []  # list of Header class instances
+        self.edges = []  # list of CleaLink class instances
+
+    def __eq__(self, other):
+        return (cllctCntr(self.edges) == cllctCntr(other.edges) and
+                cllctCntr(self.vertices) == cllctCntr(other.vertices))
+
+    def __ne__(self, other):
+        return (
+            not cllctCntr(self.edges) == cllctCntr(other.edges) or
+            not cllctCntr(self.vertices) == cllctCntr(other.vertices))
+
+    def __hash__(self):
+        sHash = hash(tuple(hash(h) for h in sorted(self.vertices,
+                                                   key=lambda x: x.id)))
+        sHash += hash(tuple(hash(cl) for cl in sorted(
+                                                    self.edges,
+                                                    key=lambda x: x.from_id)))
+        return sHash
+
+    def add_vertex(self, vertex):
+        if not isinstance(vertex, Header):
+            raise TypeError("Variable 'vertex' is not instance "
+                            "of class Header")
+        if vertex not in self.vertices:
+            self.vertices.append(vertex)
+
+    def add_edge(self, edge):
+        if not isinstance(edge, CleanLink):
+            raise TypeError("Variable 'edge' is not instance "
+                            "of class CleanLink")
+        if edge not in self.edges:
+            self.edges.append(edge)
+
+    def get_subgraph(self, headerFilter, edgeFilter):  # stub
+        pass
+
+    def get_itearable_lin_graph(self):  # stub
+        pass
+
+
+class IterableLinkGraph(LinkGraph):  # stub
+    pass
 
 
 if __name__ == "__main__":
@@ -90,6 +153,8 @@ if __name__ == "__main__":
               "https://goto.ru")
     h6 = DuplicateHeader("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
                          "https://goto.ru")
-    print(h3 == h2)
-    print(h2 != h3)
+    a = LinkGraph()
+    b = LinkGraph()
+    a.add_vertex(h2)
+    b.add_vertex(h3)
     input('press any key...')
