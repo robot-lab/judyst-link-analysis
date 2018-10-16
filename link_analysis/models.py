@@ -161,30 +161,25 @@ class HeadersFilter():
     Arguments contains conditions for which headers will be selected.\n
     firstDate and lastDate: instances of datetime.date
     """
-    def __init__(self, docTypes=None, firstDate=None, lastDate=None):
+    def __init__(self, docTypes=None, firstDate=datetime.date.min,
+                 lastDate=datetime.date.max):
 
         if hasattr(docTypes, '__iter__'):
             self.doc_types = set(docTypes)
         else:
             self.doc_types = set()
 
-        if firstDate is not None:
-            if isinstance(firstDate, datetime.date):
-                self.first_date = firstDate
-            else:
-                raise TypeError("Variable 'firstDate' is not instance "
-                                "of datetime.date")
+        if isinstance(firstDate, datetime.date):
+            self.first_date = firstDate
         else:
-            self.first_date = datetime.date.min
+            raise TypeError("Variable 'firstDate' is not instance "
+                            "of datetime.date")
 
-        if lastDate is not None:
-            if isinstance(lastDate, datetime.date):
-                self.last_date = lastDate
-            else:
-                raise TypeError("Variable 'lastDate' is not instance "
-                                "of datetime.date")
+        if isinstance(lastDate, datetime.date):
+            self.last_date = lastDate
         else:
-            self.last_date = datetime.date.max
+            raise TypeError("Variable 'lastDate' is not instance "
+                            "of datetime.date")
 
     def __eq__(self, other):
         return (self.doc_types == other.doc_types and
@@ -210,7 +205,7 @@ class HeadersFilter():
     def get_filtered_headers(self, headersDict):
         if (self.doc_types is None and self.first_date == datetime.date.min and
                 self.last_date == datetime.date.max):
-            return headersDict.copy()
+            return headersDict
         resultDict = {}
         for key in headersDict:
             if self.check_header(headersDict[key]):
@@ -225,8 +220,9 @@ class GraphNodesFilter(HeadersFilter):
     indegreeRange and outdegreeRange: tuples that implements
     own line segment [int, int]
     """
-    def __init__(self, docTypes=None, firstDate=None, lastDate=None,
-                 indegreeRange=None, outdegreeRange=None):
+    def __init__(self, docTypes=None, firstDate=datetime.date.min,
+                 lastDate=datetime.date.max, indegreeRange=None,
+                 outdegreeRange=None):
         super().__init__(docTypes, firstDate, lastDate)
         self.indegree_range = indegreeRange
         self.outdegree_range = outdegreeRange
@@ -347,7 +343,12 @@ class LinkGraph:
         return (indegree, outdegree)
 
     def get_subgraph(self, nodesFilter=None, edgesFilter=None):
+
+        if (nodesFilter is None and edgesFilter is None):
+            return self
+
         subgraph = LinkGraph()
+        # filters nodes
         if nodesFilter is not None:
             if not isinstance(nodesFilter, GraphNodesFilter):
                 raise TypeError("Variable 'nodesFilter' is not instance "
@@ -372,16 +373,31 @@ class LinkGraph:
                 if (indegreeEggs and outdegreeEggs and restEggs):
                     subgraph.nodes.add(node)
         else:
-            subgraph.nodes = self.nodes.copy()
+            subgraph.nodes = self.nodes
+
+        # filters edges
         if edgesFilter is not None:
             if not isinstance(edgesFilter, GraphEdgesFilter):
                 raise TypeError("Variable 'edgesFilter' is not instance "
                                 "of class GraphEdgesFilter")
-            for edge in self.edges:
-                if (edge.header_from in subgraph.nodes and
-                    edge.header_to in subgraph.nodes and
-                        edgesFilter.check_edge(edge)):
-                    subgraph.edges.add(edge)
+
+            # If nodes are filtered, we must check the edges
+            # associated with them and then filter them,
+            if nodesFilter is not None:
+                for edge in self.edges:
+                    if (edge.header_from in subgraph.nodes and
+                        edge.header_to in subgraph.nodes and
+                            edgesFilter.check_edge(edge)):
+                        subgraph.edges.add(edge)
+
+            # else just filter the edges
+            else:
+                for edge in self.edges:
+                    if edgesFilter.check_edge(edge):
+                        subgraph.edges.add(edge)
+
+        # We need to check edges after filtering of nodes
+        # even if edges are not filtered
         else:
             for edge in self.edges:
                 if (edge.header_from in subgraph.nodes and
