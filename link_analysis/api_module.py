@@ -8,10 +8,12 @@ import link_analysis.final_analysis as final_analysis
 import link_analysis.rough_analysis as rough_analysis
 import link_analysis.visualizer as visualizer
 import web_crawler.ksrf as web_crawler
+from link_analysis.models import Header, HeadersFilter
 
 # other imports---------------------------------------------------------
 import os.path
 import json
+import pickle
 from datetime import date
 
 from dateutil import parser
@@ -22,20 +24,21 @@ from dateutil import parser
 
 # internal methods------------------------------------------------------
 DECISIONS_FOLDER_NAME = "Decision files"
-HEADERS_FILE_NAME = os.path.join(DECISIONS_FOLDER_NAME, 'DecisionHeaders.json')
+HEADERS_FILE_NAME = os.path.join(DECISIONS_FOLDER_NAME,
+                                 'DecisionHeaders.pickle')
 
 
 def save_headers(headers, filename):
     '''
-    Pack the heareds with json and store it to file of the filename
+    Pack the headers with pickle and store it to file of the filename
     '''
     if not os.path.exists(os.path.dirname(filename)):
         os.mkdir(os.path.dirname(filename))
-    decisionsHeadersFile = open(filename, 'w')
-    decisionsHeadersFile.write(json.dumps(headers))
-    decisionsHeadersFile.close()
+    with open(filename, 'wb') as decisionsHeadersFile:
+        pickle.dump(headers, decisionsHeadersFile)
 
 
+# TO DO: remake format returning by web_crawler
 def collect_headers(HEADERS_FILE_NAME, countOfPage=3):
     headers = web_crawler.get_resolution_headers(countOfPage)
     save_headers(headers, HEADERS_FILE_NAME)
@@ -45,41 +48,43 @@ def collect_headers(HEADERS_FILE_NAME, countOfPage=3):
 def load_headers(filename):
     '''
     Load the stored earlier headers of the documents,
-    unpack it with json and return as
-    {uid:{'date':'date', title:'title', url:'web uri or filename'}}
+    unpack it with pickle and return as
+    {uid: class Header, uid: class DuplicateHeader, ...}
 
     '''
-    headersFile = open(filename, 'r')
-    text = headersFile.read()
-    headersFile.close()
-    return json.loads(text)
+    with open(filename, 'rb') as decisionsHeadersFile:
+        headersDict = pickle.load(decisionsHeadersFile, encoding='UTF-8')
+    return headersDict
 
 
 def check_files_for_headers(headers, folder):
     '''
     Find files of the documents of the given headers
-    and replace the header 'url':'web uri' by 'url':'filename' when
-    the file have finded.
+    and add path to file in Header.text_location if file was found
     '''
     for uid in headers:
         filename = web_crawler.get_decision_filename_by_uid(uid, folder,
                                                             ext='txt')
         if (os.path.exists(filename)):
-            headers[uid]['path to text file'] = filename
+            headers[uid].text_location = filename
 
 
 def load_files_for_headers(headers, folder):
     for key in headers:
-        if 'path to text file' not in headers[key] \
-                or not os.path.exists(headers[key]['path to text file']):
+        if (isinstance(headers[key], Header) and
+            (headers[key].text_location is None or
+                not os.path.exists(headers[key].text_location))):
+
+            # TO DO: remake loading by web_crawler
             web_crawler.load_resolution_texts({key: headers[key]}, folder)
 
 
+# TO DO: Rewrite function after rewriting final_analysis module
 def load_graph(file_name):
     '''
     Load the stored earlier graph from the given filename,
     unpack it with JSON and return as
-    [[nodes], [edges: [from, to]]
+    [[nodes], [edges: [from, to, weight]]
     '''
     graphfile = open(file_name)
     graph = json.loads(graphfile.read())
@@ -87,6 +92,7 @@ def load_graph(file_name):
     return graph
 
 
+# TO DO: Rewrite function after rewriting final_analysis module
 def load_and_visualize(filename='graph.json'):
     '''
     Load the stored earlier graph from the given filename and
@@ -103,18 +109,17 @@ def get_headers_between_dates(headers, firstDate, lastDate):
     And earlier than the last date.
     '''
     usingHeaders = {}
+    hFilter = HeadersFilter(firstDate=firstDate, lastDate=lastDate)
     for key in headers:
-        if 'not unique' in headers[key]:
-            continue
-        currdecisionDate = parser.parse(headers[key]['date'],
-                                        dayfirst=True).date()
-        if (currdecisionDate >= firstDate and currdecisionDate <= lastDate):
+        if (isinstance(headers[key], Header) and
+                hFilter.check_header(headers[key])):
             usingHeaders[key] = headers[key]
     return usingHeaders
 
 # api methods-----------------------------------------------------------
 
 
+# TO DO: Rewrite all functions below this line.
 def process_period(firstDate, lastDate, graphOutFileName='graph.json',
                    showPicture=True, isNeedReloadHeaders=False):
     '''
@@ -150,10 +155,11 @@ def process_period(firstDate, lastDate, graphOutFileName='graph.json',
 
     save_headers(decisionsHeaders, HEADERS_FILE_NAME)
 
-    rudeLinksDict = \
+    roughLinksDict = \
         rough_analysis.get_rough_links_for_multiple_docs(usingHeaders)
 
-    links = final_analysis.get_clean_links(rudeLinksDict,
+    # CONTINUE FROM THIS
+    links = final_analysis.get_clean_links(roughLinksDict,
                                            decisionsHeaders)[0]
 
     commonGraph = final_analysis.get_link_graph(links)
@@ -211,3 +217,7 @@ def start_process_with(uid, depth, headers=None,
                                         visualizerParameters[1],
                                         visualizerParameters[2])
 # end of start_process_with---------------------------------------------
+
+if __name__ == "__main__":
+    process_period("18.06.1980", "18.07.2020", showPicture=False,
+                   isNeedReloadHeaders=False)

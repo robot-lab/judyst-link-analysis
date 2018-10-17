@@ -2,19 +2,34 @@ import re
 import sys
 from link_analysis.models import Header, RoughLink
 
+# link pattern main part
+lpMP = (r".*?\sот[\s\d]+?(?:(?:января|февраля|марта|апреля|мая|июня|июля|"
+        r"августа|сентября|октября|ноября|декабря)+?[\s\d]+?года|\d{2}\."
+        r"\d{2}\.\d{4})[\s\d]+?(№|N)[\s\d]+?[-\w/]*.*?")
+# link pattern prefix #1
+lpPRF1 = r"(?<=\.\s)\s*?[А-Я]"
+# link pattern postfix #1
+lpPSF1 = r"(?=\.\s[А-Я])"
+# link pattern prefix #2
+lpPRF2 = r"(?<=^)\s*?[А-Яа-я]"
+# link pattern postfix #2
+lpPSF2 = r"(?=\.$)"
 linkPattern = re.compile(
-    r"(?<=\.\s)\s*?[А-Я][^\.!?]*?\sот[\s\d]+?(?:(?:января|февраля|марта|апреля"
-    r"мая|июня|июля|августа|сентября|октября|ноября|декабря)+?[\s\d]+?года|"
-    r"\d{2}\.\d{2}\.\d{4})[\s\d]+?(№|N)[\s\d]+?[-\w/]*[^\.!?]*?\..*?"
-    r"(?=\s[А-Я])")
+    f"(?:{lpPRF1+lpMP+lpPSF1}|{lpPRF1+lpMP+lpPSF2}|{lpPRF2+lpMP+lpPSF1}|"
+    f"{lpPRF2+lpMP+lpPSF2})", re.VERBOSE)
+
+# pattern for removing of redundant leading sentences
+reductionPattern = re.compile(r"(?:[А-Я].*[^А-Я]\.\s*(?=[А-Я])|^[А-Яа-я]"
+                              r".*[^А-Я]\.\s*(?=[А-Я]))")
+
+# same part of two regular expressions below
+samePart = (r"т[\s\d]+?(?:(?:января|февраля|марта|апреля|мая|июня|июля|"
+            r"августа|сентября|октября|ноября|декабря)+?[\s\d]+?года|\d{2}"
+            r"\.\d{2}\.\d{4})(?=\s)")
 splitPattern = re.compile(
-    r"(?i)о(?=т[\s\d]+?(?:(?:января|февраля|марта|апреля|мая|июня|июля|августа"
-    r"|сентября|октября|ноября|декабря)+?[\s\d]+?года|\d{2}\.\d{2}\.\d{4})"
-    r"(?=\s))")
+    f"(?i)о(?={samePart})")
 datePattern = re.compile(
-    r"(?i)т[\s\d]+?(?:(?:января|февраля|марта|апреля|мая|июня|июля|августа"
-    r"|сентября|октября|ноября|декабря)+?[\s\d]+?года|\d{2}\.\d{2}\.\d{4})"
-    r"(?=\s)")
+    f"(?i){samePart}")
 numberPattern = re.compile(r'(?:№|N)[\s\d]+[-\w/]*')
 opinionPattern = re.compile(r'(?i)мнение\s+судьи\s+конституционного')
 
@@ -38,7 +53,7 @@ def get_rough_links(header: Header):
         matchObjects = linkPattern.finditer(text)
     for match in matchObjects:
         linksForSplit = match[0]
-        context = linksForSplit
+        context = reductionPattern.sub('', linksForSplit) + '.'
         position = match.start(0) + len(splitPattern.split(linksForSplit,
                                         maxsplit=1)[0]) + 1
         splitedLinksForDifferentYears = splitPattern.split(linksForSplit)[1:]
@@ -85,18 +100,18 @@ if (__name__ == '__main__'):
     from datetime import date
     h1 = Header('2028-О/2018', 'КС_РФ/О', 'some title1', date(2018, 7, 17),
                 'http://doc.ksrf.ru/decision/KSRFDecision353855.pdf',
-                r'Decision files\2028-О_2018.txt')
+                r'Decision files\КС_РФ_2028-О_2018.txt')
     h2 = Header('36-П/2018', 'КС_РФ/П', 'some title2', date(2018, 10, 15),
                 'http://doc.ksrf.ru/decision/KSRFDecision357397.pdf')
     h3 = Header('33-П/2018', 'КС_РФ/П', 'some title3', date(2018, 7, 18),
                 'http://doc.ksrf.ru/decision/KSRFDecision343519.pdf',
-                r'Decision files\33-П_2018.txt')
+                r'Decision files\КС_РФ_33-П_2018.txt')
     h4 = Header('30-П/2018', 'КС_РФ/П', 'some title4', date(2018, 7, 10),
                 'http://doc.ksrf.ru/decision/KSRFDecision342302.pdf',
                 r'path that not exist')
     h5 = Header('841-О/2018', 'КС_РФ/О', 'some title5', date(2018, 4, 12),
                 'http://doc.ksrf.ru/decision/KSRFDecision332975.pdf',
-                r'Decision files\841-О_2018.txt')
+                r'Decision files\КС_РФ_841-О_2018.txt')
     headers = {'2028-О/2018': h1, '36-П/2018': h2, '33-П/2018': h3,
                '30-П/2018': h4, '841-О/2018': h5}
     roughLinks = get_rough_links_for_multiple_docs(headers)
