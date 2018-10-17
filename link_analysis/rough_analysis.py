@@ -3,9 +3,10 @@ import sys
 from link_analysis.models import Header, RoughLink
 
 linkPattern = re.compile(
-    r"(?<=\.\s)\s*?[А-Я][^\.!?]*?\sот[\s\d]+?(?:(?:января|февраля|марта|апреля|мая|"
-    r"июня|июля|августа|сентября|октября|ноября|декабря)+?[\s\d]+?года|\d{2}"
-    r"\.\d{2}\.\d{4})[\s\d]+?(№|N)[\s\d]+?[-\w/]*[^\.!?]*?\..*?(?=\s[А-Я])")
+    r"(?<=\.\s)\s*?[А-Я][^\.!?]*?\sот[\s\d]+?(?:(?:января|февраля|марта|апреля"
+    r"мая|июня|июля|августа|сентября|октября|ноября|декабря)+?[\s\d]+?года|"
+    r"\d{2}\.\d{2}\.\d{4})[\s\d]+?(№|N)[\s\d]+?[-\w/]*[^\.!?]*?\..*?"
+    r"(?=\s[А-Я])")
 splitPattern = re.compile(
     r"(?i)о(?=т[\s\d]+?(?:(?:января|февраля|марта|апреля|мая|июня|июля|августа"
     r"|сентября|октября|ноября|декабря)+?[\s\d]+?года|\d{2}\.\d{2}\.\d{4})"
@@ -38,7 +39,8 @@ def get_rough_links(header: Header):
     for match in matchObjects:
         linksForSplit = match[0]
         context = linksForSplit
-        position = match.start(0) + len(splitPattern.split(linksForSplit, maxsplit=1)[0]) + 1
+        position = match.start(0) + len(splitPattern.split(linksForSplit,
+                                        maxsplit=1)[0]) + 1
         splitedLinksForDifferentYears = splitPattern.split(linksForSplit)[1:]
         for oneYearLinks in splitedLinksForDifferentYears:
             date = datePattern.search(oneYearLinks)[0]

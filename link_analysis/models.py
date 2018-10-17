@@ -44,11 +44,23 @@ class Header(DocumentHeader):
 
 
 class DuplicateHeader(DocumentHeader):
-    def __init__(self, id, docType, title, date, sourceUrl,
+    """
+    You must specify either argument 'id' only or
+    all arguments except optional 'textLocation'
+    """
+    def __init__(self, id, docType=None, title=None, date=None, sourceUrl=None,
                  textLocation=None):
         super().__init__(id)
-        self.header_list = [Header(id, docType, title,
-                            date, sourceUrl, textLocation)]
+        if (docType is None and title is None and date is None and
+                sourceUrl is None and textLocation is None):
+            self.header_list = []
+        elif (docType is not None and title is not None and
+              date is not None and sourceUrl is not None):
+            self.header_list = [Header(id, docType, title,
+                                date, sourceUrl, textLocation)]
+        else:
+            raise ValueError("You must specify either argument 'id' only or "
+                             "all arguments except optional 'textLocation'")
 
     def __eq__(self, other):
         return (super().__eq__(other) and

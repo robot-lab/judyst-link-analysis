@@ -151,7 +151,7 @@ def process_period(firstDate, lastDate, graphOutFileName='graph.json',
     save_headers(decisionsHeaders, HEADERS_FILE_NAME)
 
     rudeLinksDict = \
-        rough_analysis.get_rude_links_for_multiple_docs(usingHeaders)
+        rough_analysis.get_rough_links_for_multiple_docs(usingHeaders)
 
     links = final_analysis.get_clean_links(rudeLinksDict,
                                            decisionsHeaders)[0]
@@ -192,7 +192,7 @@ def start_process_with(uid, depth, headers=None,
     allLinks = {uid: []}
     while depth > 0 and len(toProcess) > 0:
         depth -= 1
-        rude = rough_analysis.get_rude_links_for_multiple_docs(toProcess)
+        rude = rough_analysis.get_rough_links_for_multiple_docs(toProcess)
         clean = final_analysis.get_clean_links(rude, headers)[0]
         allLinks.update(clean)
         processed.update(toProcess)
