@@ -18,7 +18,7 @@ class DocumentHeader:
 
 class Header(DocumentHeader):
     def __init__(self, id, docType, title, date, sourceUrl,
-                 textLocation=None):
+                 text_location=None):
         super().__init__(id)
         self.document_type = docType
         self.title = title
@@ -27,7 +27,7 @@ class Header(DocumentHeader):
         else:
             raise TypeError("Variable 'date' is not instance of datetime.date")
         self.source_url = sourceUrl
-        self.text_location = textLocation
+        self.text_location = text_location
 
     def __eq__(self, other):
         return (super().__eq__(self) and

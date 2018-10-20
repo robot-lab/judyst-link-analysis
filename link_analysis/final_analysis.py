@@ -1,4 +1,5 @@
 import re
+from link_analysis.models import LinkGraph
 
 yearPattern = re.compile(r'(?<=\s)\d{4}(?=\s)')
 numberPattern = re.compile(r'\d+(-[А-Яа-я]+)+')
@@ -48,6 +49,7 @@ def get_link_graph(checkedLinks):
     argument: checked_links is a dictionary with clean links list
     as element and string with court decision ID (uid) as a key.
     '''
+    linkGraph = LinkGraph()
     vertices = list(set(list(checkedLinks.keys()) +
                         [link for citingDecisionID in checkedLinks
                          for link in checkedLinks[citingDecisionID]]))
@@ -59,7 +61,7 @@ def get_link_graph(checkedLinks):
                     weight = checkedLinks[citingDecisionID]. \
                             count(citedDecisionID)
                     edges.append((citingDecisionID, citedDecisionID, weight))
-    return (vertices, edges)
+    return linkGraph
 
 if __name__ == '__main__':
     courtSiteContent = {}
@@ -184,18 +186,18 @@ if __name__ == '__main__':
         'от 4 октября 2005 года № 364-О'
         ]
 
-    response = get_clean_links(collectedLinks, courtSiteContent)
-    checkedLinks = response[0]
-    rejectedLinks = response[1]
-    print("Checked links: ")
-    print(checkedLinks)
-    print("Rejected links: ")
-    print(rejectedLinks)
+    # response = get_clean_links(collectedLinks, courtSiteContent)
+    # checkedLinks = response[0]
+    # rejectedLinks = response[1]
+    # print("Checked links: ")
+    # print(checkedLinks)
+    # print("Rejected links: ")
+    # print(rejectedLinks)
 
-    reponse2 = get_link_graph(checkedLinks)
-    vertices = reponse2[0]
-    edges = reponse2[1]
-    print("Vertices: ")
-    print(vertices)
-    print("Edge list: ")
-    print(edges)
+    # reponse2 = get_link_graph(checkedLinks)
+    # vertices = reponse2[0]
+    # edges = reponse2[1]
+    # print("Vertices: ")
+    # print(vertices)
+    # print("Edge list: ")
+    # print(edges)
