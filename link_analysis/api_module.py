@@ -8,7 +8,7 @@ import link_analysis.final_analysis as final_analysis
 import link_analysis.rough_analysis as rough_analysis
 import link_analysis.visualizer as visualizer
 import link_analysis.converters as converters
-from link_analysis.models import Header, HeadersFilter
+import link_analysis.models as models
 import web_crawler.ksrf as web_crawler
 
 # other imports---------------------------------------------------------
@@ -56,7 +56,7 @@ def check_text_location_for_headers(headers, folder):
 
 def download_texts_for_headers(headers, folder=DECISIONS_FOLDER_NAME):
     for key in headers:
-        if (isinstance(headers[key], Header) and
+        if (isinstance(headers[key], models.Header) and
             (headers[key].text_location is None or
                 not os.path.exists(headers[key].text_location))):
 
@@ -83,26 +83,20 @@ def load_and_visualize(pathTograph=PATH_TO_JSON_GRAPH):
     visualizer.visualize_link_graph(graph, 20, 1, (20, 20))
 
 
-def get_headers_between_dates(headers, firstDate, lastDate):
-    '''
-    Do a selection from the headers for that whisch was publicated later,
-    than the first date,
-    And earlier than the last date.
-    '''
-    usingHeaders = {}
-    hFilter = HeadersFilter(firstDate=firstDate, lastDate=lastDate)
-    for key in headers:
-        if (isinstance(headers[key], Header) and
-                hFilter.check_header(headers[key])):
-            usingHeaders[key] = headers[key]
-    return usingHeaders
-
 # api methods-----------------------------------------------------------
 
 
 # TO DO: Rewrite all functions below this line.
 def process_period(
-        firstDate: str, lastDate: str, graphOutputFilePath=PATH_TO_JSON_GRAPH,
+        firstDateOfDocsForProcessing: None, lastDateOfDocsForProcessing=None,
+        docTypesForProcessing=None,
+        firstDateForNodes=None, lastDateForNodes=None,
+        nodesIndegreeRange=None, nodesOutdegreeRange=None, nodesTypes=None,
+        includeIsolatedNodes=False,
+        firstDateFrom=None, lastDateFrom=None, docTypesFrom=None,
+        firstDateTo=None, lastDateTo=None, docTypesTo=None,
+        weightsRange=None,
+        graphOutputFilePath=PATH_TO_JSON_GRAPH,
         showPicture=True, isNeedReloadHeaders=False):
     '''
     Process decisions from the date specified as firstDate to
@@ -110,14 +104,64 @@ def process_period(
     Write a graph of result of the processing and, if it was specified,
     draw graph and show it to user.
     '''
+    if not ((isinstance(firstDateOfDocsForProcessing, str) and
+            isinstance(lastDateOfDocsForProcessing, str)
+             ) or
+            (isinstance(firstDateOfDocsForProcessing, date) and
+            isinstance(lastDateOfDocsForProcessing, date))):
+            raise 'Date have different types'
+    if isinstance(firstDateOfDocsForProcessing, str):
+        firstDateOfDocsForProcessing = parser.parse(
+            firstDateOfDocsForProcessing, dayfirst=True).date()
+    if isinstance(lastDateOfDocsForProcessing, str):
+        lastDateOfDocsForProcessing = parser.parse(
+            lastDateOfDocsForProcessing, dayfirst=True).date()
+    if (firstDateOfDocsForProcessing > lastDateOfDocsForProcessing):
+        raise "date error: The first date is later than the last date."
 
-    if not isinstance(firstDate, date):
-        firstDate = parser.parse(firstDate, dayfirst=True).date()
+    if not ((isinstance(firstDateForNodes, str) and
+            isinstance(lastDateForNodes, str)
+             ) or
+            (isinstance(firstDateForNodes, date) and
+            isinstance(lastDateForNodes, date))):
+            raise 'Date have different types'
+    if isinstance(firstDateForNodes, str):
+        firstDateForNodes = parser.parse(
+            firstDateForNodes, dayfirst=True).date()
+    if isinstance(lastDateForNodes, str):
+        lastDateForNodes = parser.parse(
+            lastDateForNodes, dayfirst=True).date()
+    if (firstDateForNodes > lastDateForNodes):
+        raise "date error: The first date is later than the last date. "
 
-    if not isinstance(lastDate, date):
-        lastDate = parser.parse(lastDate, dayfirst=True).date()
+    if not ((isinstance(firstDateFrom, str) and
+            isinstance(lastDateFrom, str)
+             ) or
+            (isinstance(firstDateFrom, date) and
+            isinstance(lastDateFrom, date))):
+            raise 'Date have different types'
+    if isinstance(firstDateFrom, str):
+        firstDateFrom = parser.parse(
+            firstDateFrom, dayfirst=True).date()
+    if isinstance(lastDateFrom, str):
+        lastDateFrom = parser.parse(
+            lastDateFrom, dayfirst=True).date()
+    if (firstDateFrom > lastDateFrom):
+        raise "date error: The first date is later than the last date. "
 
-    if (firstDate > lastDate):
+    if not ((isinstance(firstDateTo, str) and
+            isinstance(lastDateTo, str)
+             ) or
+            (isinstance(firstDateTo, date) and
+            isinstance(lastDateTo, date))):
+            raise 'Date have different types'
+    if isinstance(firstDateTo, str):
+        firstDateTo = parser.parse(
+            firstDateTo, dayfirst=True).date()
+    if isinstance(lastDateTo, str):
+        lastDateTo = parser.parse(
+            lastDateTo, dayfirst=True).date()
+    if (firstDateTo > lastDateTo):
         raise "date error: The first date is later than the last date. "
 
     decisionsHeaders = {}
@@ -127,8 +171,10 @@ def process_period(
     else:
         decisionsHeaders = converters.load_pickle(PATH_TO_PICKLE_HEADERS)
 
-    usingHeaders = get_headers_between_dates(decisionsHeaders, firstDate,
-                                             lastDate)
+    hFilter = models.HeadersFilter(
+        docTypesForProcessing,
+        firstDateOfDocsForProcessing, lastDateOfDocsForProcessing)
+    usingHeaders = hFilter.get_filtered_headers(decisionsHeaders)
 
     check_text_location_for_headers(usingHeaders, DECISIONS_FOLDER_NAME)
 
@@ -140,23 +186,43 @@ def process_period(
 
     roughLinksDict = \
         rough_analysis.get_rough_links_for_multiple_docs(usingHeaders)
-
+    if (rough_analysis.PATH_NONE_VALUE_KEY in roughLinksDict or
+            rough_analysis.PATH_NOT_EXIST_KEY in roughLinksDict):
+        raise 'Some headers have not text'
     links = final_analysis.get_clean_links(roughLinksDict,
                                            decisionsHeaders)[0]
 
-    linkGraphClass = final_analysis.get_link_graph(links)
-    linkGraphLists = (linkGraphClass.get_nodes_as_IDs_list(),
-                      linkGraphClass.get_edges_as_list_of_tuples())
+    linkGraph = final_analysis.get_link_graph(links)
+    nFilter = models.GraphNodesFilter(
+        nodesTypes, firstDateForNodes, lastDateForNodes, nodesIndegreeRange,
+        nodesOutdegreeRange)
+    hFromFilter = models.HeadersFilter(
+        docTypesFrom,
+        firstDateFrom, lastDateFrom)
+    hToFilter = models.HeadersFilter(
+        docTypesTo,
+        firstDateTo, lastDateTo)
+    eFilter = models.GraphEdgesFilter(hFromFilter, hToFilter, weightsRange)
+    subgraph = linkGraph.get_subgraph(nFilter, eFilter, includeIsolatedNodes)
+    linkGraphLists = (subgraph.get_nodes_as_IDs_list(),
+                      subgraph.get_edges_as_list_of_tuples())
+
     converters.save_json(linkGraphLists, graphOutputFilePath)
     if showPicture:
         visualizer.visualize_link_graph(linkGraphLists, 20, 1, (40, 40))
 # end of ProcessPeriod--------------------------------------------------
 
 
-def start_process_with(decisionID, depth,
-                       graphOutputFilePath=PATH_TO_JSON_GRAPH,
-                       isShowPicture=True, isNeedReloadHeaders=False,
-                       visualizerParameters=(20, 1, (40, 40))):
+def start_process_with(
+        decisionID, depth,
+        firstDateForNodes=None, lastDateForNodes=None, nodesIndegreeRange=None,
+        nodesOutdegreeRange=None, nodesTypes=None, includeIsolatedNodes=False,
+        firstDateFrom=None, lastDateFrom=None, docTypesFrom=None,
+        firstDateTo=None, lastDateTo=None, docTypesTo=None,
+        weightsRange=None,
+        graphOutputFilePath=PATH_TO_JSON_GRAPH,
+        isShowPicture=True, isNeedReloadHeaders=False,
+        visualizerParameters=(20, 1, (40, 40))):
     '''
     Start processing decisions from the decision which uid was given and repeat
     this behavior recursively for given depth.
@@ -171,6 +237,52 @@ def start_process_with(decisionID, depth,
         headers = converters.load_pickle(PATH_TO_PICKLE_HEADERS)
     if (decisionID not in headers):
         raise "Unknown uid"
+
+    if not ((isinstance(firstDateForNodes, str) and
+            isinstance(lastDateForNodes, str)
+             ) or
+            (isinstance(firstDateForNodes, date) and
+            isinstance(lastDateForNodes, date))):
+            raise 'Date have different types'
+    if isinstance(firstDateForNodes, str):
+        firstDateForNodes = parser.parse(
+            firstDateForNodes, dayfirst=True).date()
+    if isinstance(lastDateForNodes, str):
+        lastDateForNodes = parser.parse(
+            lastDateForNodes, dayfirst=True).date()
+    if (firstDateForNodes > lastDateForNodes):
+        raise "date error: The first date is later than the last date. "
+
+    if not ((isinstance(firstDateFrom, str) and
+            isinstance(lastDateFrom, str)
+             ) or
+            (isinstance(firstDateFrom, date) and
+            isinstance(lastDateFrom, date))):
+            raise 'Date have different types'
+    if isinstance(firstDateFrom, str):
+        firstDateFrom = parser.parse(
+            firstDateFrom, dayfirst=True).date()
+    if isinstance(lastDateFrom, str):
+        lastDateFrom = parser.parse(
+            lastDateFrom, dayfirst=True).date()
+    if (firstDateFrom > lastDateFrom):
+        raise "date error: The first date is later than the last date. "
+
+    if not ((isinstance(firstDateTo, str) and
+            isinstance(lastDateTo, str)
+             ) or
+            (isinstance(firstDateTo, date) and
+            isinstance(lastDateTo, date))):
+            raise 'Date have different types'
+    if isinstance(firstDateTo, str):
+        firstDateTo = parser.parse(
+            firstDateTo, dayfirst=True).date()
+    if isinstance(lastDateTo, str):
+        lastDateTo = parser.parse(
+            lastDateTo, dayfirst=True).date()
+    if (firstDateTo > lastDateTo):
+        raise "date error: The first date is later than the last date. "
+
     check_text_location_for_headers(headers, DECISIONS_FOLDER_NAME)
     download_texts_for_headers(headers, DECISIONS_FOLDER_NAME)
 
@@ -179,9 +291,12 @@ def start_process_with(decisionID, depth,
     allLinks = {decisionID: []}
     while depth > 0 and len(toProcess) > 0:
         depth -= 1
-        roughLinks = rough_analysis.get_rough_links_for_multiple_docs(
+        roughLinksDict = rough_analysis.get_rough_links_for_multiple_docs(
             toProcess)
-        cleanLinks = final_analysis.get_clean_links(roughLinks, headers)[0]
+        if (rough_analysis.PATH_NONE_VALUE_KEY in roughLinksDict or
+                rough_analysis.PATH_NOT_EXIST_KEY) in roughLinksDict:
+            raise 'Some headers have not text'
+        cleanLinks = final_analysis.get_clean_links(roughLinksDict, headers)[0]
         allLinks.update(cleanLinks)
         processed.update(toProcess)
         toProcess = {}
@@ -191,9 +306,21 @@ def start_process_with(decisionID, depth,
                 if (id_ not in processed):
                     toProcess[id_] = headers[id_]
 
-    linkGraphClass = final_analysis.get_link_graph(allLinks)
-    linkGraphLists = (linkGraphClass.get_nodes_as_IDs_list(),
-                      linkGraphClass.get_edges_as_list_of_tuples())
+    linkGraph = final_analysis.get_link_graph(allLinks)
+    nFilter = models.GraphNodesFilter(
+        nodesTypes, firstDateForNodes, lastDateForNodes, nodesIndegreeRange,
+        nodesOutdegreeRange)
+    hFromFilter = models.HeadersFilter(
+        docTypesFrom,
+        firstDateFrom, lastDateFrom)
+    hToFilter = models.HeadersFilter(
+        docTypesTo,
+        firstDateTo, lastDateTo)
+    eFilter = models.GraphEdgesFilter(hFromFilter, hToFilter, weightsRange)
+    subgraph = linkGraph.get_subgraph(nFilter, eFilter, includeIsolatedNodes)
+    linkGraphLists = (subgraph.get_nodes_as_IDs_list(),
+                      subgraph.get_edges_as_list_of_tuples())
+
     converters.save_json(linkGraphLists, graphOutputFilePath)
     if (isShowPicture):
         visualizer.visualize_link_graph(linkGraphLists,

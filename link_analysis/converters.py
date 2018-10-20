@@ -26,6 +26,7 @@ def convert_dictDict_to_dictDocumentHeader(headersOldFormat):
             else:
                 duplicateHeader = DuplicateHeader(docID)
                 for dh in headersOldFormat[key][1]:
+                    docType = dh['type']
                     title = dh['title']
                     date = dateutil.parser.parse(dh['date'],
                                                  dayfirst=True).date()
@@ -93,9 +94,9 @@ def load_json(pathToFile):
     return data
 
 
-def save_pickle(anyData, pathToFile, exist_ok=True):
+def save_pickle(anyData, pathToFile):
     try:
-        os.makedirs(os.path.dirname(pathToFile))
+        os.makedirs(os.path.dirname(pathToFile), exist_ok=True)
         with open(pathToFile, 'wb') as pickleFile:
             pickle.dump(anyData, pickleFile)
     except OSError:
@@ -110,3 +111,28 @@ def load_pickle(pathToFile):
     except OSError:
         return None
     return data
+
+if __name__ == '__main__':
+    p0 = load_pickle('Decision files0\\DecisionHeaders0.pickle')
+    p1 = load_pickle('Decision files0\\DecisionHeaders.pickle')
+
+    pickle1 = load_pickle('Decision files0\\DecisionHeaders.pickle')
+    json1 = convert_dictDocumentHeader_to_dicDict(pickle1)
+    save_json(json1, 'Decision files0\\DecisionHeaders.json')
+    json2 = load_json('Decision files0\\DecisionHeaders.json')
+    pickle2 = convert_dictDict_to_dictDocumentHeader(json2)
+    save_pickle(pickle2, 'Decision files0\\DecisionHeaders1.pickle')
+    pickle3 = load_pickle('Decision files0\\DecisionHeaders1.pickle')
+    json3 = convert_dictDocumentHeader_to_dicDict(pickle3)
+    save_json(json3, 'Decision files0\\DecisionHeaders3.json')
+
+    json3file = open('Decision files0\\DecisionHeaders3.json', 'r')
+    json3text = json3file.read()
+    json1file = open('Decision files0\\DecisionHeaders.json', 'r')
+    json1text = json1file.read()
+    for i in range(len(json1text)):
+        if json1text[i] != json3text[i]:
+            repr(json1text[i])
+            print(json1text[i])
+            break
+    print('all done')

@@ -1,6 +1,6 @@
 import re
 import sys
-from link_analysis.models import Header, RoughLink
+from link_analysis.models import Header, RoughLink, DuplicateHeader
 
 # link pattern main part
 lpMP = (r".*?\sот[\s\d]+?(?:(?:января|февраля|марта|апреля|мая|июня|июля|"
@@ -62,7 +62,7 @@ def get_rough_links(header: Header):
             numbers = numberPattern.findall(oneYearLinks)
             for number in numbers:
                 gottenRoughLink = 'о' + date + ' ' + number.upper()
-                roughLinks.append(RoughLink(header, context, gottenRoughLink,
+                roughLinks.append(RoughLink(header, gottenRoughLink, context,
                                   position))
             position += len(oneYearLinks) + 1
     return roughLinks
@@ -75,12 +75,15 @@ PATH_NOT_EXIST_KEY = 'path does not exist'
 def get_rough_links_for_multiple_docs(headers: dict):
     """
     :param header: dict of instances of class models.Header
-    return dict of lists of class RoughLink, also this dict may contain
-    two lists of instances of class models.Header which were
-    unsuccessfully processed
+    return dict with list of instances of class RoughLink
+    as element and instance class Header as key,
+    also this dict may contain two lists of instances of
+    lass models.Header which were unsuccessfully processed
     """
     result = {}
     for decisionID in headers:
+        if isinstance(headers[decisionID], DuplicateHeader):
+            continue
         maybeRoughLinks = get_rough_links(headers[decisionID])
         if maybeRoughLinks is TypeError:
             if PATH_NONE_VALUE_KEY not in result:
@@ -92,26 +95,26 @@ def get_rough_links_for_multiple_docs(headers: dict):
                 result[PATH_NOT_EXIST_KEY] = []
             result[PATH_NOT_EXIST_KEY].append(headers[decisionID])
             continue
-        result[decisionID] = maybeRoughLinks
+        result[headers[decisionID]] = maybeRoughLinks
     return result
 
 
 if (__name__ == '__main__'):
     from datetime import date
-    h1 = Header('2028-О/2018', 'КС_РФ/О', 'some title1', date(2018, 7, 17),
+    h1 = Header('2028-О/2018', 'КСРФ/О', 'some title1', date(2018, 7, 17),
                 'http://doc.ksrf.ru/decision/KSRFDecision353855.pdf',
-                r'Decision files\КС_РФ_2028-О_2018.txt')
-    h2 = Header('36-П/2018', 'КС_РФ/П', 'some title2', date(2018, 10, 15),
+                r'Decision files\КСРФ_2028-О_2018.txt')
+    h2 = Header('36-П/2018', 'КСРФ/П', 'some title2', date(2018, 10, 15),
                 'http://doc.ksrf.ru/decision/KSRFDecision357397.pdf')
-    h3 = Header('33-П/2018', 'КС_РФ/П', 'some title3', date(2018, 7, 18),
+    h3 = Header('33-П/2018', 'КСРФ/П', 'some title3', date(2018, 7, 18),
                 'http://doc.ksrf.ru/decision/KSRFDecision343519.pdf',
-                r'Decision files\КС_РФ_33-П_2018.txt')
-    h4 = Header('30-П/2018', 'КС_РФ/П', 'some title4', date(2018, 7, 10),
+                r'Decision files\КСРФ_33-П_2018.txt')
+    h4 = Header('30-П/2018', 'КСРФ/П', 'some title4', date(2018, 7, 10),
                 'http://doc.ksrf.ru/decision/KSRFDecision342302.pdf',
                 r'path that not exist')
-    h5 = Header('841-О/2018', 'КС_РФ/О', 'some title5', date(2018, 4, 12),
+    h5 = Header('841-О/2018', 'КСРФ/О', 'some title5', date(2018, 4, 12),
                 'http://doc.ksrf.ru/decision/KSRFDecision332975.pdf',
-                r'Decision files\КС_РФ_841-О_2018.txt')
+                r'Decision files\КСРФ_841-О_2018.txt')
     headers = {'2028-О/2018': h1, '36-П/2018': h2, '33-П/2018': h3,
                '30-П/2018': h4, '841-О/2018': h5}
     roughLinks = get_rough_links_for_multiple_docs(headers)

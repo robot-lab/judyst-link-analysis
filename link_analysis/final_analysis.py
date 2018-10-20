@@ -3,64 +3,72 @@ from link_analysis.models import LinkGraph
 
 yearPattern = re.compile(r'(?<=\s)\d{4}(?=\s)')
 numberPattern = re.compile(r'\d+(-[А-Яа-я]+)+')
+splitPattern = re.compile(r'(№|N)')
 
 
-def get_clean_links(collectedLinks, courtSiteContent):
+def get_clean_links(collectedLinks: dict, courtSiteContent: dict,
+                    courtPrefix='КСРФ/'):
     '''
     Gets clean links.
     arguments:
-    collected_links: a dictionary with dirty links list as element and
-    string with court decision ID (uid) as a key.
-    court_site_content: a dictionary with dictionary such as
-    {'date': 'date_str', 'title': 'title_str', 'url': 'link_str'}
+    collected_links: a dictionary with list of instances of class Rough link
+    as element and instance class Header as key.
+    court_site_content: a dictionary with intance of class DocumentHeader
     as element and string with court decision ID (uid) as a key.
     '''
     rejectedLinks = {}
     checkedLinks = {}
-    for courtDecisionID in collectedLinks:
-        checkedLinks[courtDecisionID] = []
-        for link in collectedLinks[courtDecisionID]:
-            spam = re.split(r'№', link)
+    for headerFrom in collectedLinks:
+        checkedLinks[headerFrom] = []
+        for link in collectedLinks[headerFrom]:
+            spam = splitPattern(link.body)
             number = numberPattern.search(spam[-1])
             years = yearPattern.findall(spam[0])
             if years and number:
                 eggs = False
                 while years:
-                    gottenID = number[0].upper() + '/' + years.pop()
+                    gottenID = (courtPrefix + number[0].upper() +
+                                '/' + years.pop())
                     if gottenID in courtSiteContent:
-                        checkedLinks[courtDecisionID].append(gottenID)
                         eggs = True
                         years.clear()
+                        headerTo = courtSiteContent[gottenID]
+                        positionAndContext = (link.position, link.context)
+                        cleanLink = None
+                        for cl in checkedLinks[headerFrom]:
+                            if cl.header_to == headerTo:
+                                cleanLink = cl
+                                break
+                        if cleanLink is not None:
+                            cleanLink.citations_number += 1
+                            cleanLink.append(positionAndContext)
+                        else:
+                            cleanLink = cleanLink(headerFrom, headerTo, 1,
+                                                  positionAndContext)
                 if not eggs:
-                    if courtDecisionID not in rejectedLinks:
-                        rejectedLinks[courtDecisionID] = []
-                    rejectedLinks[courtDecisionID].append(link)
+                    if headerFrom not in rejectedLinks:
+                        rejectedLinks[headerFrom] = []
+                    rejectedLinks[headerFrom].append(link)
             else:
-                if courtDecisionID not in rejectedLinks:
-                    rejectedLinks[courtDecisionID] = []
-                rejectedLinks[courtDecisionID].append(link)
+                if headerFrom not in rejectedLinks:
+                    rejectedLinks[headerFrom] = []
+                rejectedLinks[headerFrom].append(link)
     return (checkedLinks, rejectedLinks)
 
 
 def get_link_graph(checkedLinks):
     '''
-    Gets Link Graph, returning tuple (vertices = [],
-    edges = [(citing_decision_id, cited_decision_id, weight), (),...]).
-    argument: checked_links is a dictionary with clean links list
-    as element and string with court decision ID (uid) as a key.
+    Gets Link Graph, returning instance of clas LinkGraph
+    argument: checked_links is a dictionary with list of instances
+    of class CleanLink as element and string with court decision ID (uid)
+    as a key.
     '''
     linkGraph = LinkGraph()
-    vertices = list(set(list(checkedLinks.keys()) +
-                        [link for citingDecisionID in checkedLinks
-                         for link in checkedLinks[citingDecisionID]]))
-    edges = []
-    for citingDecisionID in vertices:
-        if citingDecisionID in checkedLinks:
-            for citedDecisionID in vertices:
-                if citedDecisionID in checkedLinks[citingDecisionID]:
-                    weight = checkedLinks[citingDecisionID]. \
-                            count(citedDecisionID)
-                    edges.append((citingDecisionID, citedDecisionID, weight))
+    for header in checkedLinks:
+        linkGraph.add_node(header)
+        for cl in checkedLinks[header]:
+            linkGraph.add_node(cl.header_to)
+            linkGraph.add_edge(cl)
     return linkGraph
 
 if __name__ == '__main__':

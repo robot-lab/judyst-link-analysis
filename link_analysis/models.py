@@ -18,7 +18,7 @@ class DocumentHeader:
 
 class Header(DocumentHeader):
     def __init__(self, id, docType, title, date, sourceUrl,
-                 text_location=None):
+                 textLocation=None):
         super().__init__(id)
         self.document_type = docType
         self.title = title
@@ -27,7 +27,7 @@ class Header(DocumentHeader):
         else:
             raise TypeError("Variable 'date' is not instance of datetime.date")
         self.source_url = sourceUrl
-        self.text_location = text_location
+        self.text_location = textLocation
 
     def __eq__(self, other):
         return (super().__eq__(self) and
@@ -40,7 +40,7 @@ class Header(DocumentHeader):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return DocumentHeader.__hash__(self)
+        return super().__hash__()
 
 
 class DuplicateHeader(DocumentHeader):
@@ -103,7 +103,7 @@ class Link:
 
 
 class RoughLink(Link):
-    def __init__(self, headerFrom, context, body, position):
+    def __init__(self, headerFrom, body, context, position):
         """
         :param headerFrom: class Header
             Citing document
@@ -112,8 +112,8 @@ class RoughLink(Link):
             raise TypeError("Variable 'headerFrom' is not instance "
                             "of class Header")
         super().__init__(headerFrom)
-        self.context = context
         self.body = body
+        self.context = context
         self.position = position
 
     def __eq__(self, other):
@@ -147,9 +147,7 @@ class CleanLink(Link):
         super().__init__(headerFrom)
         self.header_to = headerTo
         self.citations_number = citationsNumber
-        if isinstance(positionsAndContexts, list):
-            self.positions_and_contexts = positionsAndContexts
-        elif isinstance(positionsAndContexts, tuple):
+        if isinstance(positionsAndContexts, tuple):
             self.positions_and_contexts = [positionsAndContexts]
         else:
             self.positions_and_contexts = list(positionsAndContexts)
@@ -167,6 +165,9 @@ class CleanLink(Link):
     def __hash__(self):
         return hash(tuple([super().__hash__(), hash(self.header_to)]))
 
+    def append(self, positionAndContext: tuple):
+        self.positions_and_contexts.append(positionAndContext)
+
 
 class HeadersFilter():
     """
@@ -178,9 +179,8 @@ class HeadersFilter():
 
         if hasattr(docTypes, '__iter__'):
             self.doc_types = set(docTypes)
-        else:
-            self.doc_types = set()
-
+        if self.doc_types == {}:
+            self.doc_types = None
         if isinstance(firstDate, datetime.date):
             self.first_date = firstDate
         else:
@@ -340,7 +340,7 @@ class LinkGraph:
                             "of class CleanLink")
         self.edges.add(edge)
 
-    def get_node_degrees(self, node):
+    def get_degrees(self, node):
         """
         node: class Header\n
         returns tuple degrees=(indegree, outdegree)
@@ -354,7 +354,15 @@ class LinkGraph:
                 indegree += 1
         return (indegree, outdegree)
 
-    def get_subgraph(self, nodesFilter=None, edgesFilter=None):
+    def is_isolated(self, node):
+        for edge in self.edges:
+            if (hash(edge.header_from) == hash(node) or
+                    hash(edge.header_to) == hash(node)):
+                return False
+        return True
+
+    def get_subgraph(self, nodesFilter=None, edgesFilter=None,
+                     includeIsolatedNodes=False):
 
         if (nodesFilter is None and edgesFilter is None):
             return self
@@ -371,7 +379,7 @@ class LinkGraph:
                 restEggs = False
                 if (nodesFilter.indegree_range is not None or
                         nodesFilter.outdegree_range is not None):
-                    degrees = self.get_node_degrees(node)
+                    degrees = self.get_degrees(node)
                 if (nodesFilter.indegree_range is None or
                    (nodesFilter.indegree_range[0] <= degrees[0] <=
                         nodesFilter.indegree_range[1])):
@@ -415,7 +423,15 @@ class LinkGraph:
                 if (edge.header_from in subgraph.nodes and
                         edge.header_to in subgraph.nodes):
                     subgraph.edges.add(edge)
-        return subgraph
+        if not includeIsolatedNodes:
+            subgraph2 = LinkGraph()
+            subgraph2.edges = subgraph.edges
+            for node in subgraph.nodes:
+                if not subgraph.is_isolated(node):
+                    subgraph2.add_node(node)
+            return subgraph2
+        else:
+            return subgraph
 
     def get_nodes_as_IDs_list(self):
         return list(v.id for v in self.nodes)
