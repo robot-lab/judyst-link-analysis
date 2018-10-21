@@ -1,9 +1,9 @@
 import re
-from link_analysis.models import LinkGraph, CleanLink, DuplicateHeader
+from models import LinkGraph, CleanLink, DuplicateHeader
 
 yearPattern = re.compile(r'(?<=\s)\d{4}(?=\s)')
 numberPattern = re.compile(r'\d+(-[А-Яа-я]+)+')
-splitPattern = re.compile(r'(№|N)')
+splitPattern = re.compile(r'(?:№|N)')
 
 
 def get_clean_links(collectedLinks: dict, courtSiteContent: dict,
@@ -217,3 +217,4 @@ if __name__ == '__main__':
     # print(vertices)
     # print("Edge list: ")
     # print(edges)
+    print('ok')

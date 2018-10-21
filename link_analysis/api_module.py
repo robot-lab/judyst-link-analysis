@@ -11,12 +11,12 @@ from dateutil import parser
 # License: Apache Software License, BSD License (Dual License)
 
 # imports Core modules--------------------------------------------------
-import link_analysis.final_analysis as final_analysis
-import link_analysis.models as models
-import link_analysis.rough_analysis as rough_analysis
-import link_analysis.visualizer as visualizer
-import link_analysis.converters as converters
-import web_crawler.ksrf as web_crawler
+import final_analysis
+import models
+import rough_analysis
+import visualizer
+import converters
+from web_crawler import ksrf
 
 
 # methods---------------------------------------------------------------
@@ -35,7 +35,7 @@ PATH_TO_JSON_GRAPH = 'graph.json'
 
 def collect_headers(pathToFileForSave, pagesNum):
     # TO DO: ask about pagesNum
-    headersOld = web_crawler.get_resolution_headers(pagesNum)
+    headersOld = ksrf.get_resolution_headers(pagesNum)
     headersNew = converters.pickle2(headersOld, models.DocumentHeader)
     converters.save_pickle(headersNew, pathToFileForSave)
     return headersNew
@@ -48,7 +48,7 @@ def check_text_location_for_headers(headers, folder):
     '''
     for key in headers:
         # generate a possible path according to previously established rules
-        pathToTextLocation = web_crawler.get_decision_filename_by_uid(
+        pathToTextLocation = ksrf.get_decision_filename_by_uid(
             key, folder, ext='txt')
         # if path is exist put it to header
         if (os.path.exists(pathToTextLocation)):
@@ -61,7 +61,7 @@ def download_texts_for_headers(headers, folder=DECISIONS_FOLDER_NAME):
             (headers[key].text_location is None or
                 not os.path.exists(headers[key].text_location))):
             oldFormatHeader = headers[key].convert_to_dict()
-            web_crawler.load_resolution_texts({key: oldFormatHeader}, folder)
+            ksrf.load_resolution_texts({key: oldFormatHeader}, folder)
 
 
 def load_graph(pathToGraph=PATH_TO_JSON_GRAPH):
@@ -342,5 +342,6 @@ if __name__ == "__main__":
     #     weightsRange=(1, 5),
     #     graphOutputFilePath=PATH_TO_JSON_GRAPH,
     #     showPicture=True, isNeedReloadHeaders=False)
-    headersOld = web_crawler.get_resolution_headers(3)
-    print('all done')
+    headersOld = ksrf.get_resolution_headers(3)
+    print('headersOld')
+    input('press any key...')

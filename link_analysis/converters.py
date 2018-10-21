@@ -1,12 +1,8 @@
 import json
 import pickle
 import os
-import datetime
 
-import dateutil.parser
-# License: Apache Software License, BSD License (Dual License)
-
-from link_analysis.models import Header, DuplicateHeader, DocumentHeader
+from models import Header, DuplicateHeader, DocumentHeader
 
 
 def convert_to_class_format(data, className):

@@ -1,6 +1,5 @@
 import re
-import sys
-from link_analysis.models import Header, RoughLink, DuplicateHeader
+from models import Header, RoughLink, DuplicateHeader
 
 # link pattern main part
 lpMP = (r".*?\sот[\s\d]+?(?:(?:января|февраля|марта|апреля|мая|июня|июля|"
