@@ -7,6 +7,8 @@
 import os.path
 from datetime import date
 
+from dateutil import parser
+# License: Apache Software License, BSD License (Dual License)
 
 # imports Core modules--------------------------------------------------
 import link_analysis.final_analysis as final_analysis
@@ -16,8 +18,6 @@ import link_analysis.visualizer as visualizer
 import link_analysis.converters as converters
 import web_crawler.ksrf as web_crawler
 
-from dateutil import parser
-# License: Apache Software License, BSD License (Dual License)
 
 # methods---------------------------------------------------------------
 
@@ -87,7 +87,7 @@ def load_and_visualize(pathTograph=PATH_TO_JSON_GRAPH):
 # api methods-----------------------------------------------------------
 
 
-# TO DO: Rewrite all functions below this line.
+
 def process_period(
         firstDateOfDocsForProcessing=None, lastDateOfDocsForProcessing=None,
         docTypesForProcessing=None,

@@ -338,18 +338,14 @@ class LinkGraph:
                             "of class CleanLink")
         self.edges.add(edge)
 
-    def get_degrees(self, node):
-        """
-        node: class Header\n
-        returns tuple degrees=(indegree, outdegree)
-        """
-        indegree = 0
-        outdegree = 0
+    def get_all_nodes_degrees(self):
+        nodes_i = []
+        nodes_o = []
         for edge in self.edges:
-            if hash(edge.header_from) == hash(node):
-                outdegree += 1
-            if hash(edge.header_to) == hash(node):
-                indegree += 1
+            nodes_i.append(edge.header_from)
+            nodes_o.append(edge.header_to)
+        indegree = collections.Counter(nodes_i)
+        outdegree = collections.Counter(nodes_o)
         return (indegree, outdegree)
 
     def get_subgraph(self, nodesFilter=None, edgesFilter=None,
@@ -366,19 +362,19 @@ class LinkGraph:
                                 "of class GraphNodesFilter")
             i = 0  # debug
             L = len(self.nodes)  # debug
+            if (nodesFilter.indegree_range is not None or
+                    nodesFilter.outdegree_range is not None):
+                indegrees, outdegrees = self.get_all_nodes_degrees()
             for node in self.nodes:
                 indegreeEggs = False
                 outdegreeEggs = False
                 restEggs = False
-                if (nodesFilter.indegree_range is not None or
-                        nodesFilter.outdegree_range is not None):
-                    degrees = self.get_degrees(node)
                 if (nodesFilter.indegree_range is None or
-                   (nodesFilter.indegree_range[0] <= degrees[0] <=
+                   (nodesFilter.indegree_range[0] <= indegrees[node] <=
                         nodesFilter.indegree_range[1])):
                     indegreeEggs = True
                 if (nodesFilter.outdegree_range is None or
-                   (nodesFilter.outdegree_range[0] <= degrees[1] <=
+                   (nodesFilter.outdegree_range[0] <= outdegrees[node] <=
                         nodesFilter.outdegree_range[1])):
                     outdegreeEggs = True
                 if nodesFilter.check_header(node):
