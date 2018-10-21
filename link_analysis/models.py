@@ -1,5 +1,7 @@
 import datetime
 import collections
+import dateutil.parser
+# License: Apache Software License, BSD License (Dual License)
 
 
 class DocumentHeader:
@@ -14,6 +16,13 @@ class DocumentHeader:
 
     def __hash__(self):
         return hash(self.id)
+
+    @staticmethod
+    def convert_from_dict(key: str, oldFormatHeader: dict):
+        if 'not unique' in oldFormatHeader:
+            return DuplicateHeader.convert_from_dict(key, oldFormatHeader)
+        else:
+            return Header.convert_from_dict(key, oldFormatHeader)
 
 
 class Header(DocumentHeader):
@@ -41,6 +50,35 @@ class Header(DocumentHeader):
 
     def __hash__(self):
         return super().__hash__()
+
+    def convert_to_dict(self):
+        dictFormatHeader = {
+            'type': self.document_type,
+            'title': self.title,
+            'date': self.date.strftime('%d.%m.%Y'),
+            'url': self.source_url
+            }
+        if self.text_location is not None:
+            dictFormatHeader['path to text file'] = self.text_location
+        return dictFormatHeader
+
+    @staticmethod
+    def convert_from_dict(key: str, oldFormatHeader: dict):
+        try:
+            docID = key
+            docType = oldFormatHeader['type']
+            title = oldFormatHeader['title']
+            date = dateutil.parser.parse(oldFormatHeader['date'],
+                                         dayfirst=True).date()
+            sourceUrl = oldFormatHeader['url']
+            if 'path to text file' in oldFormatHeader:
+                textLocation = oldFormatHeader['path to text file']
+            else:
+                textLocation = None
+        except KeyError:
+            raise KeyError("'type', 'title', 'date', 'url' is required, "
+                           "only 'path to file' is optional")
+        return Header(docID, docType, title, date, sourceUrl, textLocation)
 
 
 class DuplicateHeader(DocumentHeader):
@@ -79,6 +117,42 @@ class DuplicateHeader(DocumentHeader):
                    textLocation)
         if h not in self.header_list:
             self.header_list.append(h)
+
+    def convert_to_dict(self):
+        dhList = []
+        for dupHeader in self.header_list:
+            dh = {
+                'type':  dupHeader.document_type,
+                'title':  dupHeader.title,
+                'date':  dupHeader.date.strftime('%d.%m.%Y'),
+                'url':  dupHeader.source_url
+                }
+            if dupHeader.text_location is not None:
+                dh['path to text file'] = dupHeader.text_location
+            dhList.append(dh)
+        return ('not unique', dhList)
+
+    @staticmethod
+    def convert_from_dict(key: str, oldFormatHeader: dict):
+        docID = key
+        duplicateHeader = DuplicateHeader(docID)
+        try:
+            for dh in oldFormatHeader[1]:
+                docType = dh['type']
+                title = dh['title']
+                date = dateutil.parser.parse(dh['date'],
+                                             dayfirst=True).date()
+                sourceUrl = dh['url']
+                if 'path to text file' in dh:
+                    textLocation = dh['path to text file']
+                else:
+                    textLocation = None
+                duplicateHeader.append(docType, title, date,
+                                       sourceUrl, textLocation)
+        except KeyError:
+            raise KeyError("'type', 'title', 'date', 'url' is required, "
+                           "only 'path to file' is optional")
+        return duplicateHeader
 
 
 class Link:

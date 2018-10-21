@@ -2,77 +2,53 @@ import json
 import pickle
 import os
 import datetime
+
 import dateutil.parser
-from link_analysis.models import Header, DuplicateHeader
+# License: Apache Software License, BSD License (Dual License)
+
+from link_analysis.models import Header, DuplicateHeader, DocumentHeader
 
 
-def convert_dictDict_to_dictDocumentHeader(headersOldFormat):
-    headersNewFormat = {}
-    try:
-        for key in headersOldFormat:
-            docID = key
-            if 'not unique' not in headersOldFormat[key]:
-                docType = headersOldFormat[key]['type']
-                title = headersOldFormat[key]['title']
-                date = dateutil.parser.parse(headersOldFormat[key]['date'],
-                                             dayfirst=True).date()
-                sourceUrl = headersOldFormat[key]['url']
-                if 'path to text file' in headersOldFormat[key]:
-                    textLocation = headersOldFormat[key]['path to text file']
-                else:
-                    textLocation = None
-                headersNewFormat[key] = Header(
-                    docID, docType, title, date, sourceUrl, textLocation)
-            else:
-                duplicateHeader = DuplicateHeader(docID)
-                for dh in headersOldFormat[key][1]:
-                    docType = dh['type']
-                    title = dh['title']
-                    date = dateutil.parser.parse(dh['date'],
-                                                 dayfirst=True).date()
-                    sourceUrl = dh['url']
-                    if 'path to text file' in dh:
-                        textLocation = dh[key]['path to text file']
-                    else:
-                        textLocation = None
-                    duplicateHeader.append(docType, title, date,
-                                           sourceUrl, textLocation)
-                headersNewFormat[key] = duplicateHeader
-    except KeyError:
-        raise KeyError("'type', 'title', 'date', 'url' is required, "
-                       "only 'path to file' is optional")
-    return headersNewFormat
+def convert_to_class_format(data, className):
+    '''
+    argument data: iterable stadard python object like dictionary or list
+    with dictionary elements for that class format exist\n
+    if data is dictionary, data's keys must be standard python objects\n
+    argument className: name of class that contains static method
+    'convert_from_dict'. This class is format for element of data argument\n
+    returns dictionary or list with instances of class className
+    '''
+    if not hasattr(data, '__iter__'):
+        raise ValueError("'data' is not iterable object")
+    if isinstance(data, dict):
+        convertedData = {}
+        for key in data:
+            convertedData[key] = className.convert_from_dict(key, data[key])
+    else:
+        convertedData = []
+        for el in data:
+            convertedData.append(className.convert_from_dict(el))
+    return convertedData
 
 
-def convert_dictDocumentHeader_to_dicDict(headersNewFormat):
-    headersOldFormat = {}
-    for key in headersNewFormat:
-        if isinstance(headersNewFormat[key], Header):
-            headersOldFormat[key] = {}
-            headersOldFormat[key]['type'] = headersNewFormat[key].document_type
-            headersOldFormat[key]['title'] = headersNewFormat[key].title
-            headersOldFormat[key]['date'] = \
-                headersNewFormat[key].date.strftime('%d.%m.%Y')
-            headersOldFormat[key]['url'] = headersNewFormat[key].source_url
-            if headersNewFormat[key].text_location is not None:
-                headersOldFormat[key]['path to text file'] = \
-                    headersNewFormat[key].text_location
-        elif isinstance(headersNewFormat[key], DuplicateHeader):
-            dhList = []
-            for dupHeader in headersNewFormat[key].header_list:
-                dh = {}
-                dh['type'] = dupHeader.document_type
-                dh['title'] = dupHeader.title
-                dh['date'] = dupHeader.date.strftime('%d.%m.%Y')
-                dh['url'] = dupHeader.source_url
-                if dupHeader.text_location is not None:
-                    dh['path to text file'] = dupHeader.text_location
-                dhList.append(dh)
-            headersOldFormat[key] = ('not unique', dhList)
-        else:
-            raise TypeError("Variable 'headersNewFormat' is not instance of "
-                            "class Header or class DuplicateHeader")
-    return headersOldFormat
+def convert_to_json_serializable_format(data):
+    '''
+    argument data: iterable stadard python object like dictionary or list
+    if data is dictionary, data's keys must be standard python objects
+    with instances of classes which has method 'convert_to_dict';\n
+    returns dictionary or list with dictionary elements
+    '''
+    if not hasattr(data, '__iter__'):
+        raise ValueError("'data' is not iterable object")
+    if isinstance(data, dict):
+        convertedData = {}
+        for key in data:
+            convertedData[key] = data[key].convert_to_dict()
+    else:
+        convertedData = []
+        for el in data:
+            convertedData.append(el.convert_to_dict())
+    return convertedData
 
 
 def save_json(jsonSerializableData, pathToFile):
@@ -117,17 +93,14 @@ def load_pickle(pathToFile):
     return data
 
 if __name__ == '__main__':
-    p0 = load_pickle('Decision files0\\DecisionHeaders0.pickle')
-    p1 = load_pickle('Decision files0\\DecisionHeaders.pickle')
-
-    pickle1 = load_pickle('Decision files\\DecisionHeaders.pickle')
-    json1 = convert_dictDocumentHeader_to_dicDict(pickle1)
+    pickle1 = load_pickle('Decision files0\\DecisionHeaders.pickle')
+    json1 = convert_to_json_serializable_format(pickle1)
     save_json(json1, 'Decision files0\\DecisionHeaders.json')
     json2 = load_json('Decision files0\\DecisionHeaders.json')
-    pickle2 = convert_dictDict_to_dictDocumentHeader(json2)
+    pickle2 = convert_to_class_format(json2, className=DocumentHeader)
     save_pickle(pickle2, 'Decision files0\\DecisionHeaders1.pickle')
     pickle3 = load_pickle('Decision files0\\DecisionHeaders1.pickle')
-    json3 = convert_dictDocumentHeader_to_dicDict(pickle3)
+    json3 = convert_to_json_serializable_format(pickle3)
     save_json(json3, 'Decision files0\\DecisionHeaders3.json')
 
     json3file = open('Decision files0\\DecisionHeaders3.json', 'r')
