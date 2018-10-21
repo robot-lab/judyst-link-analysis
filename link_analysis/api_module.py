@@ -3,17 +3,18 @@
 # rexarrior@yandex.ru
 
 
-# imports Core modules--------------------------------------------------
-import link_analysis.final_analysis as final_analysis
-import link_analysis.rough_analysis as rough_analysis
-import link_analysis.visualizer as visualizer
-import link_analysis.converters as converters
-import link_analysis.models as models
-import web_crawler.ksrf as web_crawler
-
 # other imports---------------------------------------------------------
 import os.path
 from datetime import date
+
+
+# imports Core modules--------------------------------------------------
+import link_analysis.final_analysis as final_analysis
+import link_analysis.models as models
+import link_analysis.rough_analysis as rough_analysis
+import link_analysis.visualizer as visualizer
+import link_analysis.converters as converters
+import web_crawler.ksrf as web_crawler
 
 from dateutil import parser
 # License: Apache Software License, BSD License (Dual License)
@@ -43,7 +44,7 @@ def collect_headers(pathToFileForSave, pagesNum):
 def check_text_location_for_headers(headers, folder):
     '''
     Find files of the documents of the given headers
-    and add path to file in Header.text_location if file was found
+   and add path to file in Header.text_location if file was found
     '''
     for key in headers:
         # generate a possible path according to previously established rules
@@ -88,11 +89,11 @@ def load_and_visualize(pathTograph=PATH_TO_JSON_GRAPH):
 
 # TO DO: Rewrite all functions below this line.
 def process_period(
-        firstDateOfDocsForProcessing: None, lastDateOfDocsForProcessing=None,
+        firstDateOfDocsForProcessing=None, lastDateOfDocsForProcessing=None,
         docTypesForProcessing=None,
         firstDateForNodes=None, lastDateForNodes=None,
         nodesIndegreeRange=None, nodesOutdegreeRange=None, nodesTypes=None,
-        includeIsolatedNodes=False,
+        includeIsolatedNodes=True,
         firstDateFrom=None, lastDateFrom=None, docTypesFrom=None,
         firstDateTo=None, lastDateTo=None, docTypesTo=None,
         weightsRange=None,
@@ -104,12 +105,10 @@ def process_period(
     Write a graph of result of the processing and, if it was specified,
     draw graph and show it to user.
     '''
-    if not ((isinstance(firstDateOfDocsForProcessing, str) and
-            isinstance(lastDateOfDocsForProcessing, str)
-             ) or
-            (isinstance(firstDateOfDocsForProcessing, date) and
-            isinstance(lastDateOfDocsForProcessing, date))):
-            raise 'Date have different types'
+    if firstDateOfDocsForProcessing is None:
+        firstDateOfDocsForProcessing = date.min
+    if lastDateOfDocsForProcessing is None:
+        lastDateOfDocsForProcessing = date.max
     if isinstance(firstDateOfDocsForProcessing, str):
         firstDateOfDocsForProcessing = parser.parse(
             firstDateOfDocsForProcessing, dayfirst=True).date()
@@ -119,12 +118,10 @@ def process_period(
     if (firstDateOfDocsForProcessing > lastDateOfDocsForProcessing):
         raise "date error: The first date is later than the last date."
 
-    if not ((isinstance(firstDateForNodes, str) and
-            isinstance(lastDateForNodes, str)
-             ) or
-            (isinstance(firstDateForNodes, date) and
-            isinstance(lastDateForNodes, date))):
-            raise 'Date have different types'
+    if firstDateForNodes is None:
+        firstDateForNodes = date.min
+    if lastDateForNodes is None:
+        lastDateForNodes = date.max
     if isinstance(firstDateForNodes, str):
         firstDateForNodes = parser.parse(
             firstDateForNodes, dayfirst=True).date()
@@ -134,12 +131,10 @@ def process_period(
     if (firstDateForNodes > lastDateForNodes):
         raise "date error: The first date is later than the last date. "
 
-    if not ((isinstance(firstDateFrom, str) and
-            isinstance(lastDateFrom, str)
-             ) or
-            (isinstance(firstDateFrom, date) and
-            isinstance(lastDateFrom, date))):
-            raise 'Date have different types'
+    if firstDateFrom is None:
+        firstDateFrom = date.min
+    if lastDateFrom is None:
+        lastDateFrom = date.max
     if isinstance(firstDateFrom, str):
         firstDateFrom = parser.parse(
             firstDateFrom, dayfirst=True).date()
@@ -149,12 +144,10 @@ def process_period(
     if (firstDateFrom > lastDateFrom):
         raise "date error: The first date is later than the last date. "
 
-    if not ((isinstance(firstDateTo, str) and
-            isinstance(lastDateTo, str)
-             ) or
-            (isinstance(firstDateTo, date) and
-            isinstance(lastDateTo, date))):
-            raise 'Date have different types'
+    if firstDateTo is None:
+        firstDateTo = date.min
+    if lastDateTo is None:
+        lastDateTo = date.max
     if isinstance(firstDateTo, str):
         firstDateTo = parser.parse(
             firstDateTo, dayfirst=True).date()
@@ -188,11 +181,12 @@ def process_period(
         rough_analysis.get_rough_links_for_multiple_docs(usingHeaders)
     if (rough_analysis.PATH_NONE_VALUE_KEY in roughLinksDict or
             rough_analysis.PATH_NOT_EXIST_KEY in roughLinksDict):
-        raise 'Some headers have not text'
+        raise ValueError('Some headers have no text')
     links = final_analysis.get_clean_links(roughLinksDict,
                                            decisionsHeaders)[0]
 
     linkGraph = final_analysis.get_link_graph(links)
+    converters.save_pickle(linkGraph, 'linkGraph.pickle')
     nFilter = models.GraphNodesFilter(
         nodesTypes, firstDateForNodes, lastDateForNodes, nodesIndegreeRange,
         nodesOutdegreeRange)
@@ -204,6 +198,7 @@ def process_period(
         firstDateTo, lastDateTo)
     eFilter = models.GraphEdgesFilter(hFromFilter, hToFilter, weightsRange)
     subgraph = linkGraph.get_subgraph(nFilter, eFilter, includeIsolatedNodes)
+    converters.save_pickle(subgraph, 'subgraph.pickle')
     linkGraphLists = (subgraph.get_nodes_as_IDs_list(),
                       subgraph.get_edges_as_list_of_tuples())
 
@@ -216,7 +211,7 @@ def process_period(
 def start_process_with(
         decisionID, depth,
         firstDateForNodes=None, lastDateForNodes=None, nodesIndegreeRange=None,
-        nodesOutdegreeRange=None, nodesTypes=None, includeIsolatedNodes=False,
+        nodesOutdegreeRange=None, nodesTypes=None, includeIsolatedNodes=True,
         firstDateFrom=None, lastDateFrom=None, docTypesFrom=None,
         firstDateTo=None, lastDateTo=None, docTypesTo=None,
         weightsRange=None,
@@ -238,12 +233,10 @@ def start_process_with(
     if (decisionID not in headers):
         raise "Unknown uid"
 
-    if not ((isinstance(firstDateForNodes, str) and
-            isinstance(lastDateForNodes, str)
-             ) or
-            (isinstance(firstDateForNodes, date) and
-            isinstance(lastDateForNodes, date))):
-            raise 'Date have different types'
+    if firstDateForNodes is None:
+        firstDateForNodes = date.min
+    if lastDateForNodes is None:
+        lastDateForNodes = date.max
     if isinstance(firstDateForNodes, str):
         firstDateForNodes = parser.parse(
             firstDateForNodes, dayfirst=True).date()
@@ -253,12 +246,10 @@ def start_process_with(
     if (firstDateForNodes > lastDateForNodes):
         raise "date error: The first date is later than the last date. "
 
-    if not ((isinstance(firstDateFrom, str) and
-            isinstance(lastDateFrom, str)
-             ) or
-            (isinstance(firstDateFrom, date) and
-            isinstance(lastDateFrom, date))):
-            raise 'Date have different types'
+    if firstDateFrom is None:
+        firstDateFrom = date.min
+    if lastDateFrom is None:
+        lastDateFrom = date.max
     if isinstance(firstDateFrom, str):
         firstDateFrom = parser.parse(
             firstDateFrom, dayfirst=True).date()
@@ -268,12 +259,10 @@ def start_process_with(
     if (firstDateFrom > lastDateFrom):
         raise "date error: The first date is later than the last date. "
 
-    if not ((isinstance(firstDateTo, str) and
-            isinstance(lastDateTo, str)
-             ) or
-            (isinstance(firstDateTo, date) and
-            isinstance(lastDateTo, date))):
-            raise 'Date have different types'
+    if firstDateTo is None:
+        firstDateTo = date.min
+    if lastDateTo is None:
+        lastDateTo = date.max
     if isinstance(firstDateTo, str):
         firstDateTo = parser.parse(
             firstDateTo, dayfirst=True).date()
@@ -330,5 +319,17 @@ def start_process_with(
 # end of start_process_with---------------------------------------------
 
 if __name__ == "__main__":
-    process_period("18.06.1980", "18.07.2020", showPicture=False,
-                   isNeedReloadHeaders=False)
+    # process_period("18.06.1980", "18.07.2020", showPicture=False,
+    #                isNeedReloadHeaders=False)
+    process_period(
+        firstDateOfDocsForProcessing='18.03.2013', lastDateOfDocsForProcessing='14.08.2018',
+        docTypesForProcessing={'КСРФ/О', 'КСРФ/П'},
+        firstDateForNodes='18.03.2014', lastDateForNodes='14.08.2017',
+        nodesIndegreeRange=(0, 25), nodesOutdegreeRange=(0, 25), nodesTypes={'КСРФ/О', 'КСРФ/П'},
+        includeIsolatedNodes=True,
+        firstDateFrom='18.03.2016', lastDateFrom='14.08.2016', docTypesFrom={'КСРФ/О', 'КСРФ/П'},
+        firstDateTo='18.03.2015', lastDateTo='14.08.2015', docTypesTo={'КСРФ/О', 'КСРФ/П'},
+        weightsRange=(1, 5),
+        graphOutputFilePath=PATH_TO_JSON_GRAPH,
+        showPicture=True, isNeedReloadHeaders=False)
+    print('all done')

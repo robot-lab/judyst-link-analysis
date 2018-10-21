@@ -179,7 +179,7 @@ class HeadersFilter():
 
         if hasattr(docTypes, '__iter__'):
             self.doc_types = set(docTypes)
-        if self.doc_types == {}:
+        else:
             self.doc_types = None
         if isinstance(firstDate, datetime.date):
             self.first_date = firstDate
@@ -215,12 +215,10 @@ class HeadersFilter():
             return False
 
     def get_filtered_headers(self, headersDict):
-        if (self.doc_types is None and self.first_date == datetime.date.min and
-                self.last_date == datetime.date.max):
-            return headersDict
         resultDict = {}
         for key in headersDict:
-            if self.check_header(headersDict[key]):
+            if (isinstance(headersDict[key], Header) and
+                    self.check_header(headersDict[key])):
                 resultDict[key] = headersDict[key]
         return resultDict
 
@@ -354,15 +352,8 @@ class LinkGraph:
                 indegree += 1
         return (indegree, outdegree)
 
-    def is_isolated(self, node):
-        for edge in self.edges:
-            if (hash(edge.header_from) == hash(node) or
-                    hash(edge.header_to) == hash(node)):
-                return False
-        return True
-
     def get_subgraph(self, nodesFilter=None, edgesFilter=None,
-                     includeIsolatedNodes=False):
+                     includeIsolatedNodes=True):
 
         if (nodesFilter is None and edgesFilter is None):
             return self
@@ -373,6 +364,8 @@ class LinkGraph:
             if not isinstance(nodesFilter, GraphNodesFilter):
                 raise TypeError("Variable 'nodesFilter' is not instance "
                                 "of class GraphNodesFilter")
+            i = 0  # debug
+            L = len(self.nodes)  # debug
             for node in self.nodes:
                 indegreeEggs = False
                 outdegreeEggs = False
@@ -392,6 +385,8 @@ class LinkGraph:
                     restEggs = True
                 if (indegreeEggs and outdegreeEggs and restEggs):
                     subgraph.nodes.add(node)
+                i += 1  # debug
+                print(f'Проверили вершину {i}/{L}')  # debug
         else:
             subgraph.nodes = self.nodes
 
@@ -424,14 +419,11 @@ class LinkGraph:
                         edge.header_to in subgraph.nodes):
                     subgraph.edges.add(edge)
         if not includeIsolatedNodes:
-            subgraph2 = LinkGraph()
-            subgraph2.edges = subgraph.edges
-            for node in subgraph.nodes:
-                if not subgraph.is_isolated(node):
-                    subgraph2.add_node(node)
-            return subgraph2
-        else:
-            return subgraph
+            subgraph.nodes = set()
+            for edge in subgraph.edges:
+                subgraph.add_node(edge.header_from)
+                subgraph.add_node(edge.header_to)
+        return subgraph
 
     def get_nodes_as_IDs_list(self):
         return list(v.id for v in self.nodes)

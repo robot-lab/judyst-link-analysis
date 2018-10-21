@@ -77,7 +77,9 @@ def convert_dictDocumentHeader_to_dicDict(headersNewFormat):
 
 def save_json(jsonSerializableData, pathToFile):
     try:
-        os.makedirs(os.path.dirname(pathToFile), exist_ok=True)
+        dirname = os.path.dirname(pathToFile)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
         with open(pathToFile, 'w') as jsonFile:
             json.dump(jsonSerializableData, jsonFile)
     except OSError:
@@ -96,7 +98,9 @@ def load_json(pathToFile):
 
 def save_pickle(anyData, pathToFile):
     try:
-        os.makedirs(os.path.dirname(pathToFile), exist_ok=True)
+        dirname = os.path.dirname(pathToFile)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
         with open(pathToFile, 'wb') as pickleFile:
             pickle.dump(anyData, pickleFile)
     except OSError:
@@ -116,7 +120,7 @@ if __name__ == '__main__':
     p0 = load_pickle('Decision files0\\DecisionHeaders0.pickle')
     p1 = load_pickle('Decision files0\\DecisionHeaders.pickle')
 
-    pickle1 = load_pickle('Decision files0\\DecisionHeaders.pickle')
+    pickle1 = load_pickle('Decision files\\DecisionHeaders.pickle')
     json1 = convert_dictDocumentHeader_to_dicDict(pickle1)
     save_json(json1, 'Decision files0\\DecisionHeaders.json')
     json2 = load_json('Decision files0\\DecisionHeaders.json')

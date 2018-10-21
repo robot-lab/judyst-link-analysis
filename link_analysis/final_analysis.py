@@ -1,5 +1,5 @@
 import re
-from link_analysis.models import LinkGraph
+from link_analysis.models import LinkGraph, CleanLink, DuplicateHeader
 
 yearPattern = re.compile(r'(?<=\s)\d{4}(?=\s)')
 numberPattern = re.compile(r'\d+(-[А-Яа-я]+)+')
@@ -21,7 +21,7 @@ def get_clean_links(collectedLinks: dict, courtSiteContent: dict,
     for headerFrom in collectedLinks:
         checkedLinks[headerFrom] = []
         for link in collectedLinks[headerFrom]:
-            spam = splitPattern(link.body)
+            spam = splitPattern.split(link.body)
             number = numberPattern.search(spam[-1])
             years = yearPattern.findall(spam[0])
             if years and number:
@@ -30,6 +30,13 @@ def get_clean_links(collectedLinks: dict, courtSiteContent: dict,
                     gottenID = (courtPrefix + number[0].upper() +
                                 '/' + years.pop())
                     if gottenID in courtSiteContent:
+                        try:
+                            if isinstance(courtSiteContent[gottenID],
+                                          DuplicateHeader):
+                                raise TypeError("It links on duplicating "
+                                                "document")
+                        except TypeError:
+                            break
                         eggs = True
                         years.clear()
                         headerTo = courtSiteContent[gottenID]
@@ -43,8 +50,9 @@ def get_clean_links(collectedLinks: dict, courtSiteContent: dict,
                             cleanLink.citations_number += 1
                             cleanLink.append(positionAndContext)
                         else:
-                            cleanLink = cleanLink(headerFrom, headerTo, 1,
+                            cleanLink = CleanLink(headerFrom, headerTo, 1,
                                                   positionAndContext)
+                            checkedLinks[headerFrom].append(cleanLink)
                 if not eggs:
                     if headerFrom not in rejectedLinks:
                         rejectedLinks[headerFrom] = []
