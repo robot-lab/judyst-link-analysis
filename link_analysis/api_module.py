@@ -17,8 +17,6 @@ import rough_analysis
 import visualizer
 import converters
 from web_crawler import ksrf
-
-
 # methods---------------------------------------------------------------
 
 
@@ -31,7 +29,7 @@ PATH_TO_JSON_HEADERS = os.path.join(DECISIONS_FOLDER_NAME,
 PATH_TO_PICKLE_HEADERS = os.path.join(DECISIONS_FOLDER_NAME,
                                       PICKLE_HEADERS_FILENAME)
 PATH_TO_JSON_GRAPH = 'graph.json'
-
+ALL_CLEAN_LINKS_PATH = 'allCleanLinks.pickle'
 
 def collect_headers(pathToFileForSave, pagesNum):
     # TO DO: ask about pagesNum
@@ -176,7 +174,7 @@ def process_period(
         raise ValueError('Some headers have no text')
     links = final_analysis.get_clean_links(roughLinksDict,
                                            decisionsHeaders)[0]
-
+    converters.save_pickle(links, 'allCleanLinks.pickle')
     linkGraph = final_analysis.get_link_graph(links)
     converters.save_pickle(linkGraph, 'linkGraph.pickle')
     nFilter = models.GraphNodesFilter(
@@ -277,9 +275,9 @@ def start_process_with(
         toProcess = {}
         for decID in cleanLinks:
             for cl in cleanLinks[decID]:
-                id_ = cl.header_to.id
-                if (id_ not in processed):
-                    toProcess[id_] = headers[id_]
+                docID = cl.header_to.doc_id
+                if (docID not in processed):
+                    toProcess[docID] = headers[docID]
 
     linkGraph = final_analysis.get_link_graph(allLinks)
     converters.save_pickle(processed, 'processWithHeaders.pickle')
@@ -309,8 +307,8 @@ def start_process_with(
 
 if __name__ == "__main__":
     # process_period("18.06.1980", "18.07.2020", showPicture=False,
-    #                isNeedReloadHeaders=False)
-    #
+    #                isNeedReloadHeaders=False, includeIsolatedNodes=True)
+
     # process_period(
     #     firstDateOfDocsForProcessing='18.03.2013',
     #     lastDateOfDocsForProcessing='14.08.2018',
@@ -326,22 +324,33 @@ if __name__ == "__main__":
     #     weightsRange=(1, 5),
     #     graphOutputFilePath=PATH_TO_JSON_GRAPH,
     #     showPicture=True, isNeedReloadHeaders=False)
-    #
+    
     # start_process_with(decisionID='КСРФ/1-П/2015', depth=3)
     # load_and_visualize()
-    # start_process_with(
-    #     decisionID='КСРФ/1-П/2015', depth=10,
-    #     firstDateForNodes='18.03.2014', lastDateForNodes='14.08.2018',
-    #     nodesIndegreeRange=(0, 25), nodesOutdegreeRange=(0, 25),
-    #     nodesTypes={'КСРФ/О', 'КСРФ/П'},
-    #     includeIsolatedNodes=False,
-    #     firstDateFrom='18.03.2011', lastDateFrom='14.08.2019',
-    #     docTypesFrom={'КСРФ/О', 'КСРФ/П'},
-    #     firstDateTo='18.03.2011', lastDateTo='14.08.2018',
-    #     docTypesTo={'КСРФ/О', 'КСРФ/П'},
-    #     weightsRange=(1, 5),
-    #     graphOutputFilePath=PATH_TO_JSON_GRAPH,
-    #     showPicture=True, isNeedReloadHeaders=False)
-    headersOld = ksrf.get_resolution_headers(3)
-    print('headersOld')
+    start_process_with(
+        decisionID='КСРФ/1-П/2015', depth=10,
+        firstDateForNodes='18.03.2014', lastDateForNodes='14.08.2018',
+        nodesIndegreeRange=(0, 25), nodesOutdegreeRange=(0, 25),
+        nodesTypes={'КСРФ/О', 'КСРФ/П'},
+        includeIsolatedNodes=False,
+        firstDateFrom='18.03.2011', lastDateFrom='14.08.2019',
+        docTypesFrom={'КСРФ/О', 'КСРФ/П'},
+        firstDateTo='18.03.2011', lastDateTo='14.08.2018',
+        docTypesTo={'КСРФ/О', 'КСРФ/П'},
+        weightsRange=(1, 5),
+        graphOutputFilePath=PATH_TO_JSON_GRAPH,
+        showPicture=True, isNeedReloadHeaders=False)
+    
+    
+    # headersOld = ksrf.get_resolution_headers(3)
+    # print(headersOld)
+    
+    # saving all cleal lniks
+    # cleanLinks = converters.load_pickle(ALL_CLEAN_LINKS_PATH)
+    # cleanLinksLists = list(cleanLinks[key] for key in cleanLinks if cleanLinks[key])
+    # cleanLinksList = []
+    # for L in cleanLinksLists:
+    #     cleanLinksList.extend(L)
+    # JSONcleanLinks = converters.convert_to_json_serializable_format(cleanLinksList)
+    # converters.save_json(JSONcleanLinks, 'jsonAllCleanLinks.json')
     input('press any key...')

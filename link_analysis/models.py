@@ -1,24 +1,63 @@
 import datetime
 import collections
+
 import dateutil.parser
-# License: Apache Software License, BSD License (Dual License)
+# License: Apache Software Licenseid, BSD License (Dual License)
 
 
 class DocumentHeader:
-    def __init__(self, id_):
-        self.id = id_
+
+    """
+    Base class for subclasses Header and DuplicateHeader.
+    Instance stores data about document like court decision.
+
+    :attribute doc_id: str.
+        ID of document.
+
+    :methods convert_from_dict: staticmethod.
+        Interface method. Calls method with same name from subclasses
+        and returns their response.
+    """
+
+    def __init__(self, docID: str):
+        """
+        Creates instance using document ID. Used at subclasses.
+
+        :param docID: str.
+            ID of document.
+        """
+        if isinstance(docID, str):
+            self.doc_id = docID
+        raise TypeError("'docID' must be instance of 'str'")
 
     def __eq__(self, other):
-        return self.id == other.id
+        return self.doc_id == other.doc_id
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(self.id)
+        return hash(self.doc_id)
 
     @staticmethod
     def convert_from_dict(key: str, oldFormatHeader: dict):
+        """
+        Convert dict object to instance of subclass of class DocumentHeader.
+
+        :param key: str.
+            Key which related with oldFormatHeader.
+        :param oldFormatHeader: dict.
+            Dict object that stores data about document.
+
+        :return: DocumentHeader.
+            Instance of one of subclasses (Header or DuplicateHeader).
+        """
+
+        if not isinstance(key, str):
+            raise TypeError("'key' must be instance of 'str'")
+        if not isinstance(oldFormatHeader, dict):
+            raise TypeError("'oldFormatHeader' must be instance of 'dict'")
+
         if 'not unique' in oldFormatHeader:
             return DuplicateHeader.convert_from_dict(key, oldFormatHeader)
         else:
@@ -26,24 +65,77 @@ class DocumentHeader:
 
 
 class Header(DocumentHeader):
-    def __init__(self, id, docType, title, date, sourceUrl,
+
+    """
+    Subclass of DocumentHeader. Implements storage of data
+    about document whose identifier is unique.
+
+    :attribute doc_id: str.
+        ID of document.
+    :attribute doc_type: str.
+        Type of document.
+    :attribute title: str.
+        Title of document.
+    :attribute release_date: datetime.date.
+        Release date of document
+    :attribute text_source_url: str.
+            URL of document text source.
+    :attribute text_location: str, optional (default=None).
+        Location of text document.
+
+    :method convert_to_dict: instancemethod.
+        Convert instance to dict object.
+    :method convert_from_dict: staticmethod.
+        Convert dict object to instance of own class.
+        Called from superclass by iterface method with same name.
+    """
+
+    def __init__(self, docID, docType, title, releaseDate, textSourceUrl,
                  textLocation=None):
-        super().__init__(id)
-        self.document_type = docType
-        self.title = title
-        if isinstance(date, datetime.date):
-            self.date = date
+        """
+        Constructor which uses superclass constructor passing it an arg docID.
+
+        :param docID: str.
+            ID of document.
+        :param docType: str.
+            Type of document.
+        :param title: str.
+            Title of document.
+        :param releaseDate: datetime.date.
+            Release date of document.
+        :param textSourceUrl: str.
+            URL of document text source.
+        :param textLocation: str, optional (default=None).
+            Location of text document.
+        """
+        super().__init__(docID)
+        if isinstance(docType, str):
+            self.doc_type = docType
         else:
-            raise TypeError("Variable 'date' is not instance of datetime.date")
-        self.source_url = sourceUrl
-        self.text_location = textLocation
+            raise TypeError("'docType' must be instance of 'str'")
+        if isinstance(title, str):
+            self.title = title
+        else:
+            raise TypeError("'title' must be instance of 'str'")
+        if isinstance(releaseDate, datetime.date):
+            self.release_date = releaseDate
+        else:
+            raise TypeError("'releaseDate' must be instance of 'datetime.date'")
+        if isinstance(textSourceUrl, str):
+            self.text_source_url = textSourceUrl
+        else:
+            raise TypeError("'textSourceUrl' must be instance of 'str'")
+        if isinstance(textLocation, str) or textLocation is None:
+            self.text_location = textLocation
+        else:
+            raise TypeError("'textLocation' must be instance of 'str'")
 
     def __eq__(self, other):
         return (super().__eq__(self) and
-                self.document_type == other.document_type and
+                self.doc_type == other.doc_type and
                 self.title == other.title and
-                self.date == other.date and
-                self.source_url == other.source_url)
+                self.release_date == other.release_date and
+                self.text_source_url == other.text_source_url)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -52,11 +144,18 @@ class Header(DocumentHeader):
         return super().__hash__()
 
     def convert_to_dict(self):
+        """
+        Convert instance to dict object that stores all values
+        of attributes of instance.
+
+        :return: dict.
+            Dict object that stores values of attributes of instance.
+        """
         dictFormatHeader = {
-            'type': self.document_type,
+            'type': self.doc_type,
             'title': self.title,
-            'date': self.date.strftime('%d.%m.%Y'),
-            'url': self.source_url
+            'date': self.release_date.strftime('%d.%m.%Y'),
+            'url': self.text_source_url
             }
         if self.text_location is not None:
             dictFormatHeader['path to text file'] = self.text_location
@@ -64,13 +163,31 @@ class Header(DocumentHeader):
 
     @staticmethod
     def convert_from_dict(key: str, oldFormatHeader: dict):
+        """
+        Convert dict object to instance of own class.
+        Called from superclass by iterface method with same name.
+
+        :param key: str.
+            Key which related with oldFormatHeader.
+        :param oldFormatHeader: dict.
+            Dict object that stores data about document.
+
+        :return: Header.
+            Instance of own class.
+        """
+
+        if not isinstance(key, str):
+            raise TypeError("'key' mus be instance of 'str'")
+        if not isinstance(oldFormatHeader, dict):
+            raise TypeError("'oldFormatHeader' must be instance of 'dict'")
+
         try:
             docID = key
             docType = oldFormatHeader['type']
             title = oldFormatHeader['title']
-            date = dateutil.parser.parse(oldFormatHeader['date'],
+            releaseDate = dateutil.parser.parse(oldFormatHeader['date'],
                                          dayfirst=True).date()
-            sourceUrl = oldFormatHeader['url']
+            textSourceUrl = oldFormatHeader['url']
             if 'path to text file' in oldFormatHeader:
                 textLocation = oldFormatHeader['path to text file']
             else:
@@ -78,27 +195,87 @@ class Header(DocumentHeader):
         except KeyError:
             raise KeyError("'type', 'title', 'date', 'url' is required, "
                            "only 'path to file' is optional")
-        return Header(docID, docType, title, date, sourceUrl, textLocation)
+        return Header(docID, docType, title, releaseDate, textSourceUrl, textLocation)
 
 
 class DuplicateHeader(DocumentHeader):
+
     """
-    You must specify either argument 'id' only or
-    all arguments except optional 'textLocation'
+    Subclass of DocumentHeader. Implements storage of data
+    about document whose identifier is not unique.
+
+    :attribute doc_id: str.
+        Common ID of duplicated documents.
+    :attribute header_list: list.
+        List with instances of class Header.
+        Any of them stores data about one of the duplicated documents.
+
+    :method append: instancemethod.
+        Append instance of class Header that contains data
+        about duplicated document at self.header_list.
+    :method convert_to_dict: instancemethod.
+        Convert instance to dict object.
+    :method convert_from_dict: staticmethod.
+        Convert dict object to instance of own class.
+        Called from superclass by iterface method with same name.
     """
-    def __init__(self, id, docType=None, title=None, date=None, sourceUrl=None,
-                 textLocation=None):
-        super().__init__(id)
-        if (docType is None and title is None and date is None and
-                sourceUrl is None and textLocation is None):
+
+    def __init__(self, docID, docType=None, title=None, releaseDate=None,
+                 textSourceUrl=None, textLocation=None):
+        """
+        Constructor with optinal arguments. You must specify either
+        argument 'docID' only to create empty list that ready to append
+        new elements or all arguments except optional 'textLocation' to create
+        list with first element.
+
+        :param docID: str.
+            Common ID of duplicated documents.
+        :param docType: str.
+            Type of first duplicated document that be added at list.
+        :param title: str.
+            Title of first duplicated document that be added at list.
+        :param releaseDate: datetime.date.
+            Release date of first duplicated document that be added at list.
+        :param textSourceUrl: str.
+            URL of text source of first duplicated document that be added at list.
+        :param textLocation: str, optional (default=None).
+            Text location of first duplicated document that be added at list.
+        """
+        if isinstance(docID, str):
+            super().__init__(docID)
+        else:
+            raise TypeError("'docID' must be instance of 'str'")
+        if isinstance(docType, str) or docType is None:
+            self.doc_type = docType
+        else:
+            raise TypeError("'docType' must be instance of 'str'")
+        if isinstance(title, str) or title is None:
+            self.title = title
+        else:
+            raise TypeError("'title' must be instance of 'str'")
+        if isinstance(releaseDate, datetime.date) or releaseDate is None:
+            self.release_date = releaseDate
+        else:
+            raise TypeError("'date' must be instance of 'datetime.date'")
+        if isinstance(textSourceUrl, str) or textSourceUrl is None:
+            self.text_source_url = textSourceUrl
+        else:
+            raise TypeError("'textSourceUrl' must be instance of 'str'")
+        if isinstance(textLocation, str) or textLocation is None:
+            self.text_location = textLocation
+        else:
+            raise TypeError("'textLocation' must be instance of 'str'")
+
+        if (docType is None and title is None and releaseDate is None and
+                textSourceUrl is None and textLocation is None):
             self.header_list = []
         elif (docType is not None and title is not None and
-              date is not None and sourceUrl is not None):
-            self.header_list = [Header(id, docType, title,
-                                date, sourceUrl, textLocation)]
+              releaseDate is not None and textSourceUrl is not None):
+            self.header_list = [Header(docID, docType, title,
+                                releaseDate, textSourceUrl, textLocation)]
         else:
-            raise ValueError("You must specify either argument 'id' only or "
-                             "all arguments except optional 'textLocation'")
+            raise ValueError("You must specify either argument 'docID' only or"
+                             " all arguments except optional 'textLocation'")
 
     def __eq__(self, other):
         return (super().__eq__(other) and
@@ -111,21 +288,63 @@ class DuplicateHeader(DocumentHeader):
     def __hash__(self):
         return super().__hash__()
 
-    def append(self, docType, title, date, sourceUrl,
+    def append(self, docType, title, releaseDate, textSourceUrl,
                textLocation=None):
-        h = Header(self.id, docType, title, date, sourceUrl,
+        """
+        Append instance of class Header that contains data
+        about duplicated document at self.header_list.
+
+        :param docType: str.
+            Type of document that be added at list.
+        :param title: str.
+            Title of document that be added at list.
+        :param releaseDate: datetime.date.
+            Release date of document that be added at list.
+        :param textSourceUrl: str.
+            URL of text source of document that be added at list.
+        :param textLocation: str, optional (default=None).
+            Text location of document that be added at list.
+        """
+        if isinstance(docType, str) or docType is None:
+            self.doc_type = docType
+        else:
+            raise TypeError("'docType' must be instance of 'str'")
+        if isinstance(title, str) or title is None:
+            self.title = title
+        else:
+            raise TypeError("'title' must be instance of 'str'")
+        if isinstance(releaseDate, datetime.date) or releaseDate is None:
+            self.release_date = releaseDate
+        else:
+            raise TypeError("'releaseDate' must be instance of 'datetime.date'")
+        if isinstance(textSourceUrl, str) or textSourceUrl is None:
+            self.text_source_url = textSourceUrl
+        else:
+            raise TypeError("'textSourceUrl' must be instance of 'str'")
+        if isinstance(textLocation, str) or textLocation is None:
+            self.text_location = textLocation
+        else:
+            raise TypeError("'textLocation' must be instance of 'str'")
+
+        h = Header(self.doc_id, docType, title, releaseDate, textSourceUrl,
                    textLocation)
         if h not in self.header_list:
             self.header_list.append(h)
 
     def convert_to_dict(self):
+        """
+        Convert instance to dict object that stores all values of attributes of instance.
+
+        :return: dict.
+            Dict object that stores values of attributes of instance.
+        """
         dhList = []
         for dupHeader in self.header_list:
             dh = {
-                'type':  dupHeader.document_type,
+                'type':  dupHeader.doc_type,
                 'title':  dupHeader.title,
-                'date':  dupHeader.date.strftime('%d.%m.%Y'),
-                'url':  dupHeader.source_url
+                'date':  dupHeader.release_date.strftime('%d.%m.%Y'),
+                'url':  dupHeader.text_source_url
                 }
             if dupHeader.text_location is not None:
                 dh['path to text file'] = dupHeader.text_location
@@ -134,21 +353,37 @@ class DuplicateHeader(DocumentHeader):
 
     @staticmethod
     def convert_from_dict(key: str, oldFormatHeader: dict):
+        """
+        Convert dict object to instance of own class.
+        Called from superclass by iterface method with same name.
+
+        :param key: str.
+            Key which related with oldFormatHeader.
+        :param oldFormatHeader: dict.
+            Dict object that stores data about document.
+
+        :return: DuplicateHeader.
+            Instance of own class.
+        """
+        if not isinstance(key, str):
+            raise TypeError("'key' mus be instance of 'str'")
+        if not isinstance(oldFormatHeader, dict):
+            raise TypeError("'oldFormatHeader' must be instance of 'dict'")
         docID = key
         duplicateHeader = DuplicateHeader(docID)
         try:
             for dh in oldFormatHeader[1]:
                 docType = dh['type']
                 title = dh['title']
-                date = dateutil.parser.parse(dh['date'],
+                releaseDate = dateutil.parser.parse(dh['date'],
                                              dayfirst=True).date()
-                sourceUrl = dh['url']
+                textSourceUrl = dh['url']
                 if 'path to text file' in dh:
                     textLocation = dh['path to text file']
                 else:
                     textLocation = None
-                duplicateHeader.append(docType, title, date,
-                                       sourceUrl, textLocation)
+                duplicateHeader.append(docType, title, releaseDate,
+                                       textSourceUrl, textLocation)
         except KeyError:
             raise KeyError("'type', 'title', 'date', 'url' is required, "
                            "only 'path to file' is optional")
@@ -241,6 +476,17 @@ class CleanLink(Link):
 
     def append(self, positionAndContext: tuple):
         self.positions_and_contexts.append(positionAndContext)
+    
+    def convert_to_dict(self):
+        cleanLinkDict = {
+            'doc_id_from': self.header_from.doc_id,
+            'doc_id_to': self.header_to.doc_id,
+            'to_doc_title': self.header_to.title,
+            'citations_number': self.citations_number,
+            'contexts_list': [pac[1] for pac in self.positions_and_contexts],
+            'positions_list': [pac[0] for pac in self.positions_and_contexts]
+        }
+        return cleanLinkDict
 
 
 class HeadersFilter():
@@ -248,20 +494,24 @@ class HeadersFilter():
     Arguments contains conditions for which headers will be selected.\n
     firstDate and lastDate: instances of datetime.date
     """
-    def __init__(self, docTypes=None, firstDate=datetime.date.min,
-                 lastDate=datetime.date.max):
+    def __init__(self, docTypes=None, firstDate=None,
+                 lastDate=None):
 
         if hasattr(docTypes, '__iter__'):
             self.doc_types = set(docTypes)
         else:
             self.doc_types = None
-        if isinstance(firstDate, datetime.date):
+        if firstDate is None:
+            self.first_date = datetime.date.min
+        elif isinstance(firstDate, datetime.date):
             self.first_date = firstDate
         else:
             raise TypeError("Variable 'firstDate' is not instance "
                             "of datetime.date")
 
-        if isinstance(lastDate, datetime.date):
+        if lastDate is None:
+            self.last_date = datetime.date.max
+        elif isinstance(lastDate, datetime.date):
             self.last_date = lastDate
         else:
             raise TypeError("Variable 'lastDate' is not instance "
@@ -282,8 +532,8 @@ class HeadersFilter():
 
     def check_header(self, header):
         if ((self.doc_types is None or
-             header.document_type in self.doc_types) and
-                self.first_date <= header.date <= self.last_date):
+             header.doc_type in self.doc_types) and
+                self.first_date <= header.release_date <= self.last_date):
             return True
         else:
             return False
@@ -304,8 +554,8 @@ class GraphNodesFilter(HeadersFilter):
     indegreeRange and outdegreeRange: tuples that implements
     own line segment [int, int]
     """
-    def __init__(self, docTypes=None, firstDate=datetime.date.min,
-                 lastDate=datetime.date.max, indegreeRange=None,
+    def __init__(self, docTypes=None, firstDate=None,
+                 lastDate=None, indegreeRange=None,
                  outdegreeRange=None):
         super().__init__(docTypes, firstDate, lastDate)
         self.indegree_range = indegreeRange
@@ -434,8 +684,6 @@ class LinkGraph:
             if not isinstance(nodesFilter, GraphNodesFilter):
                 raise TypeError("Variable 'nodesFilter' is not instance "
                                 "of class GraphNodesFilter")
-            i = 0  # debug
-            L = len(self.nodes)  # debug
             if (nodesFilter.indegree_range is not None or
                     nodesFilter.outdegree_range is not None):
                 indegrees, outdegrees = self.get_all_nodes_degrees()
@@ -455,8 +703,6 @@ class LinkGraph:
                     restEggs = True
                 if (indegreeEggs and outdegreeEggs and restEggs):
                     subgraph.nodes.add(node)
-                i += 1  # debug
-                print(f'Проверили вершину {i}/{L}')  # debug
         else:
             subgraph.nodes = self.nodes
 
@@ -496,10 +742,10 @@ class LinkGraph:
         return subgraph
 
     def get_nodes_as_IDs_list(self):
-        return list(v.id for v in self.nodes)
+        return list(v.doc_id for v in self.nodes)
 
     def get_edges_as_list_of_tuples(self):
-        return list((e.header_from.id, e.header_to.id, e.citations_number)
+        return list((e.header_from.doc_id, e.header_to.doc_id, e.citations_number)
                     for e in self.edges)
 
     def get_itearable_link_graph(self):  # stub
