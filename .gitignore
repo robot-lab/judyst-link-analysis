@@ -5,12 +5,20 @@ run.cmd
 #Decision Files
 Decision files0/
 Decision Files/*
+<<<<<<< HEAD
+Decision Files0/
+env64/
+link_analysis/json_to_pickle_converter.py
+link_analysis/my_funs.py
+=======
+>>>>>>> 2baad1f36ae87adc1badf8aaf9b08a48e9b3d127
 *.pickle
 *.json
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
 
 # C extensions
 *.so
