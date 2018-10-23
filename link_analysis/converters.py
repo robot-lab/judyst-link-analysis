@@ -1,11 +1,20 @@
 import json
 import pickle
 import os
+from typing import Dict, Iterable, TypeVar, Type, List, Union, Any
 
 from models import Header, DuplicateHeader, DocumentHeader
+from final_analysis import CleanLink
+
+# Don't forget to add to this place new classes where implemented
+# method convert_to_class_format()
+classname = TypeVar('classname', DocumentHeader, CleanLink)
 
 
-def convert_to_class_format(data, className):
+def convert_to_class_format(
+        data: Iterable[Dict[str, str]],
+        className: classname) -> Union[Dict[str, Type[classname]],
+                                       List[Type[classname]]]:
     '''
     argument data: iterable stadard python object like dictionary or list
     with dictionary elements for that class format exist\n
@@ -17,17 +26,21 @@ def convert_to_class_format(data, className):
     if not hasattr(data, '__iter__'):
         raise ValueError("'data' is not iterable object")
     if isinstance(data, dict):
-        convertedData = {}
+        convertedDataDict = {}  # type: Dict[str, Type[classname]]
         for key in data:
-            convertedData[key] = className.convert_from_dict(key, data[key])
+            convertedDataDict[key] = \
+                className.convert_from_dict(key, data[key])
+        return convertedDataDict
     else:
-        convertedData = []
+        convertedDataList = []  # type: List[Type[classname]]
         for el in data:
-            convertedData.append(className.convert_from_dict(el))
-    return convertedData
+            convertedDataList.append(className.convert_from_dict(el))
+        return convertedDataList
 
 
-def convert_to_json_serializable_format(data):
+def convert_to_json_serializable_format(
+        data: Iterable[Type[classname]]) -> Union[Dict[str, Dict[str, str]],
+                                                  List[Dict[str, str]]]:
     '''
     argument data: iterable stadard python object like dictionary or list
     if data is dictionary, data's keys must be standard python objects
@@ -37,17 +50,18 @@ def convert_to_json_serializable_format(data):
     if not hasattr(data, '__iter__'):
         raise ValueError("'data' is not iterable object")
     if isinstance(data, dict):
-        convertedData = {}
+        convertedDataDict = {}  # type: Dict[str, Dict[str, str]]
         for key in data:
-            convertedData[key] = data[key].convert_to_dict()
+            convertedDataDict[key] = data[key].convert_to_dict()
+        return convertedDataDict
     else:
-        convertedData = []
+        convertedDataList = []  # type: List[Dict[str, str]]
         for el in data:
-            convertedData.append(el.convert_to_dict())
-    return convertedData
+            convertedDataList.append(el.convert_to_dict())
+        return convertedDataList
 
 
-def save_json(jsonSerializableData, pathToFile):
+def save_json(jsonSerializableData: object, pathToFile: str) -> bool:
     try:
         dirname = os.path.dirname(pathToFile)
         if dirname:
@@ -59,7 +73,7 @@ def save_json(jsonSerializableData, pathToFile):
     return True
 
 
-def load_json(pathToFile):
+def load_json(pathToFile: str) -> Union[object, None]:
     try:
         with open(pathToFile) as jsonFile:
             data = json.load(jsonFile)
@@ -68,7 +82,7 @@ def load_json(pathToFile):
     return data
 
 
-def save_pickle(anyData, pathToFile):
+def save_pickle(anyData: Any, pathToFile: str) -> bool:
     try:
         dirname = os.path.dirname(pathToFile)
         if dirname:
@@ -80,7 +94,7 @@ def save_pickle(anyData, pathToFile):
     return True
 
 
-def load_pickle(pathToFile):
+def load_pickle(pathToFile: str) -> Any:
     try:
         with open(pathToFile, 'rb') as pickleFile:
             data = pickle.load(pickleFile, encoding='UTF-8')
@@ -91,17 +105,17 @@ def load_pickle(pathToFile):
 if __name__ == '__main__':
     pickle1 = load_pickle('Decision files0\\DecisionHeaders.pickle')
     json1 = convert_to_json_serializable_format(pickle1)
-    import time
-    start_time = time.time()
+    # import time
+    # start_time = time.time()
     save_json(json1, 'Decision files0\\DecisionHeaders.json')
-    print(f"json saving spend {time.time()-start_time} seconds")
-    input('press')
-    # json2 = load_json('Decision files0\\DecisionHeaders.json')
-    # pickle2 = convert_to_class_format(json2, className=DocumentHeader)
-    # save_pickle(pickle2, 'Decision files0\\DecisionHeaders1.pickle')
-    # pickle3 = load_pickle('Decision files0\\DecisionHeaders1.pickle')
-    # json3 = convert_to_json_serializable_format(pickle3)
-    # save_json(json3, 'Decision files0\\DecisionHeaders3.json')
+    # print(f"json saving spend {time.time()-start_time} seconds")
+    # input('press')
+    json2 = load_json('Decision files0\\DecisionHeaders.json')
+    pickle2 = convert_to_class_format(json2, className=DocumentHeader)
+    save_pickle(pickle2, 'Decision files0\\DecisionHeaders1.pickle')
+    pickle3 = load_pickle('Decision files0\\DecisionHeaders1.pickle')
+    json3 = convert_to_json_serializable_format(pickle3)
+    save_json(json3, 'Decision files0\\DecisionHeaders3.json')
 
     # json3file = open('Decision files0\\DecisionHeaders3.json', 'r')
     # json3text = json3file.read()

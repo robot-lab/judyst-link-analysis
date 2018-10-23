@@ -29,12 +29,12 @@ PATH_TO_JSON_HEADERS = os.path.join(DECISIONS_FOLDER_NAME,
 PATH_TO_PICKLE_HEADERS = os.path.join(DECISIONS_FOLDER_NAME,
                                       PICKLE_HEADERS_FILENAME)
 PATH_TO_JSON_GRAPH = 'graph.json'
-ALL_CLEAN_LINKS_PATH = 'allCleanLinks.pickle'
 
-def collect_headers(pathToFileForSave, pagesNum):
-    # TO DO: ask about pagesNum
-    headersOld = ksrf.get_resolution_headers(pagesNum)
-    headersNew = converters.pickle2(headersOld, models.DocumentHeader)
+MY_DEBUG = False
+
+def collect_headers(pathToFileForSave, pagesNum=None):
+    headersOld = ksrf.get_decision_headers(pagesNum)
+    headersNew = converters.convert_to_class_format(headersOld, models.DocumentHeader)
     converters.save_pickle(headersNew, pathToFileForSave)
     return headersNew
 
@@ -46,7 +46,7 @@ def check_text_location_for_headers(headers, folder):
     '''
     for key in headers:
         # generate a possible path according to previously established rules
-        pathToTextLocation = ksrf.get_decision_filename_by_uid(
+        pathToTextLocation = ksrf.get_possible_text_location(
             key, folder, ext='txt')
         # if path is exist put it to header
         if (os.path.exists(pathToTextLocation)):
@@ -59,7 +59,7 @@ def download_texts_for_headers(headers, folder=DECISIONS_FOLDER_NAME):
             (headers[key].text_location is None or
                 not os.path.exists(headers[key].text_location))):
             oldFormatHeader = headers[key].convert_to_dict()
-            ksrf.load_resolution_texts({key: oldFormatHeader}, folder)
+            ksrf.download_decision_texts({key: oldFormatHeader}, folder)
 
 
 def load_graph(pathToGraph=PATH_TO_JSON_GRAPH):
@@ -161,6 +161,7 @@ def process_period(
 
     check_text_location_for_headers(usingHeaders, DECISIONS_FOLDER_NAME)
 
+
     download_texts_for_headers(usingHeaders, DECISIONS_FOLDER_NAME)
 
     decisionsHeaders.update(usingHeaders)
@@ -174,9 +175,12 @@ def process_period(
         raise ValueError('Some headers have no text')
     links = final_analysis.get_clean_links(roughLinksDict,
                                            decisionsHeaders)[0]
-    converters.save_pickle(links, 'allCleanLinks.pickle')
+   
+    if MY_DEBUG:
+        converters.save_pickle(links, 'allCleanLinks.pickle')
     linkGraph = final_analysis.get_link_graph(links)
-    converters.save_pickle(linkGraph, 'linkGraph.pickle')
+    if MY_DEBUG:
+        converters.save_pickle(linkGraph, 'linkGraph.pickle')
     nFilter = models.GraphNodesFilter(
         nodesTypes, firstDateForNodes, lastDateForNodes, nodesIndegreeRange,
         nodesOutdegreeRange)
@@ -188,7 +192,8 @@ def process_period(
         firstDateTo, lastDateTo)
     eFilter = models.GraphEdgesFilter(hFromFilter, hToFilter, weightsRange)
     subgraph = linkGraph.get_subgraph(nFilter, eFilter, includeIsolatedNodes)
-    converters.save_pickle(subgraph, 'subgraph.pickle')
+    if MY_DEBUG:
+        converters.save_pickle(subgraph, 'subgraph.pickle')
     linkGraphLists = (subgraph.get_nodes_as_IDs_list(),
                       subgraph.get_edges_as_list_of_tuples())
 
@@ -280,8 +285,9 @@ def start_process_with(
                     toProcess[docID] = headers[docID]
 
     linkGraph = final_analysis.get_link_graph(allLinks)
-    converters.save_pickle(processed, 'processWithHeaders.pickle')
-    converters.save_pickle(processed, 'processWithGraph.pickle')
+    if MY_DEBUG:
+        converters.save_pickle(processed, 'processWithHeaders.pickle')
+        converters.save_pickle(processed, 'processWithGraph.pickle')
     nFilter = models.GraphNodesFilter(
         nodesTypes, firstDateForNodes, lastDateForNodes, nodesIndegreeRange,
         nodesOutdegreeRange)
@@ -293,7 +299,8 @@ def start_process_with(
         firstDateTo, lastDateTo)
     eFilter = models.GraphEdgesFilter(hFromFilter, hToFilter, weightsRange)
     subgraph = linkGraph.get_subgraph(nFilter, eFilter, includeIsolatedNodes)
-    converters.save_pickle(subgraph, 'processWithSubgraph.pickle')
+    if MY_DEBUG:
+        converters.save_pickle(subgraph, 'processWithSubgraph.pickle')
     linkGraphLists = (subgraph.get_nodes_as_IDs_list(),
                       subgraph.get_edges_as_list_of_tuples())
 
@@ -306,6 +313,8 @@ def start_process_with(
 # end of start_process_with---------------------------------------------
 
 if __name__ == "__main__":
+    import time
+    start_time = time.time()
     # process_period("18.06.1980", "18.07.2020", showPicture=False,
     #                isNeedReloadHeaders=False, includeIsolatedNodes=True)
 
@@ -340,17 +349,7 @@ if __name__ == "__main__":
         weightsRange=(1, 5),
         graphOutputFilePath=PATH_TO_JSON_GRAPH,
         showPicture=True, isNeedReloadHeaders=False)
-    
-    
-    # headersOld = ksrf.get_resolution_headers(3)
-    # print(headersOld)
-    
-    # saving all cleal lniks
-    # cleanLinks = converters.load_pickle(ALL_CLEAN_LINKS_PATH)
-    # cleanLinksLists = list(cleanLinks[key] for key in cleanLinks if cleanLinks[key])
-    # cleanLinksList = []
-    # for L in cleanLinksLists:
-    #     cleanLinksList.extend(L)
-    # JSONcleanLinks = converters.convert_to_json_serializable_format(cleanLinksList)
-    # converters.save_json(JSONcleanLinks, 'jsonAllCleanLinks.json')
+
+    print(f"Headers collection spent {time.time()-start_time} seconds.")
+    # get_only_unique_headers()
     input('press any key...')

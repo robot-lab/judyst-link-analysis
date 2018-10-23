@@ -1,4 +1,5 @@
 import re
+from typing import Dict, List, Union
 from models import Header, RoughLink, DuplicateHeader
 
 # link pattern main part
@@ -33,7 +34,7 @@ numberPattern = re.compile(r'(?:№|N)[\s\d]+[-\w/]*')
 opinionPattern = re.compile(r'(?i)мнение\s+судьи\s+конституционного')
 
 
-def get_rough_links(header: Header):
+def get_rough_links(header: Header) -> List[RoughLink]:
     """
     :param header: instance of class models.Header
     """
@@ -71,7 +72,8 @@ PATH_NONE_VALUE_KEY = 'path has None value'
 PATH_NOT_EXIST_KEY = 'path does not exist'
 
 
-def get_rough_links_for_multiple_docs(headers: dict):
+def get_rough_links_for_multiple_docs(
+        headers: Dict[str, Union[Header, DuplicateHeader]]) -> Dict[Header, List[RoughLink]]:
     """
     :param header: dict of instances of class models.Header
     return dict with list of instances of class RoughLink
@@ -79,7 +81,7 @@ def get_rough_links_for_multiple_docs(headers: dict):
     also this dict may contain two lists of instances of
     lass models.Header which were unsuccessfully processed
     """
-    result = {}
+    result = {}  # type: Dict[Header, List[RoughLink]]
     for decisionID in headers:
         if isinstance(headers[decisionID], DuplicateHeader):
             continue

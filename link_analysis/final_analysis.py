@@ -1,13 +1,18 @@
 import re
-from models import LinkGraph, CleanLink, DuplicateHeader
-
+from models import Header, DuplicateHeader, CleanLink
+from models import LinkGraph
+from rough_analysis import RoughLink
+from typing import Dict, Tuple, List, Union
 yearPattern = re.compile(r'(?<=\s)\d{4}(?=\s)')
 numberPattern = re.compile(r'\d+(-[А-Яа-я]+)+')
 splitPattern = re.compile(r'(?:№|N)')
 
 
-def get_clean_links(collectedLinks: dict, courtSiteContent: dict,
-                    courtPrefix='КСРФ/'):
+def get_clean_links(
+        collectedLinks: Dict[Header, List[RoughLink]],
+        courtSiteContent: Dict[str, Union[Header, DuplicateHeader]],
+        courtPrefix: str='КСРФ/') -> Tuple[Dict[Header, List[CleanLink]],
+                                           Dict[Header, List[RoughLink]]]:
     '''
     Gets clean links.
     arguments:
@@ -16,8 +21,8 @@ def get_clean_links(collectedLinks: dict, courtSiteContent: dict,
     court_site_content: a dictionary with intance of class DocumentHeader
     as element and string with court decision ID (uid) as a key.
     '''
-    rejectedLinks = {}
-    checkedLinks = {}
+    rejectedLinks = {}  # type: Dict[Header, List[RoughLink]]
+    checkedLinks = {}  # type: Dict[Header, List[CleanLink]]
     for headerFrom in collectedLinks:
         checkedLinks[headerFrom] = []
         for link in collectedLinks[headerFrom]:
@@ -64,7 +69,7 @@ def get_clean_links(collectedLinks: dict, courtSiteContent: dict,
     return (checkedLinks, rejectedLinks)
 
 
-def get_link_graph(checkedLinks):
+def get_link_graph(checkedLinks: Dict[Header, List[CleanLink]]) -> LinkGraph:
     '''
     Gets Link Graph, returning instance of clas LinkGraph
     argument: checked_links is a dictionary with list of instances
