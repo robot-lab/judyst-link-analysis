@@ -1,7 +1,12 @@
+*.rar
+link_analysis/json_to_pickle_converter.py
+link_analysis/my_funs.py
 run.cmd
 #Decision Files
+Decision files0/
 Decision Files/*
-
+*.pickle
+*.json
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
