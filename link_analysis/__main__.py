@@ -11,6 +11,5 @@ def main():
     # #  start_process_with('1671-О-Р/2018', 10)
     # print("--- {0} seconds ---".format(time.time() - start_time))
     # input('press any key to close...')
-    import web_crawler
-    web_crawler.__main__.main()
+    print("it's main")
 main()
