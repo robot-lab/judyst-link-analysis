@@ -1,6 +1,6 @@
 ---
 name: Idea proposal
-about: " Suggest an idea for this project"
+about: Suggest an idea for this project
 
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: " Task request"
+name: Task request
 about: Add a final task for this project
 
 ---
