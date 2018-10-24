@@ -99,7 +99,7 @@ class Header(DocumentHeader):
 
     def __init__(self, docID: str, docType: str, title: str,
                  releaseDate: datetime.date, textSourceUrl: str,
-                 textLocation: Optional[str]) -> None:
+                 textLocation: Optional[str]=None) -> None:
 
         """
         Constructor which uses superclass constructor passing it an arg docID.
