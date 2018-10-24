@@ -79,6 +79,8 @@ class Header(DocumentHeader):
 
     :attribute doc_id: str.
         ID of document.
+    :attribute supertype: str.
+        Supertype of document.
     :attribute doc_type: str.
         Type of document.
     :attribute title: str.
@@ -97,7 +99,7 @@ class Header(DocumentHeader):
         Called from superclass by iterface method with same name.
     """
 
-    def __init__(self, docID: str, docType: str, title: str,
+    def __init__(self, docID: str, supertype: str, docType: str, title: str,
                  releaseDate: datetime.date, textSourceUrl: str,
                  textLocation: Optional[str]=None) -> None:
 
@@ -106,6 +108,8 @@ class Header(DocumentHeader):
 
         :param docID: str.
             ID of document.
+        :param supertype: str.
+            Supertype of document.
         :param docType: str.
             Type of document.
         :param title: str.
@@ -118,6 +122,10 @@ class Header(DocumentHeader):
             Location of text document.
         """
         super().__init__(docID)
+        if isinstance(docType, str):
+            self.supertype = supertype
+        else:
+            raise TypeError(f"'supertype' must be instance of {supertype}")
         if isinstance(docType, str):
             self.doc_type = docType
         else:
@@ -140,7 +148,11 @@ class Header(DocumentHeader):
             raise TypeError(f"'textLocation' must be instance of {str}")
 
     def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            raise TypeError(f"Compared objects must be of the same type:"
+                            f"{type(self)} or {type(other)}")
         return (super().__eq__(self) and
+                self.supertype == other.supertype and
                 self.doc_type == other.doc_type and
                 self.title == other.title and
                 self.release_date == other.release_date and
@@ -161,6 +173,7 @@ class Header(DocumentHeader):
             Dict object that stores values of attributes of instance.
         """
         dictFormatHeader = {
+            'supertype': self.supertype,
             'doc_type': self.doc_type,
             'title': self.title,
             'release_date': self.release_date.strftime('%d.%m.%Y'),
@@ -192,6 +205,7 @@ class Header(DocumentHeader):
 
         try:
             docID = key
+            supertype = oldFormatHeader['supertype']
             docType = oldFormatHeader['doc_type']
             title = oldFormatHeader['title']
             releaseDate = dateutil.parser.parse(oldFormatHeader['release_date'],
@@ -202,9 +216,10 @@ class Header(DocumentHeader):
             else:
                 textLocation = None
         except KeyError:
-            raise KeyError("'doc_type', 'title', 'release_date', 'text_source_url' is required, "
+            raise KeyError("'doc_type', 'supertype', 'title', 'release_date', "
+                           "'text_source_url' is required, "
                            "only 'path to file' is optional")
-        return Header(docID, docType, title, releaseDate, textSourceUrl, textLocation)
+        return Header(docID, supertype, docType, title, releaseDate, textSourceUrl, textLocation)
 
 
 class DuplicateHeader(DocumentHeader):
@@ -229,7 +244,7 @@ class DuplicateHeader(DocumentHeader):
         Called from superclass by iterface method with same name.
     """
 
-    def __init__(self, docID, docType=None, title=None, releaseDate=None,
+    def __init__(self, docID, supertype=None, docType=None, title=None, releaseDate=None,
                  textSourceUrl=None, textLocation=None):
         """
         Constructor with optinal arguments. You must specify either
@@ -239,6 +254,8 @@ class DuplicateHeader(DocumentHeader):
 
         :param docID: str.
             Common ID of duplicated documents.
+        :param supertype: str.
+            Supertype of first duplicated document that be added at list.
         :param docType: str.
             Type of first duplicated document that be added at list.
         :param title: str.
@@ -254,6 +271,10 @@ class DuplicateHeader(DocumentHeader):
             super().__init__(docID)
         else:
             raise TypeError(f"'docID' must be instance of {str}")
+        if isinstance(supertype, str) or supertype is None:
+            self.supertype = supertype
+        else:
+            raise TypeError(f"'supertype' must be instance of {str}")
         if isinstance(docType, str) or docType is None:
             self.doc_type = docType
         else:
@@ -275,18 +296,23 @@ class DuplicateHeader(DocumentHeader):
         else:
             raise TypeError(f"'textLocation' must be instance of {str}")
 
-        if (docType is None and title is None and releaseDate is None and
-                textSourceUrl is None and textLocation is None):
+        if (supertype is None and docType is None and title is None and
+            releaseDate is None and  textSourceUrl is None and
+                textLocation is None):
             self.header_list = []
-        elif (docType is not None and title is not None and
-              releaseDate is not None and textSourceUrl is not None):
-            self.header_list = [Header(docID, docType, title,
+        elif (supertype is not None and docType is not None and
+              title is not None and releaseDate is not None and
+                textSourceUrl is not None):
+            self.header_list = [Header(docID, supertype, docType, title,
                                 releaseDate, textSourceUrl, textLocation)]
         else:
             raise ValueError("You must specify either argument 'docID' only or"
                              " all arguments except optional 'textLocation'")
 
     def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            raise TypeError(f"Compared objects must be of the same type:"
+                            f"{type(self)} or {type(other)}")
         return (super().__eq__(other) and
                 (collections.Counter(self.header_list) ==
                 collections.Counter(other.header_list)))
@@ -297,12 +323,14 @@ class DuplicateHeader(DocumentHeader):
     def __hash__(self):
         return super().__hash__()
 
-    def append(self, docType, title, releaseDate, textSourceUrl,
+    def append(self, supertype, docType, title, releaseDate, textSourceUrl,
                textLocation=None):
         """
         Append instance of class Header that contains data
         about duplicated document at self.header_list.
 
+        :param supertype: str.
+            Supertype of document that be added at list.
         :param docType: str.
             Type of document that be added at list.
         :param title: str.
@@ -314,6 +342,10 @@ class DuplicateHeader(DocumentHeader):
         :param textLocation: str, optional (default=None).
             Text location of document that be added at list.
         """
+        if isinstance(supertype, str) or supertype is None:
+            self.supertype = supertype
+        else:
+            raise TypeError(f"'supertype' must be instance of {str}")
         if isinstance(docType, str) or docType is None:
             self.doc_type = docType
         else:
@@ -335,7 +367,7 @@ class DuplicateHeader(DocumentHeader):
         else:
             raise TypeError(f"'textLocation' must be instance of {str}")
 
-        h = Header(self.doc_id, docType, title, releaseDate, textSourceUrl,
+        h = Header(self.doc_id, supertype, docType, title, releaseDate, textSourceUrl,
                    textLocation)
         if h not in self.header_list:
             self.header_list.append(h)
@@ -350,6 +382,7 @@ class DuplicateHeader(DocumentHeader):
         dhList = []
         for dupHeader in self.header_list:
             dh = {
+                'supertype': dupHeader.supertype,
                 'doc_type':  dupHeader.doc_type,
                 'title':  dupHeader.title,
                 'release_date':  dupHeader.release_date.strftime('%d.%m.%Y'),
@@ -383,6 +416,7 @@ class DuplicateHeader(DocumentHeader):
         duplicateHeader = DuplicateHeader(docID)
         try:
             for dh in oldFormatHeader[1]:
+                supertype = dh['supertype']
                 docType = dh['doc_type']
                 title = dh['title']
                 releaseDate = dateutil.parser.parse(dh['release_date'],
@@ -392,11 +426,13 @@ class DuplicateHeader(DocumentHeader):
                     textLocation = dh['text_location']
                 else:
                     textLocation = None
-                duplicateHeader.append(docType, title, releaseDate,
+                duplicateHeader.append(supertype, docType, title, releaseDate,
                                        textSourceUrl, textLocation)
         except KeyError:
-            raise KeyError("'doc_type', 'title', 'release_date', 'text_source_url' is required, "
-                           "only 'text_location' is optional")
+            raise KeyError(
+                "'supertype', 'doc_type', 'title', 'release_date', "
+                "'text_source_url' is required, only 'text_location' "
+                "is optional")
         return duplicateHeader
 
 
@@ -412,6 +448,9 @@ class Link:
         self.header_from = headerFrom
 
     def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            raise TypeError(f"Compared objects must be of the same type:"
+                            f"{type(self)} or {type(other)}")
         return self.header_from == other.header_from
 
     def __ne__(self, other):
@@ -436,6 +475,9 @@ class RoughLink(Link):
         self.position = position
 
     def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            raise TypeError(f"Compared objects must be of the same type:"
+                            f"{type(self)} or {type(other)}")
         return (super().__eq__(other) and
                 self.context == other.context and
                 self.body == other.body and
@@ -472,6 +514,9 @@ class CleanLink(Link):
             self.positions_and_contexts = list(positionsAndContexts)
 
     def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            raise TypeError(f"Compared objects must be of the same type:"
+                            f"{type(self)} or {type(other)}")
         return (super().__eq__(other) and
                 self.header_to == other.header_to and
                 self.citations_number == other.citations_number and
@@ -504,9 +549,12 @@ class HeadersFilter():
     Arguments contains conditions for which headers will be selected.\n
     firstDate and lastDate: instances of datetime.date
     """
-    def __init__(self, docTypes=None, firstDate=None,
+    def __init__(self, supertypes=None, docTypes=None, firstDate=None,
                  lastDate=None):
-
+        if hasattr(supertypes, '__iter__'):
+            self.supertypes = set(supertypes)
+        else:
+            self.supertypes = None
         if hasattr(docTypes, '__iter__'):
             self.doc_types = set(docTypes)
         else:
@@ -528,7 +576,11 @@ class HeadersFilter():
                             "of datetime.date")
 
     def __eq__(self, other):
-        return (self.doc_types == other.doc_types and
+        if not isinstance(other, type(self)):
+            raise TypeError(f"Compared objects must be of the same type:"
+                            f"{type(self)} or {type(other)}")
+        return (self.supertypes == other.supertypes and
+                self.doc_types == other.doc_types and
                 self.first_date == other.first_date and
                 self.last_date == other.last_date)
 
@@ -536,13 +588,16 @@ class HeadersFilter():
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(tuple([hash(tuple(self.doc_types)),
+        return hash(tuple([hash(tuple(self.supertypes)),
+                           hash(tuple(self.doc_types)),
                            hash(self.first_date),
                            hash(self.last_date)]))
 
     def check_header(self, header):
-        if ((self.doc_types is None or
-             header.doc_type in self.doc_types) and
+        if ((self.supertypes is None or
+            header.supertype in self.supertypes) and
+            (self.doc_types is None or
+            header.doc_type in self.doc_types) and
                 self.first_date <= header.release_date <= self.last_date):
             return True
         else:
@@ -564,14 +619,17 @@ class GraphNodesFilter(HeadersFilter):
     indegreeRange and outdegreeRange: tuples that implements
     own line segment [int, int]
     """
-    def __init__(self, docTypes=None, firstDate=None,
+    def __init__(self, supertype=None, docTypes=None, firstDate=None,
                  lastDate=None, indegreeRange=None,
                  outdegreeRange=None):
-        super().__init__(docTypes, firstDate, lastDate)
+        super().__init__(supertype, docTypes, firstDate, lastDate)
         self.indegree_range = indegreeRange
         self.outdegree_range = outdegreeRange
 
     def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            raise TypeError(f"Compared objects must be of the same type:"
+                            f"{type(self)} or {type(other)}")
         return (super().__eq__(other) and
                 self.indegree_range == other.indegree_range and
                 self.outdegree_range == other.outdegree_range)
@@ -598,6 +656,9 @@ class GraphEdgesFilter():
         self.weights_range = weightsRange
 
     def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            raise TypeError(f"Compared objects must be of the same type:"
+                            f"{type(self)} or {type(other)}")
         return (self.headers_filter_from == other.headers_filter_from and
                 self.headers_filter_to == other.headers_filter_to and
                 self.weights_range == other.weights_range)
@@ -643,6 +704,9 @@ class LinkGraph:
         self.edges = set()
 
     def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            raise TypeError(f"Compared objects must be of the same type:"
+                            f"{type(self)} or {type(other)}")
         return (self.nodes == other.nodes and
                 self.edges == other.edges)
 
