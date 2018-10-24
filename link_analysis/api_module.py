@@ -355,9 +355,5 @@ if __name__ == "__main__":
     #     graphOutputFilePath=PATH_TO_JSON_GRAPH,
     #     showPicture=True, isNeedReloadHeaders=False)
     
-    
-    h1=models.Header('key', 'type', 'title', releaseDate=datetime.date(1232, 1,3),
-                     textSourceUrl='url')
     print(f"Headers collection spent {time.time()-start_time} seconds.")
-    # get_only_unique_headers()
     input('press any key...')
