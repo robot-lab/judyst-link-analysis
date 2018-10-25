@@ -3,7 +3,7 @@ import pickle
 import os
 from typing import Dict, Iterable, TypeVar, Type, List, Union, Any
 
-from models import Header, DuplicateHeader, DocumentHeader
+from models import Header, DocumentHeader
 from final_analysis import CleanLink
 
 # Don't forget to add to this place new classes where implemented

@@ -1,45 +1,43 @@
 import re
-from typing import Dict, List, Union
-from models import Header, RoughLink, DuplicateHeader
+from typing import Dict, List, Union, Type
+from models import Header, RoughLink, Positions
 
 # link pattern main part
 lpMP = (r".*?\sот[\s\d]+?(?:(?:января|февраля|марта|апреля|мая|июня|июля|"
         r"августа|сентября|октября|ноября|декабря)+?[\s\d]+?года|\d{2}\."
-        r"\d{2}\.\d{4})[\s\d]+?(№|N)[\s\d]+?[-\w/]*.*?")
+        r"\d{2}\.\d{4})[\s\d]+?(?:№|N)[\s\d]+?[-\w/]*.*?")
 # link pattern prefix #1
-lpPRF1 = r"(?<=\.\s)\s*?[А-Я]"
+lpPRF1 = r"(?<=\.\s)\s*?[А-ЯA-Z]"
 # link pattern postfix #1
-lpPSF1 = r"(?=\.\s[А-Я])"
+lpPSF1 = r"(?=\.\s[А-ЯA-Z])"
 # link pattern prefix #2
-lpPRF2 = r"(?<=^)\s*?[А-Яа-я]"
+lpPRF2 = r"(?<=^)\s*?[А-ЯA-Zа-яa-z]"
 # link pattern postfix #2
 lpPSF2 = r"(?=\.$)"
-linkPattern = re.compile(
-    f"(?:{lpPRF1+lpMP+lpPSF1}|{lpPRF1+lpMP+lpPSF2}|{lpPRF2+lpMP+lpPSF1}|"
-    f"{lpPRF2+lpMP+lpPSF2})", re.VERBOSE)
+linkPattern = re.compile(f"""(?:{lpPRF1+lpMP+lpPSF1}|{lpPRF1+lpMP+lpPSF2}|
+            {lpPRF2+lpMP+lpPSF1}|{lpPRF2+lpMP+lpPSF2})""", re.VERBOSE)
 
 # pattern for removing of redundant leading sentences
-reductionPattern = re.compile(r"(?:[А-Я].*[^А-Я]\.\s*(?=[А-Я])|^[А-Яа-я]"
-                              r".*[^А-Я]\.\s*(?=[А-Я]))")
+reductionPattern = re.compile(r"(?:[А-ЯA-Z].*[^А-ЯA-Z]\.\s*(?=[А-ЯA-Z])|^[А-ЯA-Zа-яa-z]"
+                              r".*[^А-ЯA-Z]\.\s*(?=[А-ЯA-Z]))")
 
 # same part of two regular expressions below
-samePart = (r"т[\s\d]+?(?:(?:января|февраля|марта|апреля|мая|июня|июля|"
-            r"августа|сентября|октября|ноября|декабря)+?[\s\d]+?года|\d{2}"
-            r"\.\d{2}\.\d{4})(?=\s)")
-splitPattern = re.compile(
-    f"(?i)о(?={samePart})")
-datePattern = re.compile(
-    f"(?i){samePart}")
+splitPattern = re.compile(r"""(?i)о(?=т[\s\d]+?(?:(?:января|февраля|марта|апреля|мая|июня|июля|
+            августа|сентября|октября|ноября|декабря)+?[\s\d]+?года|\d{2}
+            \.\d{2}\.\d{4})[\s\d]+?(?:№|N))""")
+datePattern = re.compile(r"""(?i)т[\s\d]+?(?:(?:января|февраля|марта|апреля|мая|июня|июля|
+            августа|сентября|октября|ноября|декабря)+?[\s\d]+?года|\d{2}
+            \.\d{2}\.\d{4})(?=\s)""")
 numberPattern = re.compile(r'(?:№|N)[\s\d]+[-\w/]*')
 opinionPattern = re.compile(r'(?i)мнение\s+судьи\s+конституционного')
 
 
-def get_rough_links(header: Header) -> List[RoughLink]:
+def get_rough_links(header: Header) -> Union[List[RoughLink], Type[TypeError], Type[FileNotFoundError]]:
     """
     :param header: instance of class models.Header
     """
     try:
-        with open(header.text_location, 'r', encoding="utf-8") as file:
+        with open(header.text_location, 'r', encoding="utf-8") as file:  # debug file reading will be deleted soon
             text = file.read()
     except TypeError:
         return TypeError
@@ -53,18 +51,31 @@ def get_rough_links(header: Header) -> List[RoughLink]:
         matchObjects = linkPattern.finditer(text)
     for match in matchObjects:
         linksForSplit = match[0]
-        context = reductionPattern.sub('', linksForSplit) + '.'
-        position = match.start(0) + len(splitPattern.split(linksForSplit,
-                                        maxsplit=1)[0]) + 1
+        reduct = reductionPattern.search(linksForSplit)
+        if reduct is not None:
+            reductCorrection = reduct.end()
+            #context = linksForSplit.replace(reduct[0], '') + '.'
+        else:
+            reductCorrection = 0
+            #context = linksForSplit
+        linkCorrection = len(splitPattern.split(linksForSplit,
+                                        maxsplit=1)[0])
+        contextStartPos = match.start(0) + reductCorrection
+        contextEndPos = match.end(0) + 1
+        linkStartPos = match.start(0) + linkCorrection 
+
         splitedLinksForDifferentYears = splitPattern.split(linksForSplit)[1:]
         for oneYearLinks in splitedLinksForDifferentYears:
             date = datePattern.search(oneYearLinks)[0]
-            numbers = numberPattern.findall(oneYearLinks)
-            for number in numbers:
-                gottenRoughLink = 'о' + date + ' ' + number.upper()
-                roughLinks.append(RoughLink(header, gottenRoughLink, context,
-                                  position))
-            position += len(oneYearLinks) + 1
+            matchNumbers = list(numberPattern.finditer(oneYearLinks))
+
+            linkEndPos = linkStartPos + matchNumbers[-1].end(0) + 1
+            for number in matchNumbers:
+                gottenRoughLink = 'о' + date + ' ' + number[0].upper()
+                roughLinks.append(RoughLink(header, gottenRoughLink,
+                                  Positions(contextStartPos, contextEndPos,
+                                            linkStartPos, linkEndPos)))
+            linkStartPos += len(oneYearLinks) + 1           
     return roughLinks
 
 
@@ -73,7 +84,7 @@ PATH_NOT_EXIST_KEY = 'path does not exist'
 
 
 def get_rough_links_for_multiple_docs(
-        headers: Dict[str, Union[Header, DuplicateHeader]]) -> Dict[Header, List[RoughLink]]:
+        headers: Dict[str, Header]) -> Dict[Header, List[RoughLink]]:
     """
     :param header: dict of instances of class models.Header
     return dict with list of instances of class RoughLink
@@ -83,8 +94,8 @@ def get_rough_links_for_multiple_docs(
     """
     result = {}  # type: Dict[Header, List[RoughLink]]
     for decisionID in headers:
-        if isinstance(headers[decisionID], DuplicateHeader):
-            continue
+        if not isinstance(headers[decisionID], Header):
+            raise TypeError(f"Any element of 'headers' must be instance of {Header}")
         maybeRoughLinks = get_rough_links(headers[decisionID])
         if maybeRoughLinks is TypeError:
             if PATH_NONE_VALUE_KEY not in result:

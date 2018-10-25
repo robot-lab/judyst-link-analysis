@@ -3,6 +3,7 @@ ksrf_temp_folder/
 TestResults/
 link_analysis/json_to_pickle_converter.py
 link_analysis/my_funs.py
+link_analysis/archive.py
 run.cmd
 #Decision Files
 Decision files0/

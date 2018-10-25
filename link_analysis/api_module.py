@@ -330,8 +330,8 @@ def start_process_with(
 if __name__ == "__main__":
     import time
     start_time = time.time()
-    process_period("18.06.1980", "18.07.2020", showPicture=False,
-                   isNeedReloadHeaders=False, includeIsolatedNodes=False)
+    # process_period("18.06.1980", "18.07.2020", showPicture=False,
+    #                isNeedReloadHeaders=False, includeIsolatedNodes=False)
     # process_period("18.06.1980", "18.07.2020", showPicture=False,
     #                isNeedReloadHeaders=False, includeIsolatedNodes=False)
     # process_period(
@@ -352,7 +352,7 @@ if __name__ == "__main__":
     
     # start_process_with(decisionID='КСРФ/1-П/2015', depth=3)
 
-    load_and_visualize()
+    # load_and_visualize()
 
     # start_process_with(
     #     decisionID='КСРФ/1-П/2015', depth=10,
@@ -369,5 +369,10 @@ if __name__ == "__main__":
     #     showPicture=True, isNeedReloadHeaders=False)
     # source = web_crawler.Crawler.get_data_source('LocalFileStorage')
     # text=source.get_data('КСРФ/19-П/2014', web_crawler.DataType.DOCUMENT_TEXT)
+
+    # process_period("18.09.2018", "18.07.2020", showPicture=True,
+    #                isNeedReloadHeaders=False, includeIsolatedNodes=True)
+    import my_funs
+    my_funs.saving_all_clean_links()
     print(f"Headers collection spent {time.time()-start_time} seconds.")
     input('press any key...')
