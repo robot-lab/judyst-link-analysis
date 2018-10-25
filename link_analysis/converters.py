@@ -66,7 +66,7 @@ def save_json(jsonSerializableData: object, pathToFile: str) -> bool:
         dirname = os.path.dirname(pathToFile)
         if dirname:
             os.makedirs(dirname, exist_ok=True)
-        with open(pathToFile, 'w') as jsonFile:
+        with open(pathToFile, 'w', encoding='utf-8') as jsonFile:
             json.dump(jsonSerializableData, jsonFile)
     except OSError:
         return False
@@ -75,7 +75,7 @@ def save_json(jsonSerializableData: object, pathToFile: str) -> bool:
 
 def load_json(pathToFile: str) -> Union[object, None]:
     try:
-        with open(pathToFile) as jsonFile:
+        with open(pathToFile, encoding='utf-8') as jsonFile:
             data = json.load(jsonFile)
     except OSError:
         return None
