@@ -12,7 +12,7 @@ class DocumentHeaderTestCase(unittest.TestCase):
         self.header2 = DocumentHeader(r'КСРФ/31-П/2018')
         self.header3 = DocumentHeader(r'КСРФ/30-П/2018')
 
-    def testCreate1(self):
+    def testCreateWithCorrectArguments(self):
         try:
             self.header4 = DocumentHeader(r'КСРФ/31-П/2018')
             TestStatus = True
@@ -20,7 +20,7 @@ class DocumentHeaderTestCase(unittest.TestCase):
             TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testCreate2(self):
+    def testCreateWithIncorrectArguments(self):
         try:
             self.header4 = DocumentHeader(True)
             TestStatus = True
@@ -28,23 +28,23 @@ class DocumentHeaderTestCase(unittest.TestCase):
             TestStatus = False
         self.assertFalse(TestStatus)
 
-    def testEq1(self):
+    def testEqWithEqualClasses(self):
         TestStatus = self.header1 == self.header2
         self.assertTrue(TestStatus)
 
-    def testEq2(self):
+    def testEqWithUnequalClasses(self):
         TestStatus = self.header1 == self.header3
         self.assertFalse(TestStatus)
 
-    def testNe1(self):
+    def testNeWithUnequalClasses(self):
         TestStatus = self.header1 != self.header2
         self.assertFalse(TestStatus)
 
-    def testNe2(self):
+    def testNeWithEqualClasses(self):
         TestStatus = self.header1 != self.header3
         self.assertTrue(TestStatus)
 
-    def testHash1(self):
+    def testHashWithSameClasses(self):
         HeaderList = []
         i = 0
         while i < 100:
@@ -56,7 +56,7 @@ class DocumentHeaderTestCase(unittest.TestCase):
                 TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testHash2(self):
+    def testHashWithDifferentClasses(self):
         HeaderList = []
         i = 0
         while i < 100:
@@ -85,7 +85,7 @@ class HeaderTestCase(unittest.TestCase):
             datetime.date(2018, 9, 27),
             r'http://doc.ksrf.ru/decision/KSRFDecision357727.pdf')
 
-    def testCreate1(self):
+    def testCreateWithCorrectArguments(self):
         try:
             self.header4 = Header(
                 r'КСРФ/30-О/2018', r'КСРФ/О', 'zdarova',
@@ -96,7 +96,7 @@ class HeaderTestCase(unittest.TestCase):
             TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testCreate2(self):
+    def testCreateWithIncorrectArguments(self):
         try:
             self.header4 = Header(
                 r'КСРФ/30-О/2018', 12, False,
@@ -107,23 +107,23 @@ class HeaderTestCase(unittest.TestCase):
             TestStatus = False
         self.assertFalse(TestStatus)
 
-    def testEq1(self):
+    def testEqWithEqualClasses(self):
         TestStatus = self.header1 == self.header2
         self.assertTrue(TestStatus)
 
-    def testEq2(self):
+    def testEqWithUnequalClasses(self):
         TestStatus = self.header1 == self.header3
         self.assertFalse(TestStatus)
 
-    def testNe1(self):
+    def testNeWithUnequalClasses(self):
         TestStatus = self.header1 != self.header2
         self.assertFalse(TestStatus)
 
-    def testNe2(self):
+    def testNeWithEqualClasses(self):
         TestStatus = self.header1 != self.header3
         self.assertTrue(TestStatus)
 
-    def testHash1(self):
+    def testHashWithSameClasses(self):
         HeaderList = []
         i = 0
         while i < 100:
@@ -138,7 +138,7 @@ class HeaderTestCase(unittest.TestCase):
                 TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testHash2(self):
+    def testHashWithDifferentClasses(self):
         HeaderList = []
         i = 0
         while i < 100:
@@ -170,7 +170,7 @@ class DuplicateHeaderTestCase(unittest.TestCase):
             datetime.date(2018, 9, 27),
             r'http://doc.ksrf.ru/decision/KSRFDecision357727.pdf')
 
-    def testCreate1(self):
+    def testCreateWithCorrectArguments(self):
         try:
             self.header4 = DuplicateHeader(
                 r'КСРФ/30-О/2018', r'КСРФ/О', 'zdarova',
@@ -181,7 +181,7 @@ class DuplicateHeaderTestCase(unittest.TestCase):
             TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testCreate2(self):
+    def testCreateWithIncorrectArguments(self):
         try:
             self.header4 = DuplicateHeader(
                 r'КСРФ/30-О/2018', r'КСРФ/О', 1488,
@@ -192,23 +192,23 @@ class DuplicateHeaderTestCase(unittest.TestCase):
             TestStatus = False
         self.assertFalse(TestStatus)
 
-    def testEq1(self):
+    def testEqWithEqualClasses(self):
         TestStatus = self.header1 == self.header2
         self.assertTrue(TestStatus)
 
-    def testEq2(self):
+    def testEqWithUnequalClasses(self):
         TestStatus = self.header1 == self.header3
         self.assertFalse(TestStatus)
 
-    def testNe1(self):
+    def testNeWithUnequalClasses(self):
         TestStatus = self.header1 != self.header2
         self.assertFalse(TestStatus)
 
-    def testNe2(self):
+    def testNeWithEqualClasses(self):
         TestStatus = self.header1 != self.header3
         self.assertTrue(TestStatus)
 
-    def testHash1(self):
+    def testHashWithSameClasses(self):
         HeaderList = []
         i = 0
         while i < 100:
@@ -223,7 +223,7 @@ class DuplicateHeaderTestCase(unittest.TestCase):
                 TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testHash2(self):
+    def testHashWithDifferentClasses(self):
         HeaderList = []
         i = 0
         while i < 100:
@@ -256,7 +256,7 @@ class LinkTestCase(unittest.TestCase):
                    datetime.date(2018, 9, 27),
                    r'http://doc.ksrf.ru/decision/KSRFDecision357727.pdf'))
 
-    def testCreate1(self):
+    def testCreateWithCorrectArguments(self):
         try:
             self.link4 = Link(
                 Header(r'КСРФ/30-О/2018', r'КСРФ/О', 'zdarova',
@@ -268,7 +268,7 @@ class LinkTestCase(unittest.TestCase):
             TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testCreate2(self):
+    def testCreateWithIncorrectArguments(self):
         try:
             self.link4 = Link(
                 Header(True, r'КСРФ/О', 'zdarova',
@@ -279,23 +279,23 @@ class LinkTestCase(unittest.TestCase):
             TestStatus = False
         self.assertFalse(TestStatus)
 
-    def testEq1(self):
+    def testEqWithEqualClasses(self):
         TestStatus = self.link1 == self.link2
         self.assertTrue(TestStatus)
 
-    def testEq2(self):
+    def testEqWithUnequalClasses(self):
         TestStatus = self.link1 == self.link3
         self.assertFalse(TestStatus)
 
-    def testNe1(self):
+    def testNeWithUnequalClasses(self):
         TestStatus = self.link1 != self.link2
         self.assertFalse(TestStatus)
 
-    def testNe2(self):
+    def testNeWithEqualClasses(self):
         TestStatus = self.link1 != self.link3
         self.assertTrue(TestStatus)
 
-    def testHash1(self):
+    def testHashWithSameClasses(self):
         LinkList = []
         i = 0
         while i < 100:
@@ -310,7 +310,7 @@ class LinkTestCase(unittest.TestCase):
                 TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testHash2(self):
+    def testHashWithDifferentClasses(self):
         LinkList = []
         i = 0
         while i < 100:
@@ -334,57 +334,57 @@ class RoughLinkTestCase(unittest.TestCase):
             Header(r'КСРФ/31-П/2018', r'КСРФ/П', 'privet',
                    datetime.date(2018, 10, 16),
                    r'http://doc.ksrf.ru/decision/KSRFDecision357646.pdf)'),
-            'постановление', 'от 1 мая 2018 года № 31-П', 31)
+            'от 1 мая 2018 года № 31-П', 'постановление', 31)
         self.link2 = RoughLink(
             Header(r'КСРФ/31-П/2018', r'КСРФ/П', 'privet',
                    datetime.date(2018, 10, 16),
                    r'http://doc.ksrf.ru/decision/KSRFDecision357646.pdf)'),
-            'постановление', 'от 1 мая 2018 года № 31-П', 31)
+            'от 1 мая 2018 года № 31-П', 'постановление', 31)
         self.link3 = RoughLink(
             Header(r'КСРФ/30-О/2018', r'КСРФ/О', 'zdarova',
                    datetime.date(2018, 9, 27),
                    r'http://doc.ksrf.ru/decision/KSRFDecision357727.pdf'),
-            'определение', 'от 2 мая 2018 года № 30-О', 30)
+            'от 2 мая 2018 года № 30-О', 'определение', 30)
 
-    def testCreate1(self):
+    def testCreateWithCorrectArguments(self):
         try:
             self.link4 = RoughLink(
                 Header(r'КСРФ/30-О/2018', r'КСРФ/О', 'zdarova',
                        datetime.date(2018, 9, 27),
                        r'http://doc.ksrf.ru/decision/KSRFDecision357727.pdf'),
-                'определение', 'от 2 мая 2018 года № 30-О', 30)
+                'от 2 мая 2018 года № 30-О', 'определение', 30)
             TestStatus = True
         except TypeError:
             TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testCreate2(self):
+    def testCreateWithIncorrectArguments(self):
         try:
             self.link4 = RoughLink(
                 'Header',
-                'определение', 'от 2 мая 2018 года № 30-О', 30)
+                'от 2 мая 2018 года № 30-О', 'определение', 30)
             TestStatus = True
         except TypeError:
             TestStatus = False
         self.assertFalse(TestStatus)
 
-    def testEq1(self):
+    def testEqWithEqualClasses(self):
         TestStatus = self.link1 == self.link2
         self.assertTrue(TestStatus)
 
-    def testEq2(self):
+    def testEqWithUnequalClasses(self):
         TestStatus = self.link1 == self.link3
         self.assertFalse(TestStatus)
 
-    def testNe1(self):
+    def testNeWithUnequalClasses(self):
         TestStatus = self.link1 != self.link2
         self.assertFalse(TestStatus)
 
-    def testNe2(self):
+    def testNeWithEqualClasses(self):
         TestStatus = self.link1 != self.link3
         self.assertTrue(TestStatus)
 
-    def testHash1(self):
+    def testHashWithSameClasses(self):
         LinkList = []
         i = 0
         while i < 100:
@@ -393,14 +393,14 @@ class RoughLinkTestCase(unittest.TestCase):
                 Header(r'КСРФ/32-П/2018', r'КСРФ/П', 'privet',
                        datetime.date(2018, 10, 16),
                        r'http://doc.ksrf.ru/decision/KSRFDecision357646.pdf'),
-                'постановление', 'от 3 мая 2018 года № 32-П', 32))
+                'от 3 мая 2018 года № 32-П', 'постановление', 32))
         TestStatus = True
         for link in LinkList:
             if link.__hash__ != LinkList[0].__hash__:
                 TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testHash2(self):
+    def testHashWithDifferentClasses(self):
         LinkList = []
         i = 0
         while i < 100:
@@ -410,7 +410,7 @@ class RoughLinkTestCase(unittest.TestCase):
                        r'КСРФ/П', 'privet',
                        datetime.date(2018, 10, 16),
                        r'http://doc.ksrf.ru/decision/KSRFDecision357646.pdf'),
-                'постановление', 'от 3 мая 2018 года № 32-П', 32))
+                'от 3 мая 2018 года № 32-П', 'постановление', 32))
         LinkList = [link.__hash__() for link in LinkList]
         TestStatus = True
         for link in LinkList:
@@ -446,7 +446,7 @@ class CleanLinkTestCase(unittest.TestCase):
                    r'http://doc.ksrf.ru/decision/KSRFDecision357728.pdf'),
             30, (30, 'определение'))
 
-    def testCreate1(self):
+    def testCreateWithCorrectArguments(self):
         try:
             self.link4 = CleanLink(
                 Header(r'КСРФ/30-О/2018', r'КСРФ/О', 'zdarova',
@@ -461,7 +461,7 @@ class CleanLinkTestCase(unittest.TestCase):
             TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testCreate2(self):
+    def testCreateWithIncorrectArguments(self):
         try:
             self.link4 = CleanLink(
                 Header(r'КСРФ/30-О/2018', 228, 'zdarova',
@@ -476,23 +476,23 @@ class CleanLinkTestCase(unittest.TestCase):
             TestStatus = False
         self.assertFalse(TestStatus)
 
-    def testEq1(self):
+    def testEqWithEqualClasses(self):
         TestStatus = self.link1 == self.link2
         self.assertTrue(TestStatus)
 
-    def testEq2(self):
+    def testEqWithUnequalClasses(self):
         TestStatus = self.link1 == self.link3
         self.assertFalse(TestStatus)
 
-    def testNe1(self):
+    def testNeWithUnequalClasses(self):
         TestStatus = self.link1 != self.link2
         self.assertFalse(TestStatus)
 
-    def testNe2(self):
+    def testNeWithEqualClasses(self):
         TestStatus = self.link1 != self.link3
         self.assertTrue(TestStatus)
 
-    def testHash1(self):
+    def testHashWithSameClasses(self):
         LinkList = []
         i = 0
         while i < 100:
@@ -511,7 +511,7 @@ class CleanLinkTestCase(unittest.TestCase):
                 TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testHash2(self):
+    def testHashWithDifferentClasses(self):
         LinkList = []
         i = 0
         while i < 100:
@@ -543,7 +543,7 @@ class HeadersFilterTestCase(unittest.TestCase):
         self.header3 = HeadersFilter(r'КСРФ/О', datetime.date(2018, 9, 27),
                                      datetime.date(2018, 9, 28))
 
-    def testCreate1(self):
+    def testCreateWithCorrectArguments(self):
         try:
             self.header4 = HeadersFilter(r'КСРФ/О',
                                          datetime.date(2018, 9, 27),
@@ -553,7 +553,7 @@ class HeadersFilterTestCase(unittest.TestCase):
             TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testCreate2(self):
+    def testCreateWithIncorrectArguments(self):
         try:
             self.header4 = HeadersFilter(r'КСРФ/О',
                                          True,
@@ -563,23 +563,23 @@ class HeadersFilterTestCase(unittest.TestCase):
             TestStatus = False
         self.assertFalse(TestStatus)
 
-    def testEq1(self):
+    def testEqWithEqualClasses(self):
         TestStatus = self.header1 == self.header2
         self.assertTrue(TestStatus)
 
-    def testEq2(self):
+    def testEqWithUnequalClasses(self):
         TestStatus = self.header1 == self.header3
         self.assertFalse(TestStatus)
 
-    def testNe1(self):
+    def testNeWithUnequalClasses(self):
         TestStatus = self.header1 != self.header2
         self.assertFalse(TestStatus)
 
-    def testNe2(self):
+    def testNeWithEqualClasses(self):
         TestStatus = self.header1 != self.header3
         self.assertTrue(TestStatus)
 
-    def testHash1(self):
+    def testHashWithSameClasses(self):
         HeaderList = []
         i = 0
         while i < 100:
@@ -593,7 +593,7 @@ class HeadersFilterTestCase(unittest.TestCase):
                 TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testHash2(self):
+    def testHashWithDifferentClasses(self):
         HeaderList = []
         i = 0
         while i < 100:
@@ -608,14 +608,24 @@ class HeadersFilterTestCase(unittest.TestCase):
                 TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testFilteredHeaders(self):
+    def testGetFilteredHeadersWithNotEmptyFilter(self):
+        HeadersDict = {r'КСРФ/31-П/2018': Header(
+            r'КСРФ/31-П/2018', r'КСРФ/П', 'privet',
+            datetime.date(2018, 10, 16),
+            r'http://doc.ksrf.ru/decision/KSRFDecision357646.pdf')}
+        TestStatus = True
+        if self.header1.get_filtered_headers(HeadersDict) is None:
+            TestStatus = False
+        self.assertTrue(TestStatus)
+
+    def testGetFilteredHeadersWithEmptyFilter(self):
         HeadersDict = {r'КСРФ/31-П/2018': Header(
             r'КСРФ/31-П/2018', r'КСРФ/П', 'privet',
             datetime.date(2018, 10, 16),
             r'http://doc.ksrf.ru/decision/KSRFDecision357646.pdf')}
         TestStatus = True
         self.header4 = HeadersFilter()
-        if self.header1.get_filtered_headers(HeadersDict) is None:
+        if self.header4.get_filtered_headers(HeadersDict) is None:
             TestStatus = False
         self.assertTrue(TestStatus)
 
@@ -632,7 +642,7 @@ class GraphNodesFilterTestCase(unittest.TestCase):
                                       datetime.date(2018, 9, 28),
                                       (0, 30), (31, 60))
 
-    def testCreate1(self):
+    def testCreateWithCorrectArguments(self):
         try:
             self.node4 = GraphNodesFilter(r'КСРФ/О',
                                           datetime.date(2018, 9, 27),
@@ -643,7 +653,7 @@ class GraphNodesFilterTestCase(unittest.TestCase):
             TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testCreate2(self):
+    def testCreateWithIncorrectArguments(self):
         try:
             self.node4 = GraphNodesFilter(r'КСРФ/О',
                                           datetime.date(2018, 9, 27),
@@ -654,23 +664,23 @@ class GraphNodesFilterTestCase(unittest.TestCase):
             TestStatus = False
         self.assertFalse(TestStatus)
 
-    def testEq1(self):
+    def testEqWithEqualClasses(self):
         TestStatus = self.node1 == self.node2
         self.assertTrue(TestStatus)
 
-    def testEq2(self):
+    def testEqWithUnequalClasses(self):
         TestStatus = self.node1 == self.node3
         self.assertFalse(TestStatus)
 
-    def testNe1(self):
+    def testNeWithUnequalClasses(self):
         TestStatus = self.node1 != self.node2
         self.assertFalse(TestStatus)
 
-    def testNe2(self):
+    def testNeWithEqualClasses(self):
         TestStatus = self.node1 != self.node3
         self.assertTrue(TestStatus)
 
-    def testHash1(self):
+    def testHashWithSameClasses(self):
         NodeList = []
         i = 0
         while i < 100:
@@ -685,7 +695,7 @@ class GraphNodesFilterTestCase(unittest.TestCase):
                 TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testHash2(self):
+    def testHashWithDifferentClasses(self):
         NodeList = []
         i = 0
         while i < 100:
@@ -723,7 +733,7 @@ class GraphEdgesFilterTestCase(unittest.TestCase):
                           datetime.date(2018, 9, 29)),
             (0, 30))
 
-    def testCreate1(self):
+    def testCreateWithCorrectArguments(self):
         try:
             self.edge4 = GraphEdgesFilter(
                 HeadersFilter(r'КСРФ/О', datetime.date(2018, 9, 27),
@@ -736,7 +746,7 @@ class GraphEdgesFilterTestCase(unittest.TestCase):
             TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testCreate2(self):
+    def testCreateWithIncorrectArguments(self):
         try:
             self.edge4 = GraphEdgesFilter(
                 HeadersFilter(r'КСРФ/О', datetime.date(2018, 9, 27),
@@ -748,23 +758,23 @@ class GraphEdgesFilterTestCase(unittest.TestCase):
             TestStatus = False
         self.assertFalse(TestStatus)
 
-    def testEq1(self):
+    def testEqWithEqualClasses(self):
         TestStatus = self.edge1 == self.edge2
         self.assertTrue(TestStatus)
 
-    def testEq2(self):
+    def testEqWithUnequalClasses(self):
         TestStatus = self.edge1 == self.edge3
         self.assertFalse(TestStatus)
 
-    def testNe1(self):
+    def testNeWithUnequalClasses(self):
         TestStatus = self.edge1 != self.edge2
         self.assertFalse(TestStatus)
 
-    def testNe2(self):
+    def testNeWithEqualClasses(self):
         TestStatus = self.edge1 != self.edge3
         self.assertTrue(TestStatus)
 
-    def testHash1(self):
+    def testHashWithSameClasses(self):
         EdgeList = []
         i = 0
         while i < 100:
@@ -781,7 +791,7 @@ class GraphEdgesFilterTestCase(unittest.TestCase):
                 TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testHash2(self):
+    def testHashWithDifferentClasses(self):
         EdgeList = []
         i = 0
         while i < 100:
@@ -797,6 +807,51 @@ class GraphEdgesFilterTestCase(unittest.TestCase):
         for edge in EdgeList:
             if EdgeList.count(edge) != 1:
                 TestStatus = False
+        self.assertTrue(TestStatus)
+
+    def testGetFilteredEdgesWithNotEmptyFilter(self):
+        Edges = [CleanLink(
+            Header(r'КСРФ/31-П/2018', r'КСРФ/П', 'privet',
+                   datetime.date(2018, 10, 16),
+                   r'http://doc.ksrf.ru/decision/KSRFDecision357646.pdf)'),
+            Header(r'КСРФ/32-П/2018', r'КСРФ/П', 'poka',
+                   datetime.date(2018, 10, 17),
+                   r'http://doc.ksrf.ru/decision/KSRFDecision357647.pdf)'),
+            31, (31, 'постановление')),
+            CleanLink(
+            Header(r'КСРФ/30-О/2018', r'КСРФ/О', 'zdarova',
+                   datetime.date(2018, 9, 27),
+                   r'http://doc.ksrf.ru/decision/KSRFDecision357727.pdf'),
+            Header(r'КСРФ/31-О/2018', r'КСРФ/О', 'uvidimsya',
+                   datetime.date(2018, 9, 28),
+                   r'http://doc.ksrf.ru/decision/KSRFDecision357728.pdf'),
+            30, (30, 'определение'))]
+        TestStatus = True
+        if self.edge1.get_filtered_edges(Edges) is None:
+            TestStatus = False
+        self.assertTrue(TestStatus)
+
+    def testGetFilteredEdgesWithEmptyFilter(self):
+        Edges = [CleanLink(
+            Header(r'КСРФ/31-П/2018', r'КСРФ/П', 'privet',
+                   datetime.date(2018, 10, 16),
+                   r'http://doc.ksrf.ru/decision/KSRFDecision357646.pdf)'),
+            Header(r'КСРФ/32-П/2018', r'КСРФ/П', 'poka',
+                   datetime.date(2018, 10, 17),
+                   r'http://doc.ksrf.ru/decision/KSRFDecision357647.pdf)'),
+            31, (31, 'постановление')),
+            CleanLink(
+            Header(r'КСРФ/30-О/2018', r'КСРФ/О', 'zdarova',
+                   datetime.date(2018, 9, 27),
+                   r'http://doc.ksrf.ru/decision/KSRFDecision357727.pdf'),
+            Header(r'КСРФ/31-О/2018', r'КСРФ/О', 'uvidimsya',
+                   datetime.date(2018, 9, 28),
+                   r'http://doc.ksrf.ru/decision/KSRFDecision357728.pdf'),
+            30, (30, 'определение'))]
+        TestStatus = True
+        self.edge4 = GraphEdgesFilter()
+        if self.edge4.get_filtered_edges(Edges) is None:
+            TestStatus = False
         self.assertTrue(TestStatus)
 
 
@@ -857,7 +912,7 @@ class LinkGraphTestCase(unittest.TestCase):
                        r'http://doc.ksrf.ru/decision/KSRFDecision357728.pdf'),
                 30, (30, 'определение')))
 
-    def testCreate1(self):
+    def testCreateWithCorrectArguments(self):
         try:
             self.graph4 = LinkGraph()
             self.graph4.add_node(
@@ -882,7 +937,7 @@ class LinkGraphTestCase(unittest.TestCase):
             TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testCreate2(self):
+    def testCreateWithIncorrectArguments(self):
         try:
             self.graph4 = LinkGraph()
             self.graph4.add_node(
@@ -907,23 +962,23 @@ class LinkGraphTestCase(unittest.TestCase):
             TestStatus = False
         self.assertFalse(TestStatus)
 
-    def testEq1(self):
+    def testEqWithEqualClasses(self):
         TestStatus = self.graph1 == self.graph2
         self.assertTrue(TestStatus)
 
-    def testEq2(self):
+    def testEqWithUnequalClasses(self):
         TestStatus = self.graph1 == self.graph3
         self.assertFalse(TestStatus)
 
-    def testNe1(self):
+    def testNeWithUnequalClasses(self):
         TestStatus = self.graph1 != self.graph2
         self.assertFalse(TestStatus)
 
-    def testNe2(self):
+    def testNeWithEqualClasses(self):
         TestStatus = self.graph1 != self.graph3
         self.assertTrue(TestStatus)
 
-    def testHash1(self):
+    def testHashWithSameClasses(self):
         GraphList = []
         i = 0
         while i < 100:
@@ -953,7 +1008,7 @@ class LinkGraphTestCase(unittest.TestCase):
                 TestStatus = False
         self.assertTrue(TestStatus)
 
-    def testHash2(self):
+    def testHashWithDifferentClasses(self):
         GraphList = []
         i = 0
         while i < 100:

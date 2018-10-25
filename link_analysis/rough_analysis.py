@@ -39,7 +39,7 @@ def get_rough_links(header: Header) -> List[RoughLink]:
     :param header: instance of class models.Header
     """
     try:
-        with open(header.text_location, 'r', encoding="utf-8") as file:
+        with open(header.text_location, 'r', encoding='utf-8') as file:
             text = file.read()
     except TypeError:
         return TypeError
