@@ -358,7 +358,7 @@ if __name__ == "__main__":
     # source = web_crawler.Crawler.get_data_source('LocalFileStorage')
     # text=source.get_data('КСРФ/19-П/2014', web_crawler.DataType.DOCUMENT_TEXT)
     # text = wc_interface.get_text('КСРФ/1010-О-О/2008')
-    process_period("01.09.1985", "18.07.2020", showPicture=True,
+    process_period("01.09.1985", "18.07.2020", showPicture=False,
                    sendRequestToUpdatingHeadersInBaseFromSite=False, includeIsolatedNodes=True, takeHeadersFromLocalStorage=True)
     print(f"Headers collection spent {time.time()-start_time} seconds.")
     input('press any key...')

@@ -574,15 +574,16 @@ class LinkGraph:
         return not self.__eq__(other)
 
     def __hash__(self):
-        import time  # DEBUG
-        start_time = time.time()  # DEBUG
+        # import time  # DEBUG
+        # start_time = time.time()  # DEBUG
         vHash = hash(tuple(sorted(self.nodes, key=lambda h: hash(h))))
         eHash = hash(tuple(sorted(self.edges, key=lambda e: hash(e))))
         # It will be interesting to know:
-        if False:  # DEBUG
-            raise Exception('We finally needed the graph hash. It takes '
-                            f'{time.time()-start_time} seconds')  # DEBUG
-        print(f'{time.time()-start_time} seconds')  # DEBUG
+        # if False:  # DEBUG
+        #     raise Exception('We finally needed the graph hash. It takes '
+        #                     f'{time.time()-start_time} seconds')  # DEBUG
+        # print(f'Edge number: {len(self.edges)}')
+        # print(f'hash spent {time.time()-start_time} seconds')  # DEBUG
         return hash(tuple([vHash, eHash]))
 
     def add_node(self, node):
