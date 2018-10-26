@@ -60,6 +60,15 @@ def convert_to_json_serializable_format(
             convertedDataList.append(el.convert_to_dict())
         return convertedDataList
 
+def convert_dict_list_cls_to_json_serializable_format(data):
+    dataLists = list(data[key] for key in data if data[key])
+    resultList = []
+    for L in dataLists:
+        resultList.extend(L)
+    JSONcleanLinks = convert_to_json_serializable_format(resultList)
+    return JSONcleanLinks
+
+
 
 def save_json(jsonSerializableData: object, pathToFile: str) -> bool:
     try:
