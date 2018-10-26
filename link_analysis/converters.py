@@ -3,8 +3,10 @@ import pickle
 import os
 from typing import Dict, Iterable, TypeVar, Type, List, Union, Any
 
-from models import Header, DocumentHeader
-from final_analysis import CleanLink
+if __package__:
+    from link_analysis.models import Header, DocumentHeader, CleanLink
+else:
+    from models import Header, DocumentHeader, CleanLink
 
 # Don't forget to add to this place new classes where implemented
 # method convert_to_class_format()
@@ -59,6 +61,15 @@ def convert_to_json_serializable_format(
         for el in data:
             convertedDataList.append(el.convert_to_dict())
         return convertedDataList
+
+def convert_dict_list_cls_to_json_serializable_format(data):
+    dataLists = list(data[key] for key in data if data[key])
+    resultList = []
+    for L in dataLists:
+        resultList.extend(L)
+    JSONcleanLinks = convert_to_json_serializable_format(resultList)
+    return JSONcleanLinks
+
 
 
 def save_json(jsonSerializableData: object, pathToFile: str) -> bool:

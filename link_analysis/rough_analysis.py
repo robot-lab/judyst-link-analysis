@@ -1,6 +1,11 @@
 import re
 from typing import Dict, List, Union, Type
-from models import Header, RoughLink, Positions
+
+if __package__:
+    from link_analysis.models import Header, RoughLink, Positions
+else:
+    from models import Header, RoughLink, Positions
+    import wc_interface
 
 # link pattern main part
 lpMP = (r".*?\sот[\s\d]+?(?:(?:января|февраля|марта|апреля|мая|июня|июля|"
@@ -21,7 +26,7 @@ linkPattern = re.compile(f"""(?:{lpPRF1+lpMP+lpPSF1}|{lpPRF1+lpMP+lpPSF2}|
 reductionPattern = re.compile(r"(?:[А-ЯA-Z].*[^А-ЯA-Z]\.\s*(?=[А-ЯA-Z])|^[А-ЯA-Zа-яa-z]"
                               r".*[^А-ЯA-Z]\.\s*(?=[А-ЯA-Z]))")
 
-# same part of two regular expressions below
+# other patterns
 splitPattern = re.compile(r"""(?i)о(?=т[\s\d]+?(?:(?:января|февраля|марта|апреля|мая|июня|июля|
             августа|сентября|октября|ноября|декабря)+?[\s\d]+?года|\d{2}
             \.\d{2}\.\d{4})[\s\d]+?(?:№|N))""")
@@ -36,13 +41,10 @@ def get_rough_links(header: Header) -> Union[List[RoughLink], Type[TypeError], T
     """
     :param header: instance of class models.Header
     """
-    try:
-        with open(header.text_location, 'r', encoding="utf-8") as file:  # debug file reading will be deleted soon
-            text = file.read()
-    except TypeError:
-        return TypeError
-    except FileNotFoundError:
-        return FileNotFoundError
+    text = wc_interface.get_text(header.doc_id)
+    if not text:
+        print(f"fileID: {header.doc_id}")
+        raise ValueError("Where's the text, Lebowski?")
     roughLinks = []
     opinion = opinionPattern.search(text)
     if opinion is not None:
@@ -79,11 +81,7 @@ def get_rough_links(header: Header) -> Union[List[RoughLink], Type[TypeError], T
     return roughLinks
 
 
-PATH_NONE_VALUE_KEY = 'path has None value'
-PATH_NOT_EXIST_KEY = 'path does not exist'
-
-
-def get_rough_links_for_multiple_docs(
+def get_rough_links_for_docs(
         headers: Dict[str, Header]) -> Dict[Header, List[RoughLink]]:
     """
     :param header: dict of instances of class models.Header
@@ -97,41 +95,9 @@ def get_rough_links_for_multiple_docs(
         if not isinstance(headers[decisionID], Header):
             raise TypeError(f"Any element of 'headers' must be instance of {Header}")
         maybeRoughLinks = get_rough_links(headers[decisionID])
-        if maybeRoughLinks is TypeError:
-            if PATH_NONE_VALUE_KEY not in result:
-                result[PATH_NONE_VALUE_KEY] = []
-            result[PATH_NONE_VALUE_KEY].append(headers[decisionID])
-            continue
-        if maybeRoughLinks is FileNotFoundError:
-            if PATH_NOT_EXIST_KEY not in result:
-                result[PATH_NOT_EXIST_KEY] = []
-            result[PATH_NOT_EXIST_KEY].append(headers[decisionID])
-            continue
         result[headers[decisionID]] = maybeRoughLinks
     return result
 
 
 if (__name__ == '__main__'):
-    from datetime import date
-    # h1 = Header('2028-О/2018', 'КСРФ/О', 'some title1', date(2018, 7, 17),
-    #             'http://doc.ksrf.ru/decision/KSRFDecision353855.pdf',
-    #             r'Decision files\КСРФ_2028-О_2018.txt')
-    # h2 = Header('36-П/2018', 'КСРФ/П', 'some title2', date(2018, 10, 15),
-    #             'http://doc.ksrf.ru/decision/KSRFDecision357397.pdf')
-    # h3 = Header('33-П/2018', 'КСРФ/П', 'some title3', date(2018, 7, 18),
-    #             'http://doc.ksrf.ru/decision/KSRFDecision343519.pdf',
-    #             r'Decision files\КСРФ_33-П_2018.txt')
-    # h4 = Header('30-П/2018', 'КСРФ/П', 'some title4', date(2018, 7, 10),
-    #             'http://doc.ksrf.ru/decision/KSRFDecision342302.pdf',
-    #             r'path that not exist')
-    # h5 = Header('841-О/2018', 'КСРФ/О', 'some title5', date(2018, 4, 12),
-    #             'http://doc.ksrf.ru/decision/KSRFDecision332975.pdf',
-    #             r'Decision files\КСРФ_841-О_2018.txt')
-    # headers = {'2028-О/2018': h1, '36-П/2018': h2, '33-П/2018': h3,
-    #            '30-П/2018': h4, '841-О/2018': h5}
-    # roughLinks = get_rough_links_for_multiple_docs(headers)
-    # input('press any key...')
-
-    h = Header('test5', 'ксрф', 'А', 'title', date(1991, 3, 2), 'url', r'C:\VS Code Projects\test5.txt')
-    r=get_rough_links(h)
-    print('s')
+    print('ok')

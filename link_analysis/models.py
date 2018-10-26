@@ -6,15 +6,14 @@ import dateutil.parser
 # License: Apache Software Licenseid, BSD License (Dual License)
 
 
+
 class DocumentHeader:
 
     """
     Base class for subclasses Header and DuplicateHeader.
     Instance stores data about document like court decision.
-
     :attribute doc_id: str.
         ID of document.
-
     :methods convert_from_dict: staticmethod.
         Interface method. Calls method with same name from subclasses
         and returns their response.
@@ -23,7 +22,6 @@ class DocumentHeader:
     def __init__(self, docID: str) -> None:
         """
         Creates instance using document ID. Used at subclasses.
-
         :param docID: str.
             ID of document.
         """
@@ -49,12 +47,10 @@ class DocumentHeader:
                           oldFormatHeader: Dict):# -> Type[DocumentHeader]:
         """
         Convert dict object to instance of subclass of class DocumentHeader.
-
         :param key: str.
             Key which related with oldFormatHeader.
         :param oldFormatHeader: dict.
             Dict object that stores data about document.
-
         :return: DocumentHeader.
             Instance of one of subclasses (Header or DuplicateHeader).
         """
@@ -72,7 +68,6 @@ class Header(DocumentHeader):
     """
     Subclass of DocumentHeader. Implements storage of data
     about document whose identifier is unique.
-
     :attribute doc_id: str.
         ID of document.
     :attribute supertype: str.
@@ -87,7 +82,6 @@ class Header(DocumentHeader):
         URL of document text source.
     :attribute text_location: str, optional (default=None).
         Location of text document.
-
     :method convert_to_dict: instancemethod.
         Convert instance to dict object.
     :method convert_from_dict: staticmethod.
@@ -96,12 +90,10 @@ class Header(DocumentHeader):
     """
 
     def __init__(self, docID: str, supertype: str, docType: str, title: str,
-                 releaseDate: datetime.date, textSourceUrl: str,
-                 textLocation: Optional[str]=None) -> None:
+                 releaseDate: datetime.date, textSourceUrl: str) -> None:
 
         """
         Constructor which uses superclass constructor passing it an arg docID.
-
         :param docID: str.
             ID of document.
         :param supertype: str.
@@ -138,10 +130,6 @@ class Header(DocumentHeader):
             self.text_source_url = textSourceUrl
         else:
             raise TypeError(f"'textSourceUrl' must be instance of {str}")
-        if isinstance(textLocation, str) or textLocation is None:
-            self.text_location = textLocation
-        else:
-            raise TypeError(f"'textLocation' must be instance of {str}")
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -164,7 +152,6 @@ class Header(DocumentHeader):
         """
         Convert instance to dict object that stores all values
         of attributes of instance.
-
         :return: dict.
             Dict object that stores values of attributes of instance.
         """
@@ -175,8 +162,6 @@ class Header(DocumentHeader):
             'release_date': self.release_date.strftime('%d.%m.%Y'),
             'text_source_url': self.text_source_url
             }
-        if self.text_location is not None:
-            dictFormatHeader['text_location'] = self.text_location
         return dictFormatHeader
 
     @staticmethod
@@ -184,12 +169,10 @@ class Header(DocumentHeader):
         """
         Convert dict object to instance of own class.
         Called from superclass by iterface method with same name.
-
         :param key: str.
             Key which related with oldFormatHeader.
         :param oldFormatHeader: dict.
             Dict object that stores data about document.
-
         :return: Header.
             Instance of own class.
         """
@@ -207,15 +190,10 @@ class Header(DocumentHeader):
             releaseDate = dateutil.parser.parse(oldFormatHeader['release_date'],
                                          dayfirst=True).date()
             textSourceUrl = oldFormatHeader['text_source_url']
-            if 'text_location' in oldFormatHeader:
-                textLocation = oldFormatHeader['text_location']
-            else:
-                textLocation = None
         except KeyError:
             raise KeyError("'doc_type', 'supertype', 'title', 'release_date', "
-                           "'text_source_url' is required, "
-                           "only 'path to file' is optional")
-        return Header(docID, supertype, docType, title, releaseDate, textSourceUrl, textLocation)
+                           "'text_source_url' is required")
+        return Header(docID, supertype, docType, title, releaseDate, textSourceUrl)
 
 
 class Link:
@@ -594,6 +572,7 @@ class LinkGraph:
         if False:  # DEBUG
             raise Exception('We finally needed the graph hash. It takes '
                             f'{time.time()-start_time} seconds')  # DEBUG
+        print(f'{time.time()-start_time} seconds')  # DEBUG
         return hash(tuple([vHash, eHash]))
 
     def add_node(self, node):
@@ -700,26 +679,3 @@ class LinkGraph:
 
 class IterableLinkGraph(LinkGraph):  # stub
     pass
-
-
-if __name__ == "__main__":
-    date = datetime.date(2018, 12, 11)
-    # h1 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-    #             "https://goto.ru", "path-to")
-    # h2 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-    #             "https://goto.ru")
-    # h3 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-    #             "https://goto.ru")
-    # h4 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-    #             "https://goto.ru")
-    # h5.append("КСРФ/О-О", "Заголовк", datetime.date(1990, 1, 2),
-    #           "https://goto.ru")
-    # h6 = DuplicateHeader("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-    #                      "https://goto.ru")
-    # a = LinkGraph()
-    # b = LinkGraph()
-    # a.add_node(h2)
-    # b.add_node(h3)
-    A = LinkGraph()
-    # B = {A:1}
-    input('press any key...')

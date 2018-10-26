@@ -11,15 +11,23 @@ import dateutil.parser
 # License: Apache Software License, BSD License (Dual License)
 
 # imports Core modules--------------------------------------------------
-import final_analysis
-import models
-import rough_analysis
-import visualizer
-import converters
 from web_crawler import ksrf
 import web_crawler
-# methods---------------------------------------------------------------
 
+if __package__:
+    from link_analysis import final_analysis
+    from link_analysis import models
+    from link_analysis import rough_analysis
+    from link_analysis import visualizer
+    from link_analysis import converters
+else:
+    import final_analysis
+    import models
+    import rough_analysis
+    import visualizer
+    import converters
+    import wc_interface
+# methods---------------------------------------------------------------
 
 # internal methods------------------------------------------------------
 DECISIONS_FOLDER_NAME = 'Decision files'
@@ -29,56 +37,26 @@ PATH_TO_JSON_HEADERS = os.path.join(DECISIONS_FOLDER_NAME,
                                     JSON_HEADERS_FILENAME)
 PATH_TO_PICKLE_HEADERS = os.path.join(DECISIONS_FOLDER_NAME,
                                       PICKLE_HEADERS_FILENAME)
-PATH_TO_JSON_GRAPH = 'graph.json'
+RESULTS_FOLDER_NAME = 'ResultsTrue'                                    
+PICKLE_GRAPH_FILENAME = 'graph.pickle'
+JSON_GRAPH_FILENAME = 'graph.json'
+PATH_TO_PICKLE_GRAPH = os.path.join(RESULTS_FOLDER_NAME, PICKLE_GRAPH_FILENAME)
+PATH_TO_JSON_GRAPH = os.path.join(RESULTS_FOLDER_NAME, JSON_GRAPH_FILENAME)
+PICKLE_SUBGRAPH_FILENAME = 'subgraph.pickle'
+JSON_SUBGRAPH_FILENAME = 'subgraph.json'
+PATH_TO_PICKLE_SUBGRAPH = os.path.join(RESULTS_FOLDER_NAME, PICKLE_SUBGRAPH_FILENAME)
+PATH_TO_JSON_SUBGRAPH = os.path.join(RESULTS_FOLDER_NAME, JSON_SUBGRAPH_FILENAME)
 
 MY_DEBUG = True
 
-def collect_headers(pathToFileForSave, pagesNum=None):
-    headersOld = ksrf.get_decision_headers(pagesNum)
-    headersNew = converters.convert_to_class_format(headersOld, models.DocumentHeader)
-    converters.save_pickle(headersNew, pathToFileForSave)
-    return headersNew
 
 
-def check_text_location_for_headers(headers, folder):
-    '''
-    Find files of the documents of the given headers
-   and add path to file in Header.text_location if file was found
-    '''
-    for key in headers:
-        # generate a possible path according to previously established rules
-        pathToTextLocation = ksrf.get_possible_text_location(
-            key, folder, ext='txt')
-        # if path is exist put it to header
-        if (os.path.exists(pathToTextLocation)):
-            headers[key].text_location = pathToTextLocation
-
-
-def download_texts_for_headers(headers, folder=DECISIONS_FOLDER_NAME):
-    for key in headers:
-        if (isinstance(headers[key], models.Header) and
-            (headers[key].text_location is None or
-                not os.path.exists(headers[key].text_location))):
-            oldFormatHeader = headers[key].convert_to_dict()
-            ksrf.download_all_texts({key: oldFormatHeader}, folder)
-
-
-def load_graph(pathToGraph=PATH_TO_JSON_GRAPH):
-    '''
-    Load the stored earlier graph from the given filename,
-    unpack it with JSON and return as
-    [[nodes], [edges: [from, to, weight]]
-    '''
-    return converters.load_json(pathToGraph)
-
-
-# TO DO: Rewrite function after rewriting final_analysis module
 def load_and_visualize(pathTograph=PATH_TO_JSON_GRAPH):
     '''
     Load the stored earlier graph from the given filename and
     Visualize it with Visualizer module.
     '''
-    graph = load_graph(pathTograph)
+    graph = converters.load_json(pathTograph)
     visualizer.visualize_link_graph(graph, 20, 1, (20, 20))
 
 
@@ -98,7 +76,7 @@ def process_period(
         supertypesTo=None,
         weightsRange=None,
         graphOutputFilePath=PATH_TO_JSON_GRAPH,
-        showPicture=True, isNeedReloadHeaders=False):
+        showPicture=True, takeHeadersFromLocalStorage=True, sendRequestToUpdatingHeadersInBaseFromSite=False, whichSupertypeUpdateFromSite=None):
     '''
     Process decisions from the date specified as firstDate to
     the date specified as lastDate.
@@ -151,44 +129,48 @@ def process_period(
             firstDateTo > lastDateTo):
         raise ValueError("date error: The first date is later than the last date.")
 
-    decisionsHeaders = {}
-    if (isNeedReloadHeaders or not os.path.exists(PATH_TO_PICKLE_HEADERS)):
-        # num = 3  # stub, del after web_crawler updating
-        # decisionsHeaders = collect_headers(PATH_TO_PICKLE_HEADERS, num)
-        decisionsHeaders = collect_headers(PATH_TO_PICKLE_HEADERS)
+    if takeHeadersFromLocalStorage:
+        jsonHeaders = converters.load_json(PATH_TO_JSON_HEADERS)
     else:
-        decisionsHeaders = converters.load_pickle(PATH_TO_PICKLE_HEADERS)
+        jsonHeaders = wc_interface.get_all_headers(sendRequestToUpdatingHeadersInBaseFromSite, whichSupertypeUpdateFromSite)  #TODO: using param 'whichSupertypeReloadFromSite' is not implemented
+        #TODO: load and save same file from folder, commented while have no database
+        #converters.save_json(jsonHeaders, PATH_TO_JSON_HEADERS)
+   
+    if not jsonHeaders:
+        raise ValueError("Where's the document headers, Lebowski?")
+
+    decisionsHeaders = converters.convert_to_class_format(jsonHeaders, models.DocumentHeader)
+    converters.save_pickle(decisionsHeaders, PATH_TO_PICKLE_HEADERS)  #Not using, just backup. Maybe delete later
 
     hFilter = models.HeadersFilter(
         supertypesForProcessing,
         docTypesForProcessing,
         firstDateOfDocsForProcessing, lastDateOfDocsForProcessing)
+    
+    # filtered headers to processing
     usingHeaders = hFilter.get_filtered_headers(decisionsHeaders)
 
-    check_text_location_for_headers(usingHeaders, DECISIONS_FOLDER_NAME)
-
-
-    download_texts_for_headers(usingHeaders, DECISIONS_FOLDER_NAME)
-
-    decisionsHeaders.update(usingHeaders)
-
-    converters.save_pickle(decisionsHeaders, PATH_TO_PICKLE_HEADERS)
-
     roughLinksDict = \
-        rough_analysis.get_rough_links_for_multiple_docs(usingHeaders)
-    if (rough_analysis.PATH_NONE_VALUE_KEY in roughLinksDict or
-            rough_analysis.PATH_NOT_EXIST_KEY in roughLinksDict):
-        raise ValueError('Some headers have no text')
+        rough_analysis.get_rough_links_for_docs(usingHeaders)
     
     response = final_analysis.get_clean_links(roughLinksDict,
                                            decisionsHeaders)
     links, rejectedLinks = response[0], response[1]
+
     if MY_DEBUG:
-        converters.save_pickle(links, 'TestResults\\allCleanLinks.pickle')
-        converters.save_pickle(rejectedLinks, 'TestResults\\allRejectedLinks.pickle')
+        converters.save_pickle(links, os.path.join(RESULTS_FOLDER_NAME, 'сleanLinks.pickle'))
+        converters.save_pickle(rejectedLinks, os.path.join(RESULTS_FOLDER_NAME, 'rejectedLinks.pickle'))
+        jsonLinks = converters.convert_dict_list_cls_to_json_serializable_format(links)
+        converters.save_json(jsonLinks, os.path.join(RESULTS_FOLDER_NAME, 'cleanLinks.json'))
+
+    # got link graph
     linkGraph = final_analysis.get_link_graph(links)
+    hash(linkGraph) #TODO: Delete
+    
+    
     if MY_DEBUG:
-        converters.save_pickle(linkGraph, 'TestResults\\linkGraph.pickle')
+        converters.save_pickle(linkGraph, PATH_TO_PICKLE_GRAPH)
+
     nFilter = models.GraphNodesFilter(
         nodesTypes, firstDateForNodes, lastDateForNodes, nodesIndegreeRange,
         nodesOutdegreeRange)
@@ -202,28 +184,34 @@ def process_period(
         firstDateTo, lastDateTo)
     eFilter = models.GraphEdgesFilter(hFromFilter, hToFilter, weightsRange)
     subgraph = linkGraph.get_subgraph(nFilter, eFilter, includeIsolatedNodes)
+
     if MY_DEBUG:
-        converters.save_pickle(subgraph, 'TestResults\\subgraph.pickle')
+        converters.save_pickle(subgraph, PATH_TO_PICKLE_SUBGRAPH)
+    
     linkGraphLists = (subgraph.get_nodes_as_IDs_list(),
                       subgraph.get_edges_as_list_of_tuples())
 
     converters.save_json(linkGraphLists, graphOutputFilePath)
+    
     if showPicture:
         visualizer.visualize_link_graph(linkGraphLists, 20, 1, (40, 40))
+    return jsonLinks
+
 # end of ProcessPeriod--------------------------------------------------
 
 
 def start_process_with(
         decisionID, depth,
-        firstDateForNodes=None, lastDateForNodes=None, nodesIndegreeRange=None,
-        nodesOutdegreeRange=None, nodesTypes=None, includeIsolatedNodes=True,
+        firstDateForNodes=None, lastDateForNodes=None,
+        nodesIndegreeRange=None, nodesOutdegreeRange=None, nodesTypes=None,
+        includeIsolatedNodes=True,
         firstDateFrom=None, lastDateFrom=None, docTypesFrom=None,
         supertypesFrom=None,
         firstDateTo=None, lastDateTo=None, docTypesTo=None,
         supertypesTo=None,
         weightsRange=None,
         graphOutputFilePath=PATH_TO_JSON_GRAPH,
-        showPicture=True, isNeedReloadHeaders=False,
+        showPicture=True, takeHeadersFromLocalStorage=True, sendRequestToUpdatingHeadersInBaseFromSite=False, whichSupertypeUpdateFromSite=None,
         visualizerParameters=(20, 1, (40, 40))):
     '''
     Start processing decisions from the decision which uid was given and repeat
@@ -232,14 +220,7 @@ def start_process_with(
     if (depth < 0):
         raise "argument error: depth of the recursion must be large than 0."
 
-    if isNeedReloadHeaders or not os.path.exists(PATH_TO_PICKLE_HEADERS):
-        # num = 3  # stub, del after web_crawler updating
-        # headers = collect_headers(PATH_TO_PICKLE_HEADERS, num)
-        headers = collect_headers(PATH_TO_PICKLE_HEADERS)
-    else:
-        headers = converters.load_pickle(PATH_TO_PICKLE_HEADERS)
-    if (decisionID not in headers):
-        raise ValueError("Unknown uid")
+
 
     if isinstance(firstDateForNodes, str):
         firstDateForNodes = dateutil.parser.parse(
@@ -273,21 +254,33 @@ def start_process_with(
         lastDateTo is not None and
             firstDateTo > lastDateTo):
         raise ValueError("date error: The first date is later than the last date.")
+    
+    if takeHeadersFromLocalStorage:
+        jsonHeaders = converters.load_json(PATH_TO_JSON_HEADERS)
+    else:
+        jsonHeaders = wc_interface.get_all_headers(sendRequestToUpdatingHeadersInBaseFromSite, whichSupertypeUpdateFromSite)  #TODO: using param 'whichSupertypeReloadFromSite' is not implemented
+        #TODO: load and save same file from folder, commented while have no database
+        #converters.save_json(jsonHeaders, PATH_TO_JSON_HEADERS)
+   
+    if not jsonHeaders:
+        raise ValueError("Where's the document headers, Lebowski?")
 
-    check_text_location_for_headers(headers, DECISIONS_FOLDER_NAME)
-    download_texts_for_headers(headers, DECISIONS_FOLDER_NAME)
 
-    toProcess = {decisionID: headers[decisionID]}
+
+    decisionsHeaders = converters.convert_to_class_format(jsonHeaders, models.DocumentHeader)
+    converters.save_pickle(decisionsHeaders, PATH_TO_PICKLE_HEADERS)  #Not using, just backup. Maybe delete later
+     
+    if (decisionID not in decisionsHeaders):
+        raise ValueError("Unknown docID")
+
+    toProcess = {decisionID: decisionsHeaders[decisionID]}
     processed = {}
-    allLinks = {headers[decisionID]: []}
+    allLinks = {decisionsHeaders[decisionID]: []}
     while depth > 0 and len(toProcess) > 0:
         depth -= 1
-        roughLinksDict = rough_analysis.get_rough_links_for_multiple_docs(
+        roughLinksDict = rough_analysis.get_rough_links_for_docs(
             toProcess)
-        if (rough_analysis.PATH_NONE_VALUE_KEY in roughLinksDict or
-                rough_analysis.PATH_NOT_EXIST_KEY) in roughLinksDict:
-            raise ValueError('Some headers have not text')
-        cleanLinks = final_analysis.get_clean_links(roughLinksDict, headers)[0]
+        cleanLinks = final_analysis.get_clean_links(roughLinksDict, decisionsHeaders)[0]
         allLinks.update(cleanLinks)
         processed.update(toProcess)
         toProcess = {}
@@ -295,12 +288,15 @@ def start_process_with(
             for cl in cleanLinks[decID]:
                 docID = cl.header_to.doc_id
                 if (docID not in processed):
-                    toProcess[docID] = headers[docID]
+                    toProcess[docID] = decisionsHeaders[docID]
 
     linkGraph = final_analysis.get_link_graph(allLinks)
     if MY_DEBUG:
-        converters.save_pickle(processed, 'processWithHeaders.pickle')
-        converters.save_pickle(processed, 'processWithGraph.pickle')
+        converters.save_pickle(allLinks, os.path.join(RESULTS_FOLDER_NAME, 'processedWithсleanLinks.pickle'))
+        jsonLinks = converters.convert_dict_list_cls_to_json_serializable_format(allLinks)
+        converters.save_json(jsonLinks, os.path.join(RESULTS_FOLDER_NAME, 'processedWithcleanLinks.json'))
+        converters.save_pickle(linkGraph, os.path.join(RESULTS_FOLDER_NAME, 'processedlinkGraph.pickle'))
+
     nFilter = models.GraphNodesFilter(
         nodesTypes, firstDateForNodes, lastDateForNodes, nodesIndegreeRange,
         nodesOutdegreeRange)
@@ -331,9 +327,9 @@ if __name__ == "__main__":
     import time
     start_time = time.time()
     # process_period("18.06.1980", "18.07.2020", showPicture=False,
-    #                isNeedReloadHeaders=False, includeIsolatedNodes=False)
+    #                sendRequestToUpdatingHeadersInBaseFromSite=False, includeIsolatedNodes=True, takeHeadersFromLocalStorage=True)
     # process_period("18.06.1980", "18.07.2020", showPicture=False,
-    #                isNeedReloadHeaders=False, includeIsolatedNodes=False)
+    #                sendRequestToUpdatingHeadersInBaseFromSite=False, includeIsolatedNodes=True, takeHeadersFromLocalStorage=True)
     # process_period(
     #     firstDateOfDocsForProcessing='18.03.2013',
     #     lastDateOfDocsForProcessing='14.08.2018',
@@ -348,7 +344,7 @@ if __name__ == "__main__":
     #     docTypesTo={'КСРФ/О', 'КСРФ/П'},
     #     weightsRange=(1, 5),
     #     graphOutputFilePath=PATH_TO_JSON_GRAPH,
-    #     showPicture=True, isNeedReloadHeaders=False)
+    #     showPicture=True, sendRequestToUpdatingHeadersInBaseFromSite=False, includeIsolatedNodes=True, takeHeadersFromLocalStorage=True)
     
     # start_process_with(decisionID='КСРФ/1-П/2015', depth=3)
 
@@ -366,13 +362,12 @@ if __name__ == "__main__":
     #     docTypesTo={'КСРФ/О', 'КСРФ/П'},
     #     weightsRange=(1, 5),
     #     graphOutputFilePath=PATH_TO_JSON_GRAPH,
-    #     showPicture=True, isNeedReloadHeaders=False)
+    #     showPicture=True, sendRequestToUpdatingHeadersInBaseFromSite=False, includeIsolatedNodes=True, takeHeadersFromLocalStorage=True)
+
     # source = web_crawler.Crawler.get_data_source('LocalFileStorage')
     # text=source.get_data('КСРФ/19-П/2014', web_crawler.DataType.DOCUMENT_TEXT)
-
-    # process_period("18.09.2018", "18.07.2020", showPicture=True,
-    #                isNeedReloadHeaders=False, includeIsolatedNodes=True)
-    import my_funs
-    my_funs.saving_all_clean_links()
+    # text = wc_interface.get_text('КСРФ/1010-О-О/2008')
+    process_period("01.09.1985", "18.07.2000", showPicture=True,
+                   sendRequestToUpdatingHeadersInBaseFromSite=False, includeIsolatedNodes=True, takeHeadersFromLocalStorage=False)
     print(f"Headers collection spent {time.time()-start_time} seconds.")
     input('press any key...')
