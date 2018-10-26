@@ -20,6 +20,7 @@ if __package__:
     from link_analysis import rough_analysis
     from link_analysis import visualizer
     from link_analysis import converters
+    from link_analysis import wc_interface
 else:
     import final_analysis
     import models
@@ -367,7 +368,7 @@ if __name__ == "__main__":
     # source = web_crawler.Crawler.get_data_source('LocalFileStorage')
     # text=source.get_data('КСРФ/19-П/2014', web_crawler.DataType.DOCUMENT_TEXT)
     # text = wc_interface.get_text('КСРФ/1010-О-О/2008')
-    process_period("01.09.1985", "18.07.2000", showPicture=True,
+    process_period("01.01.2000", "18.07.2000", showPicture=True,
                    sendRequestToUpdatingHeadersInBaseFromSite=False, includeIsolatedNodes=True, takeHeadersFromLocalStorage=False)
     print(f"Headers collection spent {time.time()-start_time} seconds.")
     input('press any key...')

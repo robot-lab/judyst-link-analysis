@@ -1,5 +1,6 @@
 __version__ = '0.1'
 
+from web_crawler import Crawler
 if __package__:
     from link_analysis.api_module import process_period,\
         start_process_with
@@ -29,6 +30,17 @@ def Init(databaseSource):
     Initialize link_analisis
     '''
     wc_interface.init(databaseSource=databaseSource)
+
+
+def Init_by_locale_database(folder):
+    '''
+    Initialize link_analysis by local database
+    '''
+    source = Crawler.collected_sources['LocalFileStorage']
+    source.folder_path = folder
+    source.prepare()
+
+    wc_interface.init(databaseSource=source)
 
 
 __all__ = ['Init', 'Header', 'DocumentHeader', 'Link', 'RoughLink',

@@ -3,6 +3,7 @@ from typing import Dict, List, Union, Type
 
 if __package__:
     from link_analysis.models import Header, RoughLink, Positions
+    from link_analysis import wc_interface
 else:
     from models import Header, RoughLink, Positions
     import wc_interface
