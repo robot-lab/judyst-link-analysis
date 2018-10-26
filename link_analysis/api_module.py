@@ -5,9 +5,9 @@
 
 # other imports---------------------------------------------------------
 import os.path
-from datetime import date
+import datetime
 
-from dateutil import parser
+import dateutil.parser
 # License: Apache Software License, BSD License (Dual License)
 
 # imports Core modules--------------------------------------------------
@@ -17,6 +17,7 @@ import rough_analysis
 import visualizer
 import converters
 from web_crawler import ksrf
+import web_crawler
 # methods---------------------------------------------------------------
 
 
@@ -30,7 +31,7 @@ PATH_TO_PICKLE_HEADERS = os.path.join(DECISIONS_FOLDER_NAME,
                                       PICKLE_HEADERS_FILENAME)
 PATH_TO_JSON_GRAPH = 'graph.json'
 
-MY_DEBUG = False
+MY_DEBUG = True
 
 def collect_headers(pathToFileForSave, pagesNum=None):
     headersOld = ksrf.get_decision_headers(pagesNum)
@@ -59,7 +60,7 @@ def download_texts_for_headers(headers, folder=DECISIONS_FOLDER_NAME):
             (headers[key].text_location is None or
                 not os.path.exists(headers[key].text_location))):
             oldFormatHeader = headers[key].convert_to_dict()
-            ksrf.download_decision_texts({key: oldFormatHeader}, folder)
+            ksrf.download_all_texts({key: oldFormatHeader}, folder)
 
 
 def load_graph(pathToGraph=PATH_TO_JSON_GRAPH):
@@ -86,12 +87,15 @@ def load_and_visualize(pathTograph=PATH_TO_JSON_GRAPH):
 
 def process_period(
         firstDateOfDocsForProcessing=None, lastDateOfDocsForProcessing=None,
+        supertypesForProcessing=None,
         docTypesForProcessing=None,
         firstDateForNodes=None, lastDateForNodes=None,
         nodesIndegreeRange=None, nodesOutdegreeRange=None, nodesTypes=None,
         includeIsolatedNodes=True,
         firstDateFrom=None, lastDateFrom=None, docTypesFrom=None,
+        supertypesFrom=None,
         firstDateTo=None, lastDateTo=None, docTypesTo=None,
+        supertypesTo=None,
         weightsRange=None,
         graphOutputFilePath=PATH_TO_JSON_GRAPH,
         showPicture=True, isNeedReloadHeaders=False):
@@ -102,10 +106,10 @@ def process_period(
     draw graph and show it to user.
     '''
     if isinstance(firstDateOfDocsForProcessing, str):
-        firstDateOfDocsForProcessing = parser.parse(
+        firstDateOfDocsForProcessing = dateutil.parser.parse(
             firstDateOfDocsForProcessing, dayfirst=True).date()
     if isinstance(lastDateOfDocsForProcessing, str):
-        lastDateOfDocsForProcessing = parser.parse(
+        lastDateOfDocsForProcessing = dateutil.parser.parse(
             lastDateOfDocsForProcessing, dayfirst=True).date()
     if (firstDateOfDocsForProcessing is not None and
         lastDateOfDocsForProcessing is not None and
@@ -114,10 +118,10 @@ def process_period(
                          "than the last date.")
 
     if isinstance(firstDateForNodes, str):
-        firstDateForNodes = parser.parse(
+        firstDateForNodes = dateutil.parser.parse(
             firstDateForNodes, dayfirst=True).date()
     if isinstance(lastDateForNodes, str):
-        lastDateForNodes = parser.parse(
+        lastDateForNodes = dateutil.parser.parse(
             lastDateForNodes, dayfirst=True).date()
     if (firstDateForNodes is not None and
         lastDateForNodes is not None and
@@ -126,10 +130,10 @@ def process_period(
                          "than the last date.")
 
     if isinstance(firstDateFrom, str):
-        firstDateFrom = parser.parse(
+        firstDateFrom = dateutil.parser.parse(
             firstDateFrom, dayfirst=True).date()
     if isinstance(lastDateFrom, str):
-        lastDateFrom = parser.parse(
+        lastDateFrom = dateutil.parser.parse(
             lastDateFrom, dayfirst=True).date()
     if (firstDateFrom is not None and
         lastDateFrom is not None and
@@ -137,10 +141,10 @@ def process_period(
         raise ValueError("date error: The first date is later than the last date.")
 
     if isinstance(firstDateTo, str):
-        firstDateTo = parser.parse(
+        firstDateTo = dateutil.parser.parse(
             firstDateTo, dayfirst=True).date()
     if isinstance(lastDateTo, str):
-        lastDateTo = parser.parse(
+        lastDateTo = dateutil.parser.parse(
             lastDateTo, dayfirst=True).date()
     if (firstDateTo is not None and
         lastDateTo is not None and
@@ -149,12 +153,14 @@ def process_period(
 
     decisionsHeaders = {}
     if (isNeedReloadHeaders or not os.path.exists(PATH_TO_PICKLE_HEADERS)):
-        num = 3  # stub, del after web_crawler updating
-        decisionsHeaders = collect_headers(PATH_TO_PICKLE_HEADERS, num)
+        # num = 3  # stub, del after web_crawler updating
+        # decisionsHeaders = collect_headers(PATH_TO_PICKLE_HEADERS, num)
+        decisionsHeaders = collect_headers(PATH_TO_PICKLE_HEADERS)
     else:
         decisionsHeaders = converters.load_pickle(PATH_TO_PICKLE_HEADERS)
 
     hFilter = models.HeadersFilter(
+        supertypesForProcessing,
         docTypesForProcessing,
         firstDateOfDocsForProcessing, lastDateOfDocsForProcessing)
     usingHeaders = hFilter.get_filtered_headers(decisionsHeaders)
@@ -173,27 +179,31 @@ def process_period(
     if (rough_analysis.PATH_NONE_VALUE_KEY in roughLinksDict or
             rough_analysis.PATH_NOT_EXIST_KEY in roughLinksDict):
         raise ValueError('Some headers have no text')
-    links = final_analysis.get_clean_links(roughLinksDict,
-                                           decisionsHeaders)[0]
-   
+    
+    response = final_analysis.get_clean_links(roughLinksDict,
+                                           decisionsHeaders)
+    links, rejectedLinks = response[0], response[1]
     if MY_DEBUG:
-        converters.save_pickle(links, 'allCleanLinks.pickle')
+        converters.save_pickle(links, 'TestResults\\allCleanLinks.pickle')
+        converters.save_pickle(rejectedLinks, 'TestResults\\allRejectedLinks.pickle')
     linkGraph = final_analysis.get_link_graph(links)
     if MY_DEBUG:
-        converters.save_pickle(linkGraph, 'linkGraph.pickle')
+        converters.save_pickle(linkGraph, 'TestResults\\linkGraph.pickle')
     nFilter = models.GraphNodesFilter(
         nodesTypes, firstDateForNodes, lastDateForNodes, nodesIndegreeRange,
         nodesOutdegreeRange)
     hFromFilter = models.HeadersFilter(
+        supertypesFrom,
         docTypesFrom,
         firstDateFrom, lastDateFrom)
     hToFilter = models.HeadersFilter(
+        supertypesTo,
         docTypesTo,
         firstDateTo, lastDateTo)
     eFilter = models.GraphEdgesFilter(hFromFilter, hToFilter, weightsRange)
     subgraph = linkGraph.get_subgraph(nFilter, eFilter, includeIsolatedNodes)
     if MY_DEBUG:
-        converters.save_pickle(subgraph, 'subgraph.pickle')
+        converters.save_pickle(subgraph, 'TestResults\\subgraph.pickle')
     linkGraphLists = (subgraph.get_nodes_as_IDs_list(),
                       subgraph.get_edges_as_list_of_tuples())
 
@@ -208,7 +218,9 @@ def start_process_with(
         firstDateForNodes=None, lastDateForNodes=None, nodesIndegreeRange=None,
         nodesOutdegreeRange=None, nodesTypes=None, includeIsolatedNodes=True,
         firstDateFrom=None, lastDateFrom=None, docTypesFrom=None,
+        supertypesFrom=None,
         firstDateTo=None, lastDateTo=None, docTypesTo=None,
+        supertypesTo=None,
         weightsRange=None,
         graphOutputFilePath=PATH_TO_JSON_GRAPH,
         showPicture=True, isNeedReloadHeaders=False,
@@ -221,18 +233,19 @@ def start_process_with(
         raise "argument error: depth of the recursion must be large than 0."
 
     if isNeedReloadHeaders or not os.path.exists(PATH_TO_PICKLE_HEADERS):
-        num = 3  # stub, del after web_crawler updating
-        headers = collect_headers(PATH_TO_PICKLE_HEADERS, num)
+        # num = 3  # stub, del after web_crawler updating
+        # headers = collect_headers(PATH_TO_PICKLE_HEADERS, num)
+        headers = collect_headers(PATH_TO_PICKLE_HEADERS)
     else:
         headers = converters.load_pickle(PATH_TO_PICKLE_HEADERS)
     if (decisionID not in headers):
         raise ValueError("Unknown uid")
 
     if isinstance(firstDateForNodes, str):
-        firstDateForNodes = parser.parse(
+        firstDateForNodes = dateutil.parser.parse(
             firstDateForNodes, dayfirst=True).date()
     if isinstance(lastDateForNodes, str):
-        lastDateForNodes = parser.parse(
+        lastDateForNodes = dateutil.parser.parse(
             lastDateForNodes, dayfirst=True).date()
     if (firstDateForNodes is not None and
         lastDateForNodes is not None and
@@ -240,10 +253,10 @@ def start_process_with(
         raise ValueError("date error: The first date is later than the last date.")
 
     if isinstance(firstDateFrom, str):
-        firstDateFrom = parser.parse(
+        firstDateFrom = dateutil.parser.parse(
             firstDateFrom, dayfirst=True).date()
     if isinstance(lastDateFrom, str):
-        lastDateFrom = parser.parse(
+        lastDateFrom = dateutil.parser.parse(
             lastDateFrom, dayfirst=True).date()
     if (firstDateFrom is not None and
         lastDateFrom is not None and
@@ -251,10 +264,10 @@ def start_process_with(
         raise ValueError("date error: The first date is later than the last date.")
 
     if isinstance(firstDateTo, str):
-        firstDateTo = parser.parse(
+        firstDateTo = dateutil.parser.parse(
             firstDateTo, dayfirst=True).date()
     if isinstance(lastDateTo, str):
-        lastDateTo = parser.parse(
+        lastDateTo = dateutil.parser.parse(
             lastDateTo, dayfirst=True).date()
     if (firstDateTo is not None and
         lastDateTo is not None and
@@ -292,9 +305,11 @@ def start_process_with(
         nodesTypes, firstDateForNodes, lastDateForNodes, nodesIndegreeRange,
         nodesOutdegreeRange)
     hFromFilter = models.HeadersFilter(
+        supertypesFrom,
         docTypesFrom,
         firstDateFrom, lastDateFrom)
     hToFilter = models.HeadersFilter(
+        supertypesTo,
         docTypesTo,
         firstDateTo, lastDateTo)
     eFilter = models.GraphEdgesFilter(hFromFilter, hToFilter, weightsRange)
@@ -316,8 +331,9 @@ if __name__ == "__main__":
     import time
     start_time = time.time()
     # process_period("18.06.1980", "18.07.2020", showPicture=False,
-    #                isNeedReloadHeaders=False, includeIsolatedNodes=True)
-
+    #                isNeedReloadHeaders=False, includeIsolatedNodes=False)
+    # process_period("18.06.1980", "18.07.2020", showPicture=False,
+    #                isNeedReloadHeaders=False, includeIsolatedNodes=False)
     # process_period(
     #     firstDateOfDocsForProcessing='18.03.2013',
     #     lastDateOfDocsForProcessing='14.08.2018',
@@ -335,21 +351,28 @@ if __name__ == "__main__":
     #     showPicture=True, isNeedReloadHeaders=False)
     
     # start_process_with(decisionID='КСРФ/1-П/2015', depth=3)
-    # load_and_visualize()
-    start_process_with(
-        decisionID='КСРФ/1-П/2015', depth=10,
-        firstDateForNodes='18.03.2014', lastDateForNodes='14.08.2018',
-        nodesIndegreeRange=(0, 25), nodesOutdegreeRange=(0, 25),
-        nodesTypes={'КСРФ/О', 'КСРФ/П'},
-        includeIsolatedNodes=False,
-        firstDateFrom='18.03.2011', lastDateFrom='14.08.2019',
-        docTypesFrom={'КСРФ/О', 'КСРФ/П'},
-        firstDateTo='18.03.2011', lastDateTo='14.08.2018',
-        docTypesTo={'КСРФ/О', 'КСРФ/П'},
-        weightsRange=(1, 5),
-        graphOutputFilePath=PATH_TO_JSON_GRAPH,
-        showPicture=True, isNeedReloadHeaders=False)
 
+    # load_and_visualize()
+
+    # start_process_with(
+    #     decisionID='КСРФ/1-П/2015', depth=10,
+    #     firstDateForNodes='18.03.2014', lastDateForNodes='14.08.2018',
+    #     nodesIndegreeRange=(0, 25), nodesOutdegreeRange=(0, 25),
+    #     nodesTypes={'КСРФ/О', 'КСРФ/П'},
+    #     includeIsolatedNodes=False,
+    #     firstDateFrom='18.03.2011', lastDateFrom='14.08.2019',
+    #     docTypesFrom={'КСРФ/О', 'КСРФ/П'},
+    #     firstDateTo='18.03.2011', lastDateTo='14.08.2018',
+    #     docTypesTo={'КСРФ/О', 'КСРФ/П'},
+    #     weightsRange=(1, 5),
+    #     graphOutputFilePath=PATH_TO_JSON_GRAPH,
+    #     showPicture=True, isNeedReloadHeaders=False)
+    # source = web_crawler.Crawler.get_data_source('LocalFileStorage')
+    # text=source.get_data('КСРФ/19-П/2014', web_crawler.DataType.DOCUMENT_TEXT)
+
+    # process_period("18.09.2018", "18.07.2020", showPicture=True,
+    #                isNeedReloadHeaders=False, includeIsolatedNodes=True)
+    import my_funs
+    my_funs.saving_all_clean_links()
     print(f"Headers collection spent {time.time()-start_time} seconds.")
-    # get_only_unique_headers()
     input('press any key...')

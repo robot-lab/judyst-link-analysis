@@ -1,5 +1,5 @@
 import re
-from models import Header, DuplicateHeader, CleanLink
+from models import Header, CleanLink, Positions
 from models import LinkGraph
 from rough_analysis import RoughLink
 from typing import Dict, Tuple, List, Union
@@ -10,7 +10,7 @@ splitPattern = re.compile(r'(?:№|N)')
 
 def get_clean_links(
         collectedLinks: Dict[Header, List[RoughLink]],
-        courtSiteContent: Dict[str, Union[Header, DuplicateHeader]],
+        courtSiteContent: Dict[str, Header],
         courtPrefix: str='КСРФ/') -> Tuple[Dict[Header, List[CleanLink]],
                                            Dict[Header, List[RoughLink]]]:
     '''
@@ -35,17 +35,10 @@ def get_clean_links(
                     gottenID = (courtPrefix + number[0].upper() +
                                 '/' + years.pop())
                     if gottenID in courtSiteContent:
-                        try:
-                            if isinstance(courtSiteContent[gottenID],
-                                          DuplicateHeader):
-                                raise TypeError("It links on duplicating "
-                                                "document")
-                        except TypeError:
-                            break
                         eggs = True
                         years.clear()
                         headerTo = courtSiteContent[gottenID]
-                        positionAndContext = (link.position, link.context)
+                        positionAndContext = link.positions
                         cleanLink = None
                         for cl in checkedLinks[headerFrom]:
                             if cl.header_to == headerTo:
