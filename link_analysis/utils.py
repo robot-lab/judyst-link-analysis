@@ -10,6 +10,9 @@ isInitialized = False
 
 def init(folderName):
     # tests    
+    global isInitialized
+    if (isInitialized):
+        return
     Crawler.collected_sources[DATABASESOURCE].folder_path = folderName
     Crawler.prepare_sources([DATABASESOURCE, KSRFSOURCE])
     isInitialized = True
