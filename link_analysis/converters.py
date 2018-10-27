@@ -8,7 +8,7 @@ if __package__:
 else:
     from models import Header, DocumentHeader, CleanLink  # type: ignore
 
-# Don't forget to add to this place new classes which contaions implementation
+# Don't forget to add to this place new classes which contains implementation
 # method convert_to_class_format()
 classname = Union[Type[DocumentHeader], Type[CleanLink]]
 classobjects = Union[DocumentHeader, CleanLink]

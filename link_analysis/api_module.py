@@ -18,13 +18,13 @@ if __package__:
     from link_analysis import models
     from link_analysis import visualizer
     from link_analysis import converters
-    from link_analysis import links
+    from link_analysis import link_handler
 else:
     import models
     import visualizer
     import converters
     import wc_interface
-    import links
+    import link_handler
 # methods---------------------------------------------------------------
 
 # internal methods------------------------------------------------------
@@ -142,6 +142,7 @@ def process_period(
         jsonHeaders = wc_interface.get_all_headers(
             sendRequestToUpdatingHeadersInBaseFromSite,
             whichSupertypeUpdateFromSite)
+
         converters.save_json(jsonHeaders, PATH_TO_JSON_HEADERS)
 
     if not jsonHeaders:
@@ -161,7 +162,8 @@ def process_period(
     # filtered headers to processing
     usingHeaders = hFilter.get_filtered_headers(decisionsHeaders)
 
-    clLinks = links.parse(usingHeaders, decisionsHeaders, SUPERTYPES_TO_PARSE)
+    clLinks = link_handler.parse(usingHeaders, decisionsHeaders,
+                                 SUPERTYPES_TO_PARSE)
 
     if MY_DEBUG:
         converters.save_pickle(clLinks, os.path.join(RESULTS_FOLDER_NAME,
@@ -173,7 +175,7 @@ def process_period(
             RESULTS_FOLDER_NAME, 'cleanLinks.json'))
 
     # got link graph
-    linkGraph = links.get_link_graph(clLinks)
+    linkGraph = link_handler.get_link_graph(clLinks)
 
     if MY_DEBUG:
         converters.save_pickle(linkGraph, PATH_TO_PICKLE_GRAPH)
@@ -295,8 +297,8 @@ def start_process_with(
     allLinks = {decisionsHeaders[decisionID]: []}
     while depth > 0 and len(toProcess) > 0:
         depth -= 1
-        cleanLinks = links.parse(toProcess, decisionsHeaders,
-                                 SUPERTYPES_TO_PARSE)
+        cleanLinks = link_handler.parse(toProcess, decisionsHeaders,
+                                        SUPERTYPES_TO_PARSE)
         allLinks.update(cleanLinks)
         processed.update(toProcess)
         toProcess = {}
@@ -306,7 +308,7 @@ def start_process_with(
                 if (docID not in processed):
                     toProcess[docID] = decisionsHeaders[docID]
 
-    linkGraph = links.get_link_graph(allLinks)
+    linkGraph = link_handler.get_link_graph(allLinks)
     if MY_DEBUG:
         converters.save_pickle(allLinks, os.path.join(
             RESULTS_FOLDER_NAME, 'processedWithсleanLinks.pickle'))
@@ -334,7 +336,8 @@ def start_process_with(
     eFilter = models.GraphEdgesFilter(hFromFilter, hToFilter, weightsRange)
     subgraph = linkGraph.get_subgraph(nFilter, eFilter, includeIsolatedNodes)
     if MY_DEBUG:
-        converters.save_pickle(subgraph, 'processWithSubgraph.pickle')
+        converters.save_pickle(subgraph, os.path.join(
+            RESULTS_FOLDER_NAME, 'processWithSubgraph.pickle'))
     linkGraphLists = (subgraph.get_nodes_as_IDs_list(),
                       subgraph.get_edges_as_list_of_tuples())
 
@@ -349,30 +352,30 @@ def start_process_with(
 if __name__ == "__main__":
     import time
     start_time = time.time()
-    process_period("18.06.1980", "18.07.2020", showPicture=False,
-                   sendRequestToUpdatingHeadersInBaseFromSite=False,
-                   includeIsolatedNodes=True,
-                   takeHeadersFromLocalStorage=True)
+    # process_period("18.06.1980", "18.07.2020", showPicture=False,
+    #                sendRequestToUpdatingHeadersInBaseFromSite=False,
+    #                includeIsolatedNodes=True,
+    #                takeHeadersFromLocalStorage=True)
     # process_period("18.06.1980", "18.07.2020", showPicture=False,
     #                sendRequestToUpdatingHeadersInBaseFromSite=False,
     #                includeIsolatedNodes=True,
     # takeHeadersFromLocalStorage=True)
-    # process_period(
-    #     firstDateOfDocsForProcessing='18.03.2013',
-    #     lastDateOfDocsForProcessing='14.08.2018',
-    #     docTypesForProcessing={'КСРФ/О', 'КСРФ/П'},
-    #     firstDateForNodes='18.03.2014', lastDateForNodes='14.08.2017',
-    #     nodesIndegreeRange=(0, 25), nodesOutdegreeRange=(0, 25),
-    #     nodesTypes={'КСРФ/О', 'КСРФ/П'},
-    #     includeIsolatedNodes=False,
-    #     firstDateFrom='18.03.2016', lastDateFrom='14.08.2016',
-    #     docTypesFrom={'КСРФ/О', 'КСРФ/П'},
-    #     firstDateTo='18.03.2015', lastDateTo='14.08.2015',
-    #     docTypesTo={'КСРФ/О', 'КСРФ/П'},
-    #     weightsRange=(1, 5),
-    #     graphOutputFilePath=PATH_TO_JSON_GRAPH,
-    #     showPicture=True, sendRequestToUpdatingHeadersInBaseFromSite=False,
-    #     takeHeadersFromLocalStorage=True)
+    process_period(
+        firstDateOfDocsForProcessing='18.03.2013',
+        lastDateOfDocsForProcessing='14.08.2018',
+        docTypesForProcessing={'КСРФ/О', 'КСРФ/П'},
+        firstDateForNodes='18.03.2014', lastDateForNodes='14.08.2017',
+        nodesIndegreeRange=(0, 25), nodesOutdegreeRange=(0, 25),
+        nodesTypes={'КСРФ/О', 'КСРФ/П'},
+        includeIsolatedNodes=False,
+        firstDateFrom='18.03.2016', lastDateFrom='14.08.2016',
+        docTypesFrom={'КСРФ/О', 'КСРФ/П'},
+        firstDateTo='18.03.2015', lastDateTo='14.08.2015',
+        docTypesTo={'КСРФ/О', 'КСРФ/П'},
+        weightsRange=(1, 5),
+        graphOutputFilePath=PATH_TO_JSON_GRAPH,
+        showPicture=True, sendRequestToUpdatingHeadersInBaseFromSite=False,
+        takeHeadersFromLocalStorage=True)
 
     # start_process_with(decisionID='КСРФ/1-П/2015', depth=3)
 
@@ -401,5 +404,13 @@ if __name__ == "__main__":
     #                sendRequestToUpdatingHeadersInBaseFromSite=False,
     #                includeIsolatedNodes=True,
     #                takeHeadersFromLocalStorage=False)
+    # process_period("12.04.2018", "12.04.2018", showPicture=True,
+    #                sendRequestToUpdatingHeadersInBaseFromSite=False,
+    #                includeIsolatedNodes=True,
+    #                takeHeadersFromLocalStorage=False)
+    # cl1 = converters.load_pickle("Results0\сleanLinks.pickle")
+    # cl2 = converters.load_pickle("Results\сleanLinks.pickle")
+    # import my_funs
+    # my_funs.compare_clealinks(cl1, cl2)
     print(f"Headers collection spent {time.time()-start_time} seconds.")
-    input('press any key...')
+    print('press any key...')
