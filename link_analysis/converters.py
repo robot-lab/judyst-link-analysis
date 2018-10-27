@@ -3,18 +3,21 @@ import pickle
 import os
 from typing import Dict, Iterable, TypeVar, Type, List, Union, Any
 
-from models import Header, DocumentHeader
-from final_analysis import CleanLink
+if __package__:
+    from link_analysis.models import Header, DocumentHeader, CleanLink
+else:
+    from models import Header, DocumentHeader, CleanLink  # type: ignore
 
-# Don't forget to add to this place new classes where implemented
+# Don't forget to add to this place new classes which contains implementation
 # method convert_to_class_format()
-classname = TypeVar('classname', DocumentHeader, CleanLink)
+classname = Union[Type[DocumentHeader], Type[CleanLink]]
+classobjects = Union[DocumentHeader, CleanLink]
 
 
 def convert_to_class_format(
         data: Iterable[Dict[str, str]],
-        className: classname) -> Union[Dict[str, Type[classname]],
-                                       List[Type[classname]]]:
+        className: classname) -> Union[Dict[str, classobjects],
+                                       List[classobjects]]:
     '''
     argument data: iterable stadard python object like dictionary or list
     with dictionary elements for that class format exist\n
@@ -26,21 +29,22 @@ def convert_to_class_format(
     if not hasattr(data, '__iter__'):
         raise ValueError("'data' is not iterable object")
     if isinstance(data, dict):
-        convertedDataDict = {}  # type: Dict[str, Type[classname]]
+        convertedDataDict = {}  # type: Dict[str, classobjects]
         for key in data:
             convertedDataDict[key] = \
-                className.convert_from_dict(key, data[key])
+                className.convert_from_dict(key, data[key])  # type: ignore
         return convertedDataDict
     else:
-        convertedDataList = []  # type: List[Type[classname]]
+        convertedDataList = []  # type: List[classobjects]
         for el in data:
-            convertedDataList.append(className.convert_from_dict(el))
+            convertedDataList.append(
+                className.convert_from_dict(el))  # type: ignore
         return convertedDataList
 
 
 def convert_to_json_serializable_format(
-        data: Iterable[Type[classname]]) -> Union[Dict[str, Dict[str, str]],
-                                                  List[Dict[str, str]]]:
+        data: Iterable[classobjects]) -> Union[Dict[str, Dict[str, str]],
+                                               List[Dict[str, str]]]:
     '''
     argument data: iterable stadard python object like dictionary or list
     if data is dictionary, data's keys must be standard python objects
@@ -57,8 +61,17 @@ def convert_to_json_serializable_format(
     else:
         convertedDataList = []  # type: List[Dict[str, str]]
         for el in data:
-            convertedDataList.append(el.convert_to_dict())
+            convertedDataList.append(el.convert_to_dict())  # type: ignore
         return convertedDataList
+
+
+def convert_dict_list_cls_to_json_serializable_format(data):
+    dataLists = list(data[key] for key in data if data[key])
+    resultList = []
+    for L in dataLists:
+        resultList.extend(L)
+    JSONcleanLinks = convert_to_json_serializable_format(resultList)
+    return JSONcleanLinks
 
 
 def save_json(jsonSerializableData: object, pathToFile: str) -> bool:
@@ -111,7 +124,8 @@ if __name__ == '__main__':
     # print(f"json saving spend {time.time()-start_time} seconds")
     # input('press')
     json2 = load_json('Decision files0\\DecisionHeaders.json')
-    pickle2 = convert_to_class_format(json2, className=DocumentHeader)
+    pickle2 = convert_to_class_format(json2,  # type: ignore
+                                      className=DocumentHeader)
     save_pickle(pickle2, 'Decision files0\\DecisionHeaders1.pickle')
     pickle3 = load_pickle('Decision files0\\DecisionHeaders1.pickle')
     json3 = convert_to_json_serializable_format(pickle3)

@@ -1,9 +1,23 @@
 import datetime
 import collections
-from typing import Type, Optional, Union, Dict
+from typing import Type, Optional, Union, Dict, Set, Iterable, List, Tuple, \
+                   TypeVar
 
 import dateutil.parser
 # License: Apache Software Licenseid, BSD License (Dual License)
+
+DocumentHeaderType = TypeVar('DocumentHeaderType', bound='DocumentHeader')
+HeaderType = TypeVar('DocumentHeaderType', bound='Header')
+LinkType = TypeVar('LinkType', bound='Link')
+PositionsType = TypeVar('PositionsType', bound='Positions')
+RoughLinkType = TypeVar('RoughLinkType', bound='RoughLink')
+CleanLinkType = TypeVar('CleanLinkType', bound='CleanLink')
+HeadersFilterType = TypeVar('HeadersFilterType', bound='HeadersFilter')
+GraphNodesFilterType = TypeVar('GraphNodesFilterType',
+                               bound='GraphNodesFilter')
+GraphEdgesFilterType = TypeVar('GraphEdgesFilterType',
+                               bound='GraphEdgesFilter')
+LinkGraphType = TypeVar('LinkGraphType', bound='LinkGraph')
 
 
 class DocumentHeader:
@@ -11,10 +25,8 @@ class DocumentHeader:
     """
     Base class for subclasses Header and DuplicateHeader.
     Instance stores data about document like court decision.
-
     :attribute doc_id: str.
         ID of document.
-
     :methods convert_from_dict: staticmethod.
         Interface method. Calls method with same name from subclasses
         and returns their response.
@@ -23,7 +35,6 @@ class DocumentHeader:
     def __init__(self, docID: str) -> None:
         """
         Creates instance using document ID. Used at subclasses.
-
         :param docID: str.
             ID of document.
         """
@@ -32,13 +43,13 @@ class DocumentHeader:
         else:
             raise TypeError(f"'docID' must be instance of {str}")
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: DocumentHeaderType) -> bool:  # type: ignore
         if not isinstance(other, type(self)):
-            raise TypeError(f"Compared objects must be of the same type:"
+            raise TypeError("Compared objects must be of the same type: "
                             f"{type(self)} or {type(other)}")
         return self.doc_id == other.doc_id
 
-    def __ne__(self, other: object) -> bool:
+    def __ne__(self, other: DocumentHeaderType) -> bool:  # type: ignore
         return not self.__eq__(other)
 
     def __hash__(self) -> int:
@@ -46,23 +57,23 @@ class DocumentHeader:
 
     @staticmethod
     def convert_from_dict(key: str,
-                          oldFormatHeader: Dict):# -> Type[DocumentHeader]:
+                          oldFormatHeader: Dict[str, str]) \
+            -> HeaderType:
         """
         Convert dict object to instance of subclass of class DocumentHeader.
-
         :param key: str.
             Key which related with oldFormatHeader.
         :param oldFormatHeader: dict.
             Dict object that stores data about document.
-
         :return: DocumentHeader.
             Instance of one of subclasses (Header or DuplicateHeader).
         """
         if 'not unique' in oldFormatHeader:
-            raise TypeError("'class DuplicateHeader' is not supported anymore.")
+            raise TypeError(
+                "'class DuplicateHeader' is not supported anymore.")
         if not isinstance(key, str):
             raise TypeError(f"'key' must be instance of {str}")
-        if not isinstance(oldFormatHeader, dict) :
+        if not isinstance(oldFormatHeader, dict):
             raise TypeError(f"'oldFormatHeader' must be instance of {dict}")
         return Header.convert_from_dict(key, oldFormatHeader)
 
@@ -72,7 +83,6 @@ class Header(DocumentHeader):
     """
     Subclass of DocumentHeader. Implements storage of data
     about document whose identifier is unique.
-
     :attribute doc_id: str.
         ID of document.
     :attribute supertype: str.
@@ -87,7 +97,6 @@ class Header(DocumentHeader):
         URL of document text source.
     :attribute text_location: str, optional (default=None).
         Location of text document.
-
     :method convert_to_dict: instancemethod.
         Convert instance to dict object.
     :method convert_from_dict: staticmethod.
@@ -96,12 +105,10 @@ class Header(DocumentHeader):
     """
 
     def __init__(self, docID: str, supertype: str, docType: str, title: str,
-                 releaseDate: datetime.date, textSourceUrl: str,
-                 textLocation: Optional[str]=None) -> None:
+                 releaseDate: datetime.date, textSourceUrl: str) -> None:
 
         """
         Constructor which uses superclass constructor passing it an arg docID.
-
         :param docID: str.
             ID of document.
         :param supertype: str.
@@ -133,19 +140,16 @@ class Header(DocumentHeader):
         if isinstance(releaseDate, datetime.date):
             self.release_date = releaseDate
         else:
-            raise TypeError(f"'releaseDate' must be instance of {datetime.date}")
+            raise TypeError(
+                f"'releaseDate' must be instance of {datetime.date}")
         if isinstance(textSourceUrl, str):
             self.text_source_url = textSourceUrl
         else:
             raise TypeError(f"'textSourceUrl' must be instance of {str}")
-        if isinstance(textLocation, str) or textLocation is None:
-            self.text_location = textLocation
-        else:
-            raise TypeError(f"'textLocation' must be instance of {str}")
 
-    def __eq__(self, other):
+    def __eq__(self, other: HeaderType) -> bool:  # type: ignore
         if not isinstance(other, type(self)):
-            raise TypeError(f"Compared objects must be of the same type:"
+            raise TypeError("Compared objects must be of the same type:"
                             f"{type(self)} or {type(other)}")
         return (super().__eq__(self) and
                 self.supertype == other.supertype and
@@ -154,17 +158,16 @@ class Header(DocumentHeader):
                 self.release_date == other.release_date and
                 self.text_source_url == other.text_source_url)
 
-    def __ne__(self, other):
+    def __ne__(self, other: HeaderType) -> bool:  # type: ignore
         return not self.__eq__(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return super().__hash__()
 
-    def convert_to_dict(self):
+    def convert_to_dict(self) -> Dict[str, str]:
         """
         Convert instance to dict object that stores all values
         of attributes of instance.
-
         :return: dict.
             Dict object that stores values of attributes of instance.
         """
@@ -175,21 +178,18 @@ class Header(DocumentHeader):
             'release_date': self.release_date.strftime('%d.%m.%Y'),
             'text_source_url': self.text_source_url
             }
-        if self.text_location is not None:
-            dictFormatHeader['text_location'] = self.text_location
         return dictFormatHeader
 
     @staticmethod
-    def convert_from_dict(key: str, oldFormatHeader: dict):
+    def convert_from_dict(key: str,
+                          oldFormatHeader: Dict[str, str]) -> HeaderType:
         """
         Convert dict object to instance of own class.
         Called from superclass by iterface method with same name.
-
         :param key: str.
             Key which related with oldFormatHeader.
         :param oldFormatHeader: dict.
             Dict object that stores data about document.
-
         :return: Header.
             Instance of own class.
         """
@@ -204,22 +204,18 @@ class Header(DocumentHeader):
             supertype = oldFormatHeader['supertype']
             docType = oldFormatHeader['doc_type']
             title = oldFormatHeader['title']
-            releaseDate = dateutil.parser.parse(oldFormatHeader['release_date'],
-                                         dayfirst=True).date()
+            releaseDate = dateutil.parser.parse(
+                oldFormatHeader['release_date'], dayfirst=True).date()
             textSourceUrl = oldFormatHeader['text_source_url']
-            if 'text_location' in oldFormatHeader:
-                textLocation = oldFormatHeader['text_location']
-            else:
-                textLocation = None
         except KeyError:
             raise KeyError("'doc_type', 'supertype', 'title', 'release_date', "
-                           "'text_source_url' is required, "
-                           "only 'path to file' is optional")
-        return Header(docID, supertype, docType, title, releaseDate, textSourceUrl, textLocation)
+                           "'text_source_url' is required")
+        return Header(docID, supertype, docType, title, releaseDate,
+                      textSourceUrl)
 
 
 class Link:
-    def __init__(self, headerFrom):
+    def __init__(self, headerFrom: Header) -> None:
         """
         :param headerFrom: class Header
             Citing document
@@ -228,21 +224,23 @@ class Link:
             raise TypeError(f"'headerFrom' must be instance of {Header}")
         self.header_from = headerFrom
 
-    def __eq__(self, other):
+    def __eq__(self, other: LinkType) -> bool:  # type: ignore
         if not isinstance(other, type(self)):
-            raise TypeError(f"Compared objects must be of the same type:"
+            raise TypeError("Compared objects must be of the same type: "
                             f"{type(self)} or {type(other)}")
         return self.header_from == other.header_from
 
-    def __ne__(self, other):
+    def __ne__(self, other: LinkType) -> bool:  # type: ignore
         return not self.__eq__(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.header_from)
+
 
 class Positions:
 
-    def __init__(self, contextStartPos, contextEndPos, linkStartPos, linkEndPos):
+    def __init__(self, contextStartPos: int, contextEndPos: int,
+                 linkStartPos: int, linkEndPos: int) -> None:
         if isinstance(contextStartPos, int):
             self.context_start = contextStartPos
         else:
@@ -260,27 +258,28 @@ class Positions:
         else:
             raise TypeError(f"'linkEndPos' must be {int}")
 
-    def __eq__(self, other):
+    def __eq__(self, other: PositionsType) -> bool:  # type: ignore
         if not isinstance(other, type(self)):
-            raise TypeError(f"Compared objects must be of the same type:"
+            raise TypeError("Compared objects must be of the same type: "
                             f"{type(self)} or {type(other)}")
         return (self.context_start == other.context_start and
                 self.context_end == other.context_end and
                 self.link_start == other.link_start and
                 self.link_end == other.link_end)
 
-    def __ne__(self, other):
+    def __ne__(self, other: PositionsType) -> bool:  # type: ignore
         return not self.__eq__(other)
-    
-    def __hash__(self):
-        return hash(tuple(hash(self.context_start),
+
+    def __hash__(self) -> int:
+        return hash(tuple([hash(self.context_start),
                           hash(self.context_end),
                           hash(self.link_start),
-                          hash(self.link_end)
-                          ))
+                          hash(self.link_end)]))
+
 
 class RoughLink(Link):
-    def __init__(self, headerFrom: Header, body: str, positions: Positions):
+    def __init__(self, headerFrom: Header, body: str, positions: Positions) \
+            -> None:
         """
         :param headerFrom: class Header
             Citing document
@@ -297,22 +296,21 @@ class RoughLink(Link):
         else:
             raise TypeError(f"'positions' must be instance of {Positions}")
 
-    def __eq__(self, other):
+    def __eq__(self, other: RoughLinkType) -> bool:  # type: ignore
         if not isinstance(other, type(self)):
-            raise TypeError(f"Compared objects must be of the same type:"
+            raise TypeError("Compared objects must be of the same type: "
                             f"{type(self)} or {type(other)}")
         return (super().__eq__(other) and
                 self.body == other.body and
                 self.positions == other.positions)
 
-    def __ne__(self, other):
+    def __ne__(self, other: RoughLinkType) -> bool:  # type: ignore
         return not self.__eq__(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(tuple([super().__hash__(),
                     hash(self.body),
                     hash(self.positions)]))
-
 
 
 class CleanLink(Link):
@@ -322,8 +320,9 @@ class CleanLink(Link):
     (contex) in text
     """
 
-    def __init__(self, headerFrom, headerTo, citationsNumber,
-                 positionsList):
+    def __init__(self, headerFrom: Header, headerTo: Header,
+                 citationsNumber: int,
+                 positionsList: Union[Positions, List[Positions]]) -> None:
         """
         positionsAndContexts: tuple or list of tuples, "
         or set of tuples(int, str)
@@ -343,13 +342,14 @@ class CleanLink(Link):
         elif (isinstance(positionsList, list) or
               isinstance(positionsList, set) or
               isinstance(positionsList, tuple)):
-            self.positions_list = list(positionsList)
+            self.positions_list = positionsList
         else:
-            raise TypeError(f"'positionsList' must be instance of {list} or {tuple} or {set}")
+            raise TypeError("'positionsList' must be"
+                            f"instance of {list} or {tuple} or {set}")
 
-    def __eq__(self, other):
+    def __eq__(self, other: CleanLinkType) -> bool:  # type: ignore
         if not isinstance(other, type(self)):
-            raise TypeError(f"Compared objects must be of the same type:"
+            raise TypeError("Compared objects must be of the same type:"
                             f"{type(self)} or {type(other)}")
         return (super().__eq__(other) and
                 self.header_to == other.header_to and
@@ -357,51 +357,57 @@ class CleanLink(Link):
                 (collections.Counter(self.positions_list) ==
                  collections.Counter(other.positions_list)))
 
-    def __ne__(self, other):
+    def __ne__(self, other: CleanLinkType) -> bool:  # type: ignore
         return not self.__eq__(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(tuple([super().__hash__(), hash(self.header_to)]))
 
-    def append(self, positionAndContext: tuple):
+    def append(self, positionAndContext: Positions) -> None:
         self.positions_list.append(positionAndContext)
-    
-    def convert_to_dict(self):
+
+    def convert_to_dict(self) -> Dict[str, str]:
         cleanLinkDict = {
             'doc_id_from': self.header_from.doc_id,
             'doc_id_to': self.header_to.doc_id
         }
         positionsDictList = [pos.__dict__ for pos in self.positions_list]
-        cleanLinkDict['positions_list'] = positionsDictList
+        cleanLinkDict['positions_list'] = positionsDictList  # type: ignore
         return cleanLinkDict
 
 
-class HeadersFilter():
+class HeadersFilter:
     """
     Arguments contains conditions for which headers will be selected.\n
     firstDate and lastDate: instances of datetime.date
     """
-    def __init__(self, supertypes=None, docTypes=None, firstDate=None,
-                 lastDate=None):
+    def __init__(self, supertypes: Optional[Iterable[str]]=None,
+                 docTypes: Optional[Iterable[str]]=None,
+                 firstDate: Optional[datetime.date]=None,
+                 lastDate: Optional[datetime.date]=None) -> None:
         if hasattr(supertypes, '__iter__'):
-            self.supertypes = set(supertypes)
-            for st in supertypes:
+            self.supertypes = supertypes
+            for st in supertypes:  # type: ignore
                 if not isinstance(st, str):
-                    raise TypeError(f"any element from 'supertypes' must be instance of {str}")
+                    raise TypeError("any element from 'supertypes' "
+                                    f"must be instance of {str}")
         elif supertypes is None:
             self.supertypes = supertypes
         else:
-            raise TypeError(f"'supertypes' must be iterable structure: {list}, {set}, {tuple}")
+            raise TypeError("'supertypes' must be iterable structure:"
+                            f"{list}, {set}, {tuple}")
 
         if hasattr(docTypes, '__iter__'):
-            self.doc_types = set(docTypes)
-            for st in docTypes:
+            self.doc_types = set(docTypes)  # type: ignore
+            for st in docTypes:  # type: ignore
                 if not isinstance(st, str):
-                    raise TypeError(f"any element from 'docTypes' must be instance of {str}")
+                    raise TypeError("any element from 'docTypes'"
+                                    f"must be instance of {str}")
         elif docTypes is None:
-            self.doc_types = docTypes
+            self.doc_types = docTypes  # type: ignore
         else:
-            raise TypeError(f"'docTypes' must be iterable structure: {list}, {set}, {tuple}")
+            raise TypeError("'docTypes' must be iterable structure: "
+                            f"{list}, {set}, {tuple}")
         if firstDate is None:
             self.first_date = datetime.date.min
         elif isinstance(firstDate, datetime.date):
@@ -416,25 +422,26 @@ class HeadersFilter():
         else:
             raise TypeError(f"'lastDate' must be instance of {datetime.date}")
 
-    def __eq__(self, other):
+    def __eq__(self, other: HeadersFilterType) -> bool:  # type: ignore
         if not isinstance(other, type(self)):
-            raise TypeError(f"Compared objects must be of the same type:"
+            raise TypeError("Compared objects must be of the same type: "
                             f"{type(self)} or {type(other)}")
         return (self.supertypes == other.supertypes and
                 self.doc_types == other.doc_types and
                 self.first_date == other.first_date and
                 self.last_date == other.last_date)
 
-    def __ne__(self, other):
+    def __ne__(self, other: HeadersFilterType) -> bool:  # type: ignore
         return not self.__eq__(other)
 
-    def __hash__(self):
-        return hash(tuple([hash(tuple(self.supertypes)),
-                           hash(tuple(self.doc_types)),
-                           hash(self.first_date),
-                           hash(self.last_date)]))
+    def __hash__(self) -> int:
+        return hash(tuple([
+            hash(tuple({} if self.supertypes is None else self.supertypes)),
+            hash(tuple({} if self.doc_types is None else self.doc_types)),
+            hash(self.first_date),
+            hash(self.last_date)]))
 
-    def check_header(self, header):
+    def check_header(self, header: Header) -> bool:  # type: ignore
         if not isinstance(header, Header):
             raise TypeError(f"'header' must be instance of {Header}")
         if ((self.supertypes is None or
@@ -446,7 +453,8 @@ class HeadersFilter():
         else:
             return False
 
-    def get_filtered_headers(self, headersDict: Dict[str, Header]) -> Dict[str, Header]:
+    def get_filtered_headers(self, headersDict: Dict[str, Header]) \
+            -> Dict[str, Header]:
         resultDict = {}
         for key in headersDict:
             if (isinstance(headersDict[key], Header) and
@@ -462,36 +470,43 @@ class GraphNodesFilter(HeadersFilter):
     indegreeRange and outdegreeRange: tuples that implements
     own line segment [int, int]
     """
-    def __init__(self, supertype=None, docTypes=None, firstDate=None,
-                 lastDate=None, indegreeRange=None,
-                 outdegreeRange=None):
-        super().__init__(supertype, docTypes, firstDate, lastDate)
-        if (isinstance(indegreeRange, tuple) or isinstance(indegreeRange, list)):
+    def __init__(self, supertypes: Optional[Iterable[str]]=None,
+                 docTypes: Optional[Iterable[str]]=None,
+                 firstDate: Optional[datetime.date]=None,
+                 lastDate: Optional[datetime.date]=None,
+                 indegreeRange: Union[Tuple[int], List[int], None]=None,
+                 outdegreeRange: Union[Tuple[int], List[int], None]=None) \
+            -> None:
+        super().__init__(supertypes, docTypes, firstDate, lastDate)
+        if (isinstance(indegreeRange, tuple) or
+                isinstance(indegreeRange, list)):
             self.indegree_range = tuple(indegreeRange)
         elif indegreeRange is None:
-            self.indegree_range = indegreeRange
+            self.indegree_range = indegreeRange  # type: ignore
         else:
-            raise TypeError(f"'indegreeRange' must be instance of {tuple} or {list}")
-        if (isinstance(outdegreeRange, tuple) or isinstance(outdegreeRange, list)):
+            raise TypeError("'indegreeRange' must be instance "
+                            f"of {tuple} or {list}")
+        if (isinstance(outdegreeRange, tuple) or
+                isinstance(outdegreeRange, list)):
             self.outdegree_range = tuple(outdegreeRange)
         elif outdegreeRange is None:
-            self.outdegree_range = outdegreeRange
+            self.outdegree_range = outdegreeRange  # type: ignore
         else:
-            raise TypeError(f"'outdegreeRange' must be instance of {tuple} or {list}")
-        
+            raise TypeError("'outdegreeRange' must be "
+                            f"instance of {tuple} or {list}")
 
-    def __eq__(self, other):
+    def __eq__(self, other: GraphNodesFilterType) -> bool:  # type: ignore
         if not isinstance(other, type(self)):
-            raise TypeError(f"Compared objects must be of the same type:"
+            raise TypeError("Compared objects must be of the same type: "
                             f"{type(self)} or {type(other)}")
         return (super().__eq__(other) and
                 self.indegree_range == other.indegree_range and
                 self.outdegree_range == other.outdegree_range)
 
-    def __ne__(self, other):
+    def __ne__(self, other: GraphNodesFilterType) -> bool:  # type: ignore
         return not self.__eq__(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(tuple([super().__hash__(),
                     hash(self.indegree_range),
                     hash(self.outdegree_range)]))
@@ -502,43 +517,46 @@ class GraphEdgesFilter():
     Arguments contains conditions for which edges will be selected.\n
     weightsRange: tuple that implements line segment [int, int]
     """
-    def __init__(self, headersFilterFrom=None, headersFilterTo=None,
-                 weightsRange=None):
+    def __init__(self, headersFilterFrom: Header=None,
+                 headersFilterTo: Header=None,
+                 weightsRange: Union[Tuple[int], List[int], None]=None):
         if (isinstance(headersFilterFrom, HeadersFilter) or
                 headersFilterFrom is None):
             self.headers_filter_from = headersFilterFrom
         else:
-            raise TypeError(f"'headersFilterFrom' must be instance of {HeadersFilter}")
+            raise TypeError("'headersFilterFrom' must be "
+                            f"instance of {HeadersFilter}")
         if (isinstance(headersFilterTo, HeadersFilter) or
                 headersFilterTo is None):
             self.headers_filter_to = headersFilterTo
         else:
-            raise TypeError(f"'headersFilterTo' must be instance of {HeadersFilter}")
+            raise TypeError("'headersFilterTo' must be "
+                            f"instance of {HeadersFilter}")
         if (isinstance(weightsRange, tuple) or isinstance(weightsRange, list)):
             self.weights_range = tuple(weightsRange)
         elif weightsRange is None:
-            self.weights_range = weightsRange
+            self.weights_range = weightsRange  # type: ignore
         else:
-            raise TypeError(f"'weightsRange' must be instance of {tuple} or {list}")
+            raise TypeError("'weightsRange' must be "
+                            f"instance of {tuple} or {list}")
 
-
-    def __eq__(self, other):
+    def __eq__(self, other: GraphEdgesFilterType) -> bool:  # type: ignore
         if not isinstance(other, type(self)):
-            raise TypeError(f"Compared objects must be of the same type:"
+            raise TypeError("Compared objects must be of the same type: "
                             f"{type(self)} or {type(other)}")
         return (self.headers_filter_from == other.headers_filter_from and
                 self.headers_filter_to == other.headers_filter_to and
                 self.weights_range == other.weights_range)
 
-    def __ne__(self, other):
+    def __ne__(self, other: GraphEdgesFilterType) -> bool:  # type: ignore
         return not self.__eq__(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(tuple([hash(self.headers_filter_from),
                     hash(self.headers_filter_to),
                     hash(self.weights_range)]))
 
-    def check_edge(self, edge: CleanLink):
+    def check_edge(self, edge: CleanLink) -> bool:  # type: ignore
         """edge: class CleanLink"""
         if not isinstance(edge, CleanLink):
             raise TypeError(f"'edge' must be instance of {CleanLink}")
@@ -555,13 +573,16 @@ class GraphEdgesFilter():
         else:
             return False
 
-    def get_filtered_edges(self, edges):
+    def get_filtered_edges(self, edges: CleanLink) -> Set[CleanLink]:
         """
         edges: list or set of instances of class CleanLink\n
         returns set of instances of class CleanLink
         """
-        if not (isinstance(edges, set) or isinstance(edges, list) or isinstance(edges, tuple)):
-            raise TypeError(f"'edge' must be of instance of {set} or {list} or {tuple}")
+        if not (isinstance(edges, set) or
+                isinstance(edges, list) or
+                isinstance(edges, tuple)):
+            raise TypeError("'edge' must be "
+                            f"of instance of {set} or {list} or {tuple}")
         result = {edge for edge in edges if self.check_edge(edge)}
         return result
 
@@ -571,44 +592,45 @@ class LinkGraph:
     nodes: set of class Header instances\n
     edges: set of class CleanLink  instances
     """
-    def __init__(self):
-        self.nodes = set()
-        self.edges = set()
+    def __init__(self) -> None:
+        self.nodes = set()  # type: Set[Header]
+        self.edges = set()  # type: Set[CleanLink]
 
-    def __eq__(self, other):
+    def __eq__(self, other: LinkGraphType) -> bool:  # type: ignore
         if not isinstance(other, type(self)):
-            raise TypeError(f"Compared objects must be of the same type:"
+            raise TypeError("Compared objects must be of the same type: "
                             f"{type(self)} or {type(other)}")
         return (self.nodes == other.nodes and
                 self.edges == other.edges)
 
-    def __ne__(self, other):
+    def __ne__(self, other: LinkGraphType) -> bool:  # type: ignore
         return not self.__eq__(other)
 
-    def __hash__(self):
-        import time  # DEBUG
-        start_time = time.time()  # DEBUG
+    def __hash__(self) -> int:
+        # import time  # DEBUG
+        # start_time = time.time()  # DEBUG
         vHash = hash(tuple(sorted(self.nodes, key=lambda h: hash(h))))
         eHash = hash(tuple(sorted(self.edges, key=lambda e: hash(e))))
         # It will be interesting to know:
-        if False:  # DEBUG
-            raise Exception('We finally needed the graph hash. It takes '
-                            f'{time.time()-start_time} seconds')  # DEBUG
+        # if False:  # DEBUG
+        #     raise Exception('We finally needed the graph hash. It takes '
+        #                     f'{time.time()-start_time} seconds')  # DEBUG
+        # print(f'Edge number: {len(self.edges)}')
+        # print(f'hash spent {time.time()-start_time} seconds')  # DEBUG
         return hash(tuple([vHash, eHash]))
 
-    def add_node(self, node):
+    def add_node(self, node: Header) -> None:
         if not isinstance(node, Header):
-            raise TypeError(f"'node is not instance "
-                            "of {Header}")
+            raise TypeError(f"'node must be of {Header}")
         self.nodes.add(node)
 
-    def add_edge(self, edge):
+    def add_edge(self, edge: CleanLink) -> None:
         if not isinstance(edge, CleanLink):
-            raise TypeError(f"'edge' is not instance "
-                            "of {CleanLink}")
+            raise TypeError(f"'edge' must be instance of {CleanLink}")
         self.edges.add(edge)
 
-    def get_all_nodes_degrees(self):
+    def get_all_nodes_degrees(self) \
+            -> Tuple[Dict[Header, int], Dict[Header, int]]:
         nodes_i = []
         nodes_o = []
         for edge in self.edges:
@@ -618,18 +640,20 @@ class LinkGraph:
         outdegree = collections.Counter(nodes_o)
         return (indegree, outdegree)
 
-    def get_subgraph(self, nodesFilter=None, edgesFilter=None,
-                     includeIsolatedNodes=True):
+    def get_subgraph(self, nodesFilter: Optional[GraphNodesFilter]=None,
+                     edgesFilter: Optional[GraphEdgesFilter]=None,
+                     includeIsolatedNodes: bool=True):
 
         if not isinstance(includeIsolatedNodes, bool):
-            raise TypeError("'includeIsolatedNodes' must be instance of {bool}")
+            raise TypeError("'includeIsolatedNodes' must be "
+                            f"instance of {bool}")
 
         subgraph = LinkGraph()
         # filters nodes
         if nodesFilter is not None:
             if not isinstance(nodesFilter, GraphNodesFilter):
-                raise TypeError(f"Variable 'nodesFilter' is not instance "
-                                "of class GraphNodesFilter")
+                raise TypeError("'nodesFilter' must be instance "
+                                f"of {GraphNodesFilter}")
             if (nodesFilter.indegree_range is not None or
                     nodesFilter.outdegree_range is not None):
                 indegrees, outdegrees = self.get_all_nodes_degrees()
@@ -655,8 +679,8 @@ class LinkGraph:
         # filters edges
         if edgesFilter is not None:
             if not isinstance(edgesFilter, GraphEdgesFilter):
-                raise TypeError(f"Variable 'edgesFilter' is not instance "
-                                "of class GraphEdgesFilter")
+                raise TypeError("'edgesFilter' is not instance "
+                                f"of class {GraphEdgesFilter}")
 
             # If nodes are filtered, we must check the edges
             # associated with them and then filter them,
@@ -687,39 +711,10 @@ class LinkGraph:
                 subgraph.add_node(edge.header_to)
         return subgraph
 
-    def get_nodes_as_IDs_list(self):
+    def get_nodes_as_IDs_list(self) -> List[str]:
         return list(v.doc_id for v in self.nodes)
 
-    def get_edges_as_list_of_tuples(self):
-        return list((e.header_from.doc_id, e.header_to.doc_id, e.citations_number)
+    def get_edges_as_list_of_tuples(self) -> List[Tuple[str, str, int]]:
+        return list((e.header_from.doc_id, e.header_to.doc_id,
+                     e.citations_number)
                     for e in self.edges)
-
-    def get_itearable_link_graph(self):  # stub
-        pass
-
-
-class IterableLinkGraph(LinkGraph):  # stub
-    pass
-
-
-if __name__ == "__main__":
-    date = datetime.date(2018, 12, 11)
-    # h1 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-    #             "https://goto.ru", "path-to")
-    # h2 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-    #             "https://goto.ru")
-    # h3 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-    #             "https://goto.ru")
-    # h4 = Header("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-    #             "https://goto.ru")
-    # h5.append("КСРФ/О-О", "Заголовк", datetime.date(1990, 1, 2),
-    #           "https://goto.ru")
-    # h6 = DuplicateHeader("456-О-О/2018", "КСРФ/О-О", "Заголовк", date,
-    #                      "https://goto.ru")
-    # a = LinkGraph()
-    # b = LinkGraph()
-    # a.add_node(h2)
-    # b.add_node(h3)
-    A = LinkGraph()
-    # B = {A:1}
-    input('press any key...')
