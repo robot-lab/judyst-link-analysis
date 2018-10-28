@@ -40,7 +40,8 @@ def get_all_headers(sendRequestToUpdatingHeadersInBaseFromSite=False,
     '''
     # TODO: using param 'whichSupertypeUpdateFromSite' not implemented
     headers = Crawler.get_data_source(KSRFSOURCE).\
-        get_all_data(DataType.DOCUMENT_HEADER, whichSupertypeUpdateFromSite)
+        get_all_data(DataType.DOCUMENT_HEADER,
+                     sendRequestToUpdatingHeadersInBaseFromSite)
     return headers
 
 

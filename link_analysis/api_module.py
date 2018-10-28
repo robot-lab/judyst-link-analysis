@@ -6,7 +6,7 @@
 # other imports---------------------------------------------------------
 import os.path
 import datetime
-
+import time
 import dateutil.parser
 # License: Apache Software License, BSD License (Dual License)
 
@@ -351,8 +351,33 @@ def start_process_with(
                                         visualizerParameters[2])
 # end of start_process_with---------------------------------------------
 
+
+def get_all_links_from_all_headers(
+        sendRequestToUpdatingHeadersInBaseFromSite=False,
+        whichSupertypeUpdateFromSite=False):
+
+    print("Started to getting Headers from web_crawler.")
+    start_time = time.time()
+    jsonHeaders = wc_interface.get_all_headers(
+            sendRequestToUpdatingHeadersInBaseFromSite,
+            whichSupertypeUpdateFromSite)
+    print("Finished getting Headers from web_crawler. "
+          f"It spent {time.time()-start_time} seconds.")
+
+    if not jsonHeaders:
+        raise ValueError("Where's the document headers, Lebowski?")
+
+    decisionsHeaders = converters.convert_to_class_format(
+        jsonHeaders, models.DocumentHeader)
+
+    clLinks = link_handler.parse(decisionsHeaders, decisionsHeaders,
+                                 SUPERTYPES_TO_PARSE)
+    jsonLinks = \
+        converters.convert_dict_list_cls_to_json_serializable_format(clLinks)
+
+    return jsonLinks
+
 if __name__ == "__main__":
-    import time
     start_time = time.time()
     # process_period("18.06.1980", "18.07.2020", showPicture=False,
     #                sendRequestToUpdatingHeadersInBaseFromSite=False,
@@ -410,12 +435,14 @@ if __name__ == "__main__":
     #                sendRequestToUpdatingHeadersInBaseFromSite=False,
     #                includeIsolatedNodes=True,
     #                takeHeadersFromLocalStorage=False)
-
-    answ = process_period()
-    print(f"Found links: {len(answ)}")
     # cl1 = converters.load_pickle("Results0\сleanLinks.pickle")
     # cl2 = converters.load_pickle("Results\сleanLinks.pickle")
     # import my_funs
     # my_funs.compare_clealinks(cl1, cl2)
     # print(f"Headers collection spent {time.time()-start_time} seconds.")
+
+    response = get_all_links_from_all_headers()
+    print(f"Found links: {len(response)}. "
+          f"Time: {time.time()-start_time} seconds.")
+
     input('press any key...')
