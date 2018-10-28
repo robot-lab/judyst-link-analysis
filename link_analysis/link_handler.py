@@ -173,7 +173,7 @@ def parse(headersToParsing: Dict[str, Header], headersBase: Dict[str, Header],
     allCleanLinks = {}
     for doc_id in headersToParsing:
         text = wc_interface.get_text(doc_id)
-        if not text:
+        if text is None:
                 print(f"fileID: {doc_id}")
                 raise ValueError("Where's the text, Lebowski?")
         sentenceMatchObjects = list(_sentenceSeparator(text))
