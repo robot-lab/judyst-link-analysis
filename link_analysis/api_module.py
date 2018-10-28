@@ -146,7 +146,7 @@ def process_period(
         print("Finished getting Headers from web_crawler.")
         converters.save_json(jsonHeaders, PATH_TO_JSON_HEADERS)
 
-    if not jsonHeaders:
+    if jsonHeaders is None:
         raise ValueError("Where's the document headers, Lebowski?")
 
     decisionsHeaders = converters.convert_to_class_format(
@@ -281,7 +281,7 @@ def start_process_with(
         print("Finished getting Headers from web_crawler.")
         converters.save_json(jsonHeaders, PATH_TO_JSON_HEADERS)
 
-    if not jsonHeaders:
+    if jsonHeaders is None:
         raise ValueError(
             "Where's the document headers, Lebowski?")
 
@@ -364,7 +364,7 @@ def get_all_links_from_all_headers(
     print("Finished getting Headers from web_crawler. "
           f"It spent {time.time()-start_time} seconds.")
 
-    if not jsonHeaders:
+    if jsonHeaders is None:
         raise ValueError("Where's the document headers, Lebowski?")
 
     decisionsHeaders = converters.convert_to_class_format(
