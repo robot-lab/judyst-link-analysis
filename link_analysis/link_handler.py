@@ -4,12 +4,14 @@ from typing import Dict, List, Union, Type, Set, Tuple, Iterator
 if __package__:
     from link_analysis.models import Header, RoughLink, Positions, CleanLink, \
          LinkGraph
+    from link_analysis import wc_interface
 else:
     from models import Header, RoughLink, Positions, CleanLink, LinkGraph
     import wc_interface
 
 sMainParts = [r".*?\.\s*?"]
-sPrefixes = [r"(?<=\.\s)\s*?[А-ЯA-Z]", r"(?<=^)\s*?[А-ЯA-Zа-яa-z]"]
+sPrefixes = [r"(?<=\.\s)\s*?[А-ЯA-Z]", r"(?<=^)\s*?[А-ЯA-Zа-яa-z]",
+             r"(?<=\ufeff)\s*?[А-ЯA-Zа-яa-z]"]
 sPostfixes = [r"(?=\s[А-ЯA-Z])", r"(?=$)"]
 sRegexpes = []
 for pr in sPrefixes:
@@ -67,8 +69,8 @@ class _KsrfParser:
             sentence = sentenceMatch[0]
 
             opinion = cls.rlOpinionPattern.search(sentence)
-            if opinion is not None:
-                return {header: []}
+            if opinion is not None:  # According to the technical task.
+                break                # May change in the future.
             linkMatchObjects = cls.rlinkPattern.finditer(sentence)
             contextStartPos = sentenceMatch.start(0)
             contextEndPos = contextStartPos + len(sentence.rstrip())

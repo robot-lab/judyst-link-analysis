@@ -77,8 +77,8 @@ def process_period(
         firstDateTo=None, lastDateTo=None, docTypesTo=None,
         supertypesTo=None,
         weightsRange=None,
-        graphOutputFilePath=PATH_TO_JSON_GRAPH, showPicture=True,
-        takeHeadersFromLocalStorage=True,
+        graphOutputFilePath=PATH_TO_JSON_GRAPH, showPicture=False,
+        takeHeadersFromLocalStorage=False,
         sendRequestToUpdatingHeadersInBaseFromSite=False,
         whichSupertypeUpdateFromSite=None):
     '''
@@ -139,10 +139,11 @@ def process_period(
         jsonHeaders = converters.load_json(PATH_TO_JSON_HEADERS)
     else:
         #TODO: using param 'whichSupertypeReloadFromSite' isn't implemented
+        print("Started to getting Headers from web_crawler.")
         jsonHeaders = wc_interface.get_all_headers(
             sendRequestToUpdatingHeadersInBaseFromSite,
             whichSupertypeUpdateFromSite)
-
+        print("Finished getting Headers from web_crawler.")
         converters.save_json(jsonHeaders, PATH_TO_JSON_HEADERS)
 
     if not jsonHeaders:
@@ -164,13 +165,12 @@ def process_period(
 
     clLinks = link_handler.parse(usingHeaders, decisionsHeaders,
                                  SUPERTYPES_TO_PARSE)
+    jsonLinks = \
+        converters.convert_dict_list_cls_to_json_serializable_format(clLinks)
 
     if MY_DEBUG:
         converters.save_pickle(clLinks, os.path.join(RESULTS_FOLDER_NAME,
                                                      'сleanLinks.pickle'))
-        jsonLinks = \
-            converters.convert_dict_list_cls_to_json_serializable_format(
-                clLinks)
         converters.save_json(jsonLinks, os.path.join(
             RESULTS_FOLDER_NAME, 'cleanLinks.json'))
 
@@ -222,8 +222,8 @@ def start_process_with(
         firstDateTo=None, lastDateTo=None, docTypesTo=None,
         supertypesTo=None,
         weightsRange=None,
-        graphOutputFilePath=PATH_TO_JSON_GRAPH, showPicture=True,
-        takeHeadersFromLocalStorage=True,
+        graphOutputFilePath=PATH_TO_JSON_GRAPH, showPicture=False,
+        takeHeadersFromLocalStorage=False,
         sendRequestToUpdatingHeadersInBaseFromSite=False,
         whichSupertypeUpdateFromSite=None,
         visualizerParameters=(20, 1, (40, 40))):
@@ -274,9 +274,11 @@ def start_process_with(
         jsonHeaders = converters.load_json(PATH_TO_JSON_HEADERS)
     else:
         #TODO: using param 'whichSupertypeReloadFromSite' is not implemented
+        print("Started to getting Headers from web_crawler.")
         jsonHeaders = wc_interface.get_all_headers(
             sendRequestToUpdatingHeadersInBaseFromSite,
             whichSupertypeUpdateFromSite)
+        print("Finished getting Headers from web_crawler.")
         converters.save_json(jsonHeaders, PATH_TO_JSON_HEADERS)
 
     if not jsonHeaders:
@@ -309,12 +311,12 @@ def start_process_with(
                     toProcess[docID] = decisionsHeaders[docID]
 
     linkGraph = link_handler.get_link_graph(allLinks)
+    jsonLinks = \
+        converters.convert_dict_list_cls_to_json_serializable_format(allLinks)
+
     if MY_DEBUG:
         converters.save_pickle(allLinks, os.path.join(
             RESULTS_FOLDER_NAME, 'processedWithсleanLinks.pickle'))
-        jsonLinks = \
-            converters.convert_dict_list_cls_to_json_serializable_format(
-                allLinks)
         converters.save_json(jsonLinks, os.path.join(
             RESULTS_FOLDER_NAME, 'processedWithcleanLinks.json'))
         converters.save_pickle(linkGraph, os.path.join(
@@ -360,22 +362,22 @@ if __name__ == "__main__":
     #                sendRequestToUpdatingHeadersInBaseFromSite=False,
     #                includeIsolatedNodes=True,
     # takeHeadersFromLocalStorage=True)
-    process_period(
-        firstDateOfDocsForProcessing='18.03.2013',
-        lastDateOfDocsForProcessing='14.08.2018',
-        docTypesForProcessing={'КСРФ/О', 'КСРФ/П'},
-        firstDateForNodes='18.03.2014', lastDateForNodes='14.08.2017',
-        nodesIndegreeRange=(0, 25), nodesOutdegreeRange=(0, 25),
-        nodesTypes={'КСРФ/О', 'КСРФ/П'},
-        includeIsolatedNodes=False,
-        firstDateFrom='18.03.2016', lastDateFrom='14.08.2016',
-        docTypesFrom={'КСРФ/О', 'КСРФ/П'},
-        firstDateTo='18.03.2015', lastDateTo='14.08.2015',
-        docTypesTo={'КСРФ/О', 'КСРФ/П'},
-        weightsRange=(1, 5),
-        graphOutputFilePath=PATH_TO_JSON_GRAPH,
-        showPicture=True, sendRequestToUpdatingHeadersInBaseFromSite=False,
-        takeHeadersFromLocalStorage=True)
+    # process_period(
+    #     firstDateOfDocsForProcessing='18.03.2013',
+    #     lastDateOfDocsForProcessing='14.08.2018',
+    #     docTypesForProcessing={'КСРФ/О', 'КСРФ/П'},
+    #     firstDateForNodes='18.03.2014', lastDateForNodes='14.08.2017',
+    #     nodesIndegreeRange=(0, 25), nodesOutdegreeRange=(0, 25),
+    #     nodesTypes={'КСРФ/О', 'КСРФ/П'},
+    #     includeIsolatedNodes=False,
+    #     firstDateFrom='18.03.2016', lastDateFrom='14.08.2016',
+    #     docTypesFrom={'КСРФ/О', 'КСРФ/П'},
+    #     firstDateTo='18.03.2015', lastDateTo='14.08.2015',
+    #     docTypesTo={'КСРФ/О', 'КСРФ/П'},
+    #     weightsRange=(1, 5),
+    #     graphOutputFilePath=PATH_TO_JSON_GRAPH,
+    #     showPicture=True, sendRequestToUpdatingHeadersInBaseFromSite=False,
+    #     takeHeadersFromLocalStorage=True)
 
     # start_process_with(decisionID='КСРФ/1-П/2015', depth=3)
 
@@ -408,9 +410,12 @@ if __name__ == "__main__":
     #                sendRequestToUpdatingHeadersInBaseFromSite=False,
     #                includeIsolatedNodes=True,
     #                takeHeadersFromLocalStorage=False)
+
+    answ = process_period()
+    print(f"Found links: {len(answ)}")
     # cl1 = converters.load_pickle("Results0\сleanLinks.pickle")
     # cl2 = converters.load_pickle("Results\сleanLinks.pickle")
     # import my_funs
     # my_funs.compare_clealinks(cl1, cl2)
-    print(f"Headers collection spent {time.time()-start_time} seconds.")
-    print('press any key...')
+    # print(f"Headers collection spent {time.time()-start_time} seconds.")
+    input('press any key...')
