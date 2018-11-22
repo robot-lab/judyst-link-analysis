@@ -80,8 +80,8 @@ def save_json(jsonSerializableData: object, pathToFile: str) -> bool:
         if dirname:
             os.makedirs(dirname, exist_ok=True)
         with open(pathToFile, 'w', encoding='utf-8') as jsonFile:
-            json.dump(jsonSerializableData, jsonFile)
-    except OSError:
+            json.dump(jsonSerializableData, jsonFile, ensure_ascii=False)
+    except FileExistsError:
         return False
     return True
 
@@ -90,7 +90,7 @@ def load_json(pathToFile: str) -> Union[object, None]:
     try:
         with open(pathToFile, encoding='utf-8') as jsonFile:
             data = json.load(jsonFile)
-    except OSError:
+    except FileNotFoundError:
         return None
     return data
 
@@ -102,7 +102,7 @@ def save_pickle(anyData: Any, pathToFile: str) -> bool:
             os.makedirs(dirname, exist_ok=True)
         with open(pathToFile, 'wb') as pickleFile:
             pickle.dump(anyData, pickleFile)
-    except OSError:
+    except FileExistsError:
         return False
     return True
 
@@ -111,7 +111,7 @@ def load_pickle(pathToFile: str) -> Any:
     try:
         with open(pathToFile, 'rb') as pickleFile:
             data = pickle.load(pickleFile, encoding='UTF-8')
-    except OSError:
+    except FileNotFoundError:
         return None
     return data
 

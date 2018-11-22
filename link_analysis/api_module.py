@@ -30,9 +30,14 @@ else:
 # internal methods------------------------------------------------------
 DECISIONS_FOLDER_NAME = 'Decision files'
 JSON_HEADERS_FILENAME = 'DecisionHeaders.json'
+JSON_HEADERS_FOR_CHECKING_LINKS_FILENAME = \
+    'ForCheckingLinksDecisionHeaders.jsonlines'
 PICKLE_HEADERS_FILENAME = 'DecisionHeaders.pickle'
 PATH_TO_JSON_HEADERS = os.path.join(DECISIONS_FOLDER_NAME,
                                     JSON_HEADERS_FILENAME)
+PATH_TO_JSON_HEADERS_FOR_CHECKING_LINKS_FILENAME = \
+    os.path.join('Decision files',
+                 'ForCheckingLinksDecisionHeaders.jsonlines')
 PATH_TO_PICKLE_HEADERS = os.path.join(DECISIONS_FOLDER_NAME,
                                       PICKLE_HEADERS_FILENAME)
 RESULTS_FOLDER_NAME = 'Results'
@@ -377,6 +382,32 @@ def get_all_links_from_all_headers(
 
     return jsonLinks
 
+
+def get_CODE_links_from_all_headers(
+        sendRequestToUpdatingHeadersInBaseFromSite=False,
+        whichSupertypeUpdateFromSite=False):
+
+    print("Started to getting Headers from web_crawler.")
+    start_time = time.time()
+    jsonHeaders = wc_interface.get_all_headers(
+            sendRequestToUpdatingHeadersInBaseFromSite,
+            whichSupertypeUpdateFromSite)
+    print("Finished getting Headers from web_crawler. "
+          f"It spent {time.time()-start_time} seconds.")
+
+    if jsonHeaders is None:
+        raise ValueError("Where's the document headers, Lebowski?")
+
+    decisionsHeaders = converters.convert_to_class_format(
+        jsonHeaders, models.DocumentHeader)
+
+    clLinks = link_handler.parse(decisionsHeaders, decisionsHeaders,
+                                 {'ГКРФ', 'НКРФ'})
+    jsonLinks = \
+        converters.convert_dict_list_cls_to_json_serializable_format(clLinks)
+
+    return jsonLinks
+
 if __name__ == "__main__":
     start_time = time.time()
     # process_period("18.06.1980", "18.07.2020", showPicture=False,
@@ -441,8 +472,19 @@ if __name__ == "__main__":
     # my_funs.compare_clealinks(cl1, cl2)
     # print(f"Headers collection spent {time.time()-start_time} seconds.")
 
-    response = get_all_links_from_all_headers()
-    print(f"Found links: {len(response)}. "
-          f"Time: {time.time()-start_time} seconds.")
+    # process_period(
+    #     nodesIndegreeRange=(0, 25), nodesOutdegreeRange=(0, 25),
+    #     graphOutputFilePath=PATH_TO_JSON_GRAPH,
+    #     showPicture=False, sendRequestToUpdatingHeadersInBaseFromSite=False,
+    #     takeHeadersFromLocalStorage=True)
 
+    # response = get_all_links_from_all_headers()
+    # converters.save_json(response, 'cleanLinks.json')
+    # print(f"Found links: {len(response)}. "
+    #       f"Time: {time.time()-start_time} seconds.")
+    # jsons = converters.load_json(PATH_TO_JSON_HEADERS)
+    # converters.save_json(jsons, PATH_TO_JSON_HEADERS)
+    clLinks = get_CODE_links_from_all_headers()
+    converters.save_json(clLinks, r'ГКРФ_НКРФ_cleaLinks.json')
+    # import my_funs
     input('press any key...')
