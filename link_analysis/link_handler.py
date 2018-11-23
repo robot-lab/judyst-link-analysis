@@ -299,42 +299,42 @@ class _BaseCodeParser:
         (?:
             (?P<kind1_part1_article2>
                 (?:
-                    (?:{partWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
-                                    (?:,\s+|\s+и\s+|\s+или\s+)*)+\s*)*
-                    {articleWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
+                    (?:{partWordsRegex}(?=(?P<n1>(?:\d+(?:\.[-–—\d\s]+)*
+                                    (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n1)\s*)*
+                    {articleWordsRegex}(?=(?P<n2>(?:\d+(?:\.[-–—\d\s]+)*
                                     (?:\s*["«][а-яё,\s]*?["»])*
-                                    (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+
+                                    (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n2)
                 )+
                 \s*{codeWordsRegex}
             |
                 {codeWordsRegex}\s*\(.*?
                     (?:
-                        (?:{partWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
-                                        (?:,\s+|\s+и\s+|\s+или\s+)*)+\s*)+
-                        {articleWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
+                        (?:{partWordsRegex}(?=(?P<n3>(?:\d+(?:\.[-–—\d\s]+)*
+                                        (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n3)\s*)+
+                        {articleWordsRegex}(?=(?P<n4>(?:\d+(?:\.[-–—\d\s]+)*
                                         (?:\s*["«][а-яё,\s]*?["»])*
-                                        (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+
+                                        (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n4)
                     )+
                 .*?\)
             )
             |
             (?P<kind2_article1_part2>
                 (?:
-                    {articleWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
+                    {articleWordsRegex}(?=(?P<n5>(?:\d+(?:\.[-–—\d\s]+)*
                                        (?:\s*["«][а-яё,\s]*?["»])*
-                                       (?:,\s+|\s+и\s+|\s+или\s+)*)+\s*
-                    (?:{partWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
-                                       (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+)*
+                                       (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n5)\s*
+                    (?:{partWordsRegex}(?=(?P<n6>(?:\d+(?:\.[-–—\d\s]+)*
+                                       (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n6))*
                 )+
                 \s*{codeWordsRegex}
             |
                 {codeWordsRegex}\s*\(.*?
                     (?:
-                        {articleWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
+                        {articleWordsRegex}(?=(?P<n7>(?:\d+(?:\.[-–—\d\s]+)*
                                            (?:\s*["«][а-яё,\s]*?["»])*
-                                           (?:,\s+|\s+и\s+|\s+или\s+)*)+\s*
-                        (?:{partWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
-                                           (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+)*
+                                           (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n7)\s*
+                        (?:{partWordsRegex}(?=(?P<n8>(?:\d+(?:\.[-–—\d\s]+)*
+                                           (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n8))*
                     )+
                 .*?\)
             )
@@ -378,9 +378,6 @@ class _BaseCodeParser:
         roughLinks = []
         for sentenceMatch in sentenceMatchObjects:
             sentence = sentenceMatch[0]
-            # print(sentence)
-            # prevsentence=sentence
-            # roughLinks = []
             if findInOpinion:
                 opinion = cls.rlOpinionPattern.search(sentence)
                 if opinion is not None:  # According to the technical task.
@@ -504,6 +501,10 @@ class _GkrfCodeParser(_BaseCodeParser):
         Гражданск[а-яё]+\s+Кодекс[а-яё]+\s+Российск[а-яё]+\s+Федерац[а-яё]+|
         Гражданск[а-яё]+\s+Кодекс[а-яё]+\s+РФ)
         """
+    # kind1Pattern, kind2Pattern articlesAndPartsPattern are same as in the
+    # _BaseCodeParser, necessary to redefine because of the order of computing
+    # the strings (the final string would coincided with the string
+    # from the _BaseCodeParser)
     kind1Pattern = re.compile(rf"""(?i)
             (?:{partWordsRegex}(?P<part>
                                     (?:\d+(?:\.[-–—\d\s]+)*
@@ -532,42 +533,42 @@ class _GkrfCodeParser(_BaseCodeParser):
         (?:
             (?P<kind1_part1_article2>
                 (?:
-                    (?:{partWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
-                                    (?:,\s+|\s+и\s+|\s+или\s+)*)+\s*)*
-                    {articleWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
+                    (?:{partWordsRegex}(?=(?P<n1>(?:\d+(?:\.[-–—\d\s]+)*
+                                    (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n1)\s*)*
+                    {articleWordsRegex}(?=(?P<n2>(?:\d+(?:\.[-–—\d\s]+)*
                                     (?:\s*["«][а-яё,\s]*?["»])*
-                                    (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+
+                                    (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n2)
                 )+
                 \s*{codeWordsRegex}
             |
                 {codeWordsRegex}\s*\(.*?
                     (?:
-                        (?:{partWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
-                                        (?:,\s+|\s+и\s+|\s+или\s+)*)+\s*)+
-                        {articleWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
+                        (?:{partWordsRegex}(?=(?P<n3>(?:\d+(?:\.[-–—\d\s]+)*
+                                        (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n3)\s*)+
+                        {articleWordsRegex}(?=(?P<n4>(?:\d+(?:\.[-–—\d\s]+)*
                                         (?:\s*["«][а-яё,\s]*?["»])*
-                                        (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+
+                                        (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n4)
                     )+
                 .*?\)
             )
             |
             (?P<kind2_article1_part2>
                 (?:
-                    {articleWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
+                    {articleWordsRegex}(?=(?P<n5>(?:\d+(?:\.[-–—\d\s]+)*
                                        (?:\s*["«][а-яё,\s]*?["»])*
-                                       (?:,\s+|\s+и\s+|\s+или\s+)*)+\s*
-                    (?:{partWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
-                                       (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+)*
+                                       (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n5)\s*
+                    (?:{partWordsRegex}(?=(?P<n6>(?:\d+(?:\.[-–—\d\s]+)*
+                                       (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n6))*
                 )+
                 \s*{codeWordsRegex}
             |
                 {codeWordsRegex}\s*\(.*?
                     (?:
-                        {articleWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
+                        {articleWordsRegex}(?=(?P<n7>(?:\d+(?:\.[-–—\d\s]+)*
                                            (?:\s*["«][а-яё,\s]*?["»])*
-                                           (?:,\s+|\s+и\s+|\s+или\s+)*)+\s*
-                        (?:{partWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
-                                           (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+)*
+                                           (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n7)\s*
+                        (?:{partWordsRegex}(?=(?P<n8>(?:\d+(?:\.[-–—\d\s]+)*
+                                           (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n8))*
                     )+
                 .*?\)
             )
@@ -585,6 +586,10 @@ class _NkrfCodeParser(_BaseCodeParser):
         Налогов[а-яё]+\s+Кодекс[а-яё]+\s+Российск[а-яё]+\s+Федерац[а-яё]+|
         Налогов[а-яё]+\s+Кодекс[а-яё]+\s+РФ)
         """
+    # kind1Pattern, kind2Pattern articlesAndPartsPattern are same as in the
+    # _BaseCodeParser, necessary to redefine because of the order of computing
+    # the strings (the final string would coincided with the string
+    # from the _BaseCodeParser)
     kind1Pattern = re.compile(rf"""(?i)
             (?:{partWordsRegex}(?P<part>
                                     (?:\d+(?:\.[-–—\d\s]+)*
@@ -613,42 +618,42 @@ class _NkrfCodeParser(_BaseCodeParser):
         (?:
             (?P<kind1_part1_article2>
                 (?:
-                    (?:{partWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
-                                    (?:,\s+|\s+и\s+|\s+или\s+)*)+\s*)*
-                    {articleWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
+                    (?:{partWordsRegex}(?=(?P<n1>(?:\d+(?:\.[-–—\d\s]+)*
+                                    (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n1)\s*)*
+                    {articleWordsRegex}(?=(?P<n2>(?:\d+(?:\.[-–—\d\s]+)*
                                     (?:\s*["«][а-яё,\s]*?["»])*
-                                    (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+
+                                    (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n2)
                 )+
                 \s*{codeWordsRegex}
             |
                 {codeWordsRegex}\s*\(.*?
                     (?:
-                        (?:{partWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
-                                        (?:,\s+|\s+и\s+|\s+или\s+)*)+\s*)+
-                        {articleWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
+                        (?:{partWordsRegex}(?=(?P<n3>(?:\d+(?:\.[-–—\d\s]+)*
+                                        (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n3)\s*)+
+                        {articleWordsRegex}(?=(?P<n4>(?:\d+(?:\.[-–—\d\s]+)*
                                         (?:\s*["«][а-яё,\s]*?["»])*
-                                        (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+
+                                        (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n4)
                     )+
                 .*?\)
             )
             |
             (?P<kind2_article1_part2>
                 (?:
-                    {articleWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
+                    {articleWordsRegex}(?=(?P<n5>(?:\d+(?:\.[-–—\d\s]+)*
                                        (?:\s*["«][а-яё,\s]*?["»])*
-                                       (?:,\s+|\s+и\s+|\s+или\s+)*)+\s*
-                    (?:{partWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
-                                       (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+)*
+                                       (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n5)\s*
+                    (?:{partWordsRegex}(?=(?P<n6>(?:\d+(?:\.[-–—\d\s]+)*
+                                       (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n6))*
                 )+
                 \s*{codeWordsRegex}
             |
                 {codeWordsRegex}\s*\(.*?
                     (?:
-                        {articleWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
+                        {articleWordsRegex}(?=(?P<n7>(?:\d+(?:\.[-–—\d\s]+)*
                                            (?:\s*["«][а-яё,\s]*?["»])*
-                                           (?:,\s+|\s+и\s+|\s+или\s+)*)+\s*
-                        (?:{partWordsRegex}(?:\d+(?:\.[-–—\d\s]+)*
-                                           (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+)*
+                                           (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n7)\s*
+                        (?:{partWordsRegex}(?=(?P<n8>(?:\d+(?:\.[-–—\d\s]+)*
+                                           (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n8))*
                     )+
                 .*?\)
             )
@@ -661,6 +666,7 @@ _parsersDict = {
 }
 
 _NnDelPattern = re.compile(r'-N\d+-')
+
 
 def parse(headersToParsing: Dict[str, Header], headersBase: Dict[str, Header],
           supertypes: Set[str]) -> Dict[Header, CleanLink]:
@@ -697,7 +703,8 @@ def parse(headersToParsing: Dict[str, Header], headersBase: Dict[str, Header],
     for doc_id in headersToParsing:
         docCounter += 1
         print(
-            f'Find links in document {doc_id}  {docCounter}/{len(headersToParsing)}...',
+            f'Find links in document {doc_id}  {docCounter}'
+            f'/{len(headersToParsing)}...',
             end='\r')  # debug print
         text = wc_interface.get_text(doc_id)
         if text is None:
