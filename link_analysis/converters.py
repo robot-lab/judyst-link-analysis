@@ -114,30 +114,3 @@ def load_pickle(pathToFile: str) -> Any:
     except FileNotFoundError:
         return None
     return data
-
-if __name__ == '__main__':
-    pickle1 = load_pickle('Decision files0\\DecisionHeaders.pickle')
-    json1 = convert_to_json_serializable_format(pickle1)
-    # import time
-    # start_time = time.time()
-    save_json(json1, 'Decision files0\\DecisionHeaders.json')
-    # print(f"json saving spend {time.time()-start_time} seconds")
-    # input('press')
-    json2 = load_json('Decision files0\\DecisionHeaders.json')
-    pickle2 = convert_to_class_format(json2,  # type: ignore
-                                      className=DocumentHeader)
-    save_pickle(pickle2, 'Decision files0\\DecisionHeaders1.pickle')
-    pickle3 = load_pickle('Decision files0\\DecisionHeaders1.pickle')
-    json3 = convert_to_json_serializable_format(pickle3)
-    save_json(json3, 'Decision files0\\DecisionHeaders3.json')
-
-    # json3file = open('Decision files0\\DecisionHeaders3.json', 'r')
-    # json3text = json3file.read()
-    # json1file = open('Decision files0\\DecisionHeaders.json', 'r')
-    # json1text = json1file.read()
-    # for i in range(len(json1text)):
-    #     if json1text[i] != json3text[i]:
-    #         repr(json1text[i])
-    #         print(json1text[i])
-    #         break
-    # print('all done')
