@@ -659,10 +659,97 @@ class _NkrfCodeParser(_BaseCodeParser):
             )
         )""", re.VERBOSE)
 
+
+class _UkrfCodeParser(_BaseCodeParser):
+    CODE_PREFIX = 'УКРФ'
+    articleWordsRegex = r'(?:стат[а-яё]+\s+|(?:ст\.\s*){1,2}\s*)'
+    partWordsRegex = r'(?:част[а-яё]+\s+|(?:ч\.\s*){1,2}\s*)'
+    codeWordsRegex = \
+        r"""
+        (?:УКРФ\s+РФ|УКРФ\s+Российск[а-яё]+\s+Федерац[а-яё]+|
+        Уголов[а-яё]+\s+Кодекс[а-яё]+\s+Российск[а-яё]+\s+Федерац[а-яё]+|
+        Уголов[а-яё]+\s+Кодекс[а-яё]+\s+РФ)
+        """
+    # kind1Pattern, kind2Pattern articlesAndPartsPattern are same as in the
+    # _BaseCodeParser, necessary to redefine because of the order of computing
+    # the strings (the final string would coincided with the string
+    # from the _BaseCodeParser)
+    kind1Pattern = re.compile(rf"""(?i)
+            (?:{partWordsRegex}(?P<part>
+                                    (?:\d+(?:\.[-–—\d\s]+)*
+                                    (?:,\s+|\s+и\s+|\s+или\s+)*)+
+                                )\s*
+            )*
+            {articleWordsRegex}(?P<article>
+                                    (?:\d+(?:\.[-–—\d\s]+)*
+                                    (?:\s*["«][а-яё,\s]*?["»])*
+                                    (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+
+                                )
+    """, re.VERBOSE)
+    kind2Pattern = re.compile(rf"""(?i)
+        {articleWordsRegex}(?P<article>
+                                (?:\d+(?:\.[-–—\d\s]+)*
+                                (?:\s*["«][а-яё,\s]*?["»])*
+                                (?:,\s+|\s+и\s+|\s+или\s+)*)+
+                            )\s*
+        (?:{partWordsRegex}(?P<part>
+                                (?:\d+(?:\.[-–—\d\s]+)*
+                                (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+
+                            )
+        )*
+    """, re.VERBOSE)
+    articlesAndPartsPattern = re.compile(rf"""(?i)
+        (?:
+            (?P<kind1_part1_article2>
+                (?:
+                    (?:{partWordsRegex}(?=(?P<n1>(?:\d+(?:\.[-–—\d\s]+)*
+                                    (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n1)\s*)*
+                    {articleWordsRegex}(?=(?P<n2>(?:\d+(?:\.[-–—\d\s]+)*
+                                    (?:\s*["«][а-яё,\s]*?["»])*
+                                    (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n2)
+                )+
+                \s*{codeWordsRegex}
+            |
+                {codeWordsRegex}\s*\(.*?
+                    (?:
+                        (?:{partWordsRegex}(?=(?P<n3>(?:\d+(?:\.[-–—\d\s]+)*
+                                        (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n3)\s*)+
+                        {articleWordsRegex}(?=(?P<n4>(?:\d+(?:\.[-–—\d\s]+)*
+                                        (?:\s*["«][а-яё,\s]*?["»])*
+                                        (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n4)
+                    )+
+                .*?\)
+            )
+            |
+            (?P<kind2_article1_part2>
+                (?:
+                    {articleWordsRegex}(?=(?P<n5>(?:\d+(?:\.[-–—\d\s]+)*
+                                       (?:\s*["«][а-яё,\s]*?["»])*
+                                       (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n5)\s*
+                    (?:{partWordsRegex}(?=(?P<n6>(?:\d+(?:\.[-–—\d\s]+)*
+                                       (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n6))*
+                )+
+                \s*{codeWordsRegex}
+            |
+                {codeWordsRegex}\s*\(.*?
+                    (?:
+                        {articleWordsRegex}(?=(?P<n7>(?:\d+(?:\.[-–—\d\s]+)*
+                                           (?:\s*["«][а-яё,\s]*?["»])*
+                                           (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n7)\s*
+                        (?:{partWordsRegex}(?=(?P<n8>(?:\d+(?:\.[-–—\d\s]+)*
+                                           (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n8))*
+                    )+
+                .*?\)
+            )
+        )""", re.VERBOSE)
+
+
 _parsersDict = {
     'КСРФ': _KsrfParser,
     'ГКРФ': _GkrfCodeParser,
-    'НКРФ': _NkrfCodeParser
+    'НКРФ': _NkrfCodeParser,
+    'КОАПРФ': _BaseCodeParser,
+    'УКРФ': _UkrfCodeParser
 }
 
 _NnDelPattern = re.compile(r'-N\d+-')
