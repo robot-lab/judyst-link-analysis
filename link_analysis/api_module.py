@@ -402,7 +402,7 @@ def get_CODE_links_from_all_headers(
         jsonHeaders, models.DocumentHeader)
 
     clLinks = link_handler.parse(decisionsHeaders, decisionsHeaders,
-                                 {'ГКРФ', 'НКРФ'})
+                                 {'ГКРФ', 'НКРФ', 'КОАПРФ', 'УКРФ'})
     jsonLinks = \
         converters.convert_dict_list_cls_to_json_serializable_format(clLinks)
 
@@ -480,11 +480,10 @@ if __name__ == "__main__":
 
     # response = get_all_links_from_all_headers()
     # converters.save_json(response, 'cleanLinks.json')
-    # print(f"Found links: {len(response)}. "
+    # print(f"\nFound links: {len(response)}. "
     #       f"Time: {time.time()-start_time} seconds.")
-    # jsons = converters.load_json(PATH_TO_JSON_HEADERS)
-    # converters.save_json(jsons, PATH_TO_JSON_HEADERS)
-    clLinks = get_CODE_links_from_all_headers()
-    converters.save_json(clLinks, r'ГКРФ_НКРФ_cleaLinks.json')
-    # import my_funs
+    response = get_CODE_links_from_all_headers()
+    print(f"\nFound links: {len(response)}. "
+          f"Time: {time.time()-start_time} seconds.")
+    converters.save_json(response, r'ГКРФ_НКРФ_КоАП_УК_cleaLinks.json')
     input('press any key...')

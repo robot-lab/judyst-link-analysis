@@ -5,8 +5,10 @@ from typing import Dict, List, Union, Type, Set, Tuple, Iterator
 import json
 import dateutil
 import itertools
+
 PATH_TO_JSON_HEADERS_FOR_CHECKING_LINKS_FILENAME = \
     os.path.join('Decision files', 'ForCheckingLinksDecisionHeaders.jsonlines')
+REJECTED_COUNTER = 0
 
 if __package__:
     from link_analysis.models import Header, RoughLink, Positions, CleanLink, \
@@ -476,6 +478,9 @@ class _BaseCodeParser:
                     cleanLink = CleanLink(headerFrom, headerTo, 1,
                                           positionAndContext)
                     checkedLinks[headerFrom].append(cleanLink)
+        global REJECTED_COUNTER
+        for key in rejectedLinks:
+            REJECTED_COUNTER += len(rejectedLinks[key])
         return (checkedLinks, rejectedLinks)
 
     @classmethod
@@ -757,8 +762,31 @@ _NnDelPattern = re.compile(r'-N\d+-')
 
 def parse(headersToParsing: Dict[str, Header], headersBase: Dict[str, Header],
           supertypes: Set[str]) -> Dict[Header, CleanLink]:
+
     def get_headersForCheckingLinks():
+        import time
+        start_time = time.time()
+
+        def rekey(hs):
+            dateKeyedHs = {}
+            for key in hs:
+                try:
+                    datekey = dateutil.parser.parse(key, dayfirst=True).date()
+                except ValueError:
+                    continue
+                dateKeyedHs[datekey] = hs[key]
+            return dateKeyedHs
         print('Start to prepare headers for checking links.')  # debug print
+        PREPARED_FILE_NAME = 'preparedFileForCheckingLinks.json'
+        PATH_TO_PREPARED_FILE = os.path.join(
+            os.path.dirname(PATH_TO_JSON_HEADERS_FOR_CHECKING_LINKS_FILENAME),
+            PREPARED_FILE_NAME)
+        if os.path.exists(PATH_TO_PREPARED_FILE):
+            hs = converters.load_json(PATH_TO_PREPARED_FILE)
+            dateKeyedHs = rekey(hs)
+            print(f'Finish to prepare headers for checking links. '
+                  f'It spent {time.time()-start_time} seconds.')  # debug print
+            return dateKeyedHs
         hs = {}
         for decs in _get_next_dec_for_link_checking(1000):
             for key in decs:
@@ -768,17 +796,17 @@ def parse(headersToParsing: Dict[str, Header], headersBase: Dict[str, Header],
                     effectiveDate = decs[key]['effective_date']
                 except KeyError:
                     continue
+                try:
+                    dateutil.parser.parse(effectiveDate, dayfirst=True).date()
+                except ValueError:
+                    continue
                 if effectiveDate not in hs:
                     hs[effectiveDate] = {}
                 hs[effectiveDate][_NnDelPattern.sub('-', key)] = key
-        dateKeyedHs = {}
-        for key in hs:
-            try:
-                datekey = dateutil.parser.parse(key, dayfirst=True).date()
-            except ValueError:
-                continue
-            dateKeyedHs[datekey] = hs[key]
-        print('Finish to prepare headers for checking links.')  # debug print
+        converters.save_json(hs, PATH_TO_PREPARED_FILE)
+        dateKeyedHs = rekey(hs)
+        print(f'Finish to prepare headers for checking links. '
+              f'It spent {time.time()-start_time} seconds.')  # debug print
         return dateKeyedHs
     headersForCheckingLinks = get_headersForCheckingLinks()
     if not hasattr(supertypes, '__iter__'):
@@ -790,9 +818,8 @@ def parse(headersToParsing: Dict[str, Header], headersBase: Dict[str, Header],
     for doc_id in headersToParsing:
         docCounter += 1
         print(
-            f'Find links in document {doc_id}  {docCounter}'
-            f'/{len(headersToParsing)}...',
-            end='\r')  # debug print
+            f'Find links in document {docCounter}/{len(headersToParsing)}...'
+            f' doc_id: {doc_id:40}', end='\r')  # debug print
         text = wc_interface.get_text(doc_id)
         if text is None:
                 print(f"fileID: {doc_id}")
@@ -808,6 +835,7 @@ def parse(headersToParsing: Dict[str, Header], headersBase: Dict[str, Header],
                         allCleanLinks[h].extend(parsed[h])
                     else:
                         allCleanLinks[h] = parsed[h]
+    print(f'\nNumber of rejected links: {REJECTED_COUNTER}')
     return allCleanLinks
 
 
@@ -825,16 +853,3 @@ def get_link_graph(checkedLinks: Dict[Header, List[CleanLink]]) -> LinkGraph:
             linkGraph.add_node(cl.header_to)
             linkGraph.add_edge(cl)
     return linkGraph
-
-if __name__ == '__main__':
-    print(1)
-    pat = _BaseCodeParser.articlesAndPartsPattern
-    # a = _get_next_dec_for_link_checking()
-    # for r in a:
-    #     print(r)
-    # print('end')
-    # while True:
-    #     b = next(a)
-    #     if b is None:
-    #         break
-    #     print(b)
