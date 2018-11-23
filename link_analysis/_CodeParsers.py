@@ -297,7 +297,6 @@ class _BaseCodeParser:
            cls, header: Header, sentenceMatchObjects: list,
            headersBase: Dict[str, Header],
            supertype: str, headersForCheckingLinks) -> Dict[Header, CleanLink]:
-        cls._init_patterns()
         roughLinks = cls.get_rough_links(header, sentenceMatchObjects)
         response = cls.get_clean_links(roughLinks, headersBase, supertype,
                                        headersForCheckingLinks)
@@ -319,6 +318,7 @@ class KoaprfCodeParser(_BaseCodeParser):
         об административн[а-яё]+\s+правонарушен[а-яё]+|
         Кодекс[а-яё]+\s+РФ\s+об административн[а-яё]+\s+правонарушен[а-яё]+)
         """
+KoaprfCodeParser._init_patterns()
 
 
 class GkrfCodeParser(_BaseCodeParser):
@@ -332,6 +332,7 @@ class GkrfCodeParser(_BaseCodeParser):
         Гражданск[а-яё]+\s+Кодекс[а-яё]+\s+Российск[а-яё]+\s+Федерац[а-яё]+|
         Гражданск[а-яё]+\s+Кодекс[а-яё]+\s+РФ)
         """
+GkrfCodeParser._init_patterns()
 
 
 class NkrfCodeParser(_BaseCodeParser):
@@ -345,6 +346,7 @@ class NkrfCodeParser(_BaseCodeParser):
         Налогов[а-яё]+\s+Кодекс[а-яё]+\s+Российск[а-яё]+\s+Федерац[а-яё]+|
         Налогов[а-яё]+\s+Кодекс[а-яё]+\s+РФ)
         """
+NkrfCodeParser._init_patterns()
 
 
 class UkrfCodeParser(_BaseCodeParser):
@@ -357,3 +359,4 @@ class UkrfCodeParser(_BaseCodeParser):
         Уголов[а-яё]+\s+Кодекс[а-яё]+\s+Российск[а-яё]+\s+Федерац[а-яё]+|
         Уголов[а-яё]+\s+Кодекс[а-яё]+\s+РФ)
         """
+UkrfCodeParser._init_patterns()
