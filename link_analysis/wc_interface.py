@@ -15,7 +15,7 @@ def init(folderName='', databaseSource=None):
     if isInitialized:
         return
     print("web_crawler sources initialization was started, it may take some"
-          "time if headers is not downloaded.")
+          "time if headers are not downloaded.")
     if __package__:
         if databaseSource is None:
             raise RuntimeError('DatabaseSource should be given')
