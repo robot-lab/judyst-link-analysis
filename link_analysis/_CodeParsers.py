@@ -1,7 +1,6 @@
 import re
 from typing import Dict, List, Type, Tuple
 import dateutil
-
 import os
 import itertools
 import json
@@ -17,6 +16,8 @@ else:
 
 PATH_TO_JSON_HEADERS_FOR_CHECKING_LINKS_FILENAME = \
     os.path.join('Decision files', 'ForCheckingLinksDecisionHeaders.jsonlines')
+
+REJECTED = 0
 
 
 def _get_next_dec_for_link_checking(
@@ -64,24 +65,24 @@ class _BaseCodeParser:
     kind1PatternTemplate = r"""(?i)
             (?:{partWordsRegex}(?P<part>
                                     (?:\d+(?:\.[-–—\d\s]+)*
-                                    (?:,\s+|\s+и\s+|\s+или\s+)*)+
+                                    (?:,\s+|\s*и\s+|\s*или\s+)*)+
                                 )\s*
             )*
             {articleWordsRegex}(?P<article>
                                     (?:\d+(?:\.[-–—\d\s]+)*
                                     (?:\s*["«][а-яё,\s]*?["»])*
-                                    (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+
+                                    (?:,\s+|\s*и\s+|\s*или\s+|;\s+)*)+
                                 )
     """
     kind2PatternTemplate = r"""(?i)
         {articleWordsRegex}(?P<article>
                                 (?:\d+(?:\.[-–—\d\s]+)*
                                 (?:\s*["«][а-яё,\s]*?["»])*
-                                (?:,\s+|\s+и\s+|\s+или\s+)*)+
+                                (?:,\s+|\s*и\s+|\s*или\s+)*)+
                             )\s*
         (?:{partWordsRegex}(?P<part>
                                 (?:\d+(?:\.[-–—\d\s]+)*
-                                (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+
+                                (?:,\s+|\s*и\s+|\s*или\s+|;\s+)*)+
                             )
         )*
     """
@@ -90,20 +91,20 @@ class _BaseCodeParser:
             (?P<kind1_part1_article2>
                 (?:
                     (?:{partWordsRegex}(?=(?P<n1>(?:\d+(?:\.[-–—\d\s]+)*
-                                    (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n1)\s*)*
+                                    (?:,\s+|\s*и\s+|\s*или\s+)*)+))(?P=n1)\s*)*
                     {articleWordsRegex}(?=(?P<n2>(?:\d+(?:\.[-–—\d\s]+)*
                                     (?:\s*["«][а-яё,\s]*?["»])*
-                                    (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n2)
+                                    (?:,\s+|\s*и\s+|\s*или\s+|;\s+)*)+))(?P=n2)
                 )+
                 \s*{codeWordsRegex}
             |
-                {codeWordsRegex}\s*\(.*?
+                {codeWordsRegex}\s*\([^)]*?
                     (?:
                         (?:{partWordsRegex}(?=(?P<n3>(?:\d+(?:\.[-–—\d\s]+)*
-                                        (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n3)\s*)+
+                                        (?:,\s+|\s*и\s+|\s*или\s+)*)+))(?P=n3)\s*)+
                         {articleWordsRegex}(?=(?P<n4>(?:\d+(?:\.[-–—\d\s]+)*
                                         (?:\s*["«][а-яё,\s]*?["»])*
-                                        (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n4)
+                                        (?:,\s+|\s*и\s+|\s*или\s+|;\s+)*)+))(?P=n4)
                     )+
                 .*?\)
             )
@@ -112,19 +113,19 @@ class _BaseCodeParser:
                 (?:
                     {articleWordsRegex}(?=(?P<n5>(?:\d+(?:\.[-–—\d\s]+)*
                                        (?:\s*["«][а-яё,\s]*?["»])*
-                                       (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n5)\s*
+                                       (?:,\s+|\s*и\s+|\s*или\s+)*)+))(?P=n5)\s*
                     (?:{partWordsRegex}(?=(?P<n6>(?:\d+(?:\.[-–—\d\s]+)*
-                                       (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n6))*
+                                       (?:,\s+|\s*и\s+|\s*или\s+|;\s+)*)+))(?P=n6))*
                 )+
                 \s*{codeWordsRegex}
             |
-                {codeWordsRegex}\s*\(.*?
+                {codeWordsRegex}\s*\([^)]*?
                     (?:
                         {articleWordsRegex}(?=(?P<n7>(?:\d+(?:\.[-–—\d\s]+)*
                                            (?:\s*["«][а-яё,\s]*?["»])*
-                                           (?:,\s+|\s+и\s+|\s+или\s+)*)+))(?P=n7)\s*
+                                           (?:,\s+|\s*и\s+|\s*или\s+)*)+))(?P=n7)\s*
                         (?:{partWordsRegex}(?=(?P<n8>(?:\d+(?:\.[-–—\d\s]+)*
-                                           (?:,\s+|\s+и\s+|\s+или\s+|;\s+)*)+))(?P=n8))*
+                                           (?:,\s+|\s*и\s+|\s*или\s+|;\s+)*)+))(?P=n8))*
                     )+
                 .*?\)
             )
@@ -135,7 +136,7 @@ class _BaseCodeParser:
         r"(?P<pattern>\d+(?:\.\d+)*(?:\.(?:\d+[-–—])*?))"
         r"(?P<firstNum>\d+)\s*[-–—]\s*\1(?P<lastNum>\d+)",
         re.VERBOSE)
-    stripPattern = re.compile(r'(?:[\n\s,;]+$|^[\n\s,;]+)')
+    stripPattern = re.compile(r'(?:[\n\s,;\.]+$|^[\n\s,;\.]+)')
     splitPattern = re.compile(r'\s*[,;ил]+\s*')
     quitedTitlePattern = re.compile(r'(?i)\s*["«][а-яё,\s]*?["»]\s*')
 
@@ -176,6 +177,7 @@ class _BaseCodeParser:
                 cls.quitedTitlePattern.sub('', match).strip())
             nums = []
             for splNum in splitedNums:
+                splNum = cls.stripPattern.sub('', splNum).replace(' ', '')
                 numRange = cls.numberRangePattern.search(splNum)
                 if numRange is not None:
                     pattern = numRange['pattern']
@@ -184,7 +186,7 @@ class _BaseCodeParser:
                     for i in range(first, last+1):
                         nums.append(pattern + str(i))
                 elif splNum != '':
-                    nums.append(cls.stripPattern.sub('', splNum))
+                    nums.append(splNum)
             return nums
 
         if not isinstance(header, Header):
@@ -211,17 +213,18 @@ class _BaseCodeParser:
                     raise Exception("it's bad")
                 for match in matches:
                         if match['part'] is None:
-                            nums = get_nums_from_range(match['article'])
-                            for num in nums:
+                            articleNums = get_nums_from_range(match['article'])
+                            for articleNum in articleNums:
                                 roughLinks.append(
-                                    RoughLink(header,
-                                              f"{cls.ARTICLE_SIGN}-{num}",
-                                              Positions(contextStartPos,
-                                                        contextEndPos,
-                                                        linkStartPos,
-                                                        linkEndPos
-                                                        )
-                                              )
+                                    RoughLink(
+                                        header,
+                                        f"{cls.ARTICLE_SIGN}-{articleNum}",
+                                        Positions(contextStartPos,
+                                                  contextEndPos,
+                                                  linkStartPos,
+                                                  linkEndPos
+                                                  )
+                                        )
                                     )
                         else:
                             articleNums = get_nums_from_range(match['article'])
@@ -300,6 +303,27 @@ class _BaseCodeParser:
         roughLinks = cls.get_rough_links(header, sentenceMatchObjects)
         response = cls.get_clean_links(roughLinks, headersBase, supertype,
                                        headersForCheckingLinks)
+        debug = False
+        if debug:
+            with open(
+                    'thisNotWriteInRejected.txt', 'r', encoding='utf-8') as ff:
+                dontWrite = ff.read()
+        if debug and len(response[1]) > 0:
+            global REJECTED
+            for key in response[1]:
+                REJECTED += len(response[1][key])
+            print(f'\nTotal rejected: {REJECTED}')
+            with open('rejected_links.txt', 'at', encoding='utf-8') as file:
+                for key in response[1]:
+                    for link in response[1][key]:
+                        print(f"\nrejected link: {cls.CODE_PREFIX} {link.body}"
+                              f" from file "
+                              f"{header.doc_id.replace('/', '_')}.txt\n")
+                        if f'{cls.CODE_PREFIX} {link.body}' not in dontWrite:
+                            file.write(
+                                f"rejected link: {cls.CODE_PREFIX} {link.body}"
+                                f" from file "
+                                f"{header.doc_id.replace('/', '_')}.txt\n")
         cleanLinks = response[0]
         return cleanLinks
 
