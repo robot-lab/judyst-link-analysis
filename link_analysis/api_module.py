@@ -407,5 +407,5 @@ if __name__ == "__main__":
     response = get_CODE_links_from_all_headers()
     print(f"\nFound links: {len(response)}. "
           f"Time: {time.time()-start_time} seconds.")
-    converters.save_json(response, r'ГКРФ_НКРФ_КоАП_УК_cleaLinks.json')
+    converters.save_json(response, r'ГКРФ_НКРФ_КоАП_УК_cleanLinks.json')
     input('press any key...')

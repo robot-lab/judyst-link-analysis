@@ -24,21 +24,23 @@ else:
         NkrfCodeParser, UkrfCodeParser, _get_next_dec_for_link_checking, \
         PATH_TO_JSON_HEADERS_FOR_CHECKING_LINKS_FILENAME
 
-sMainParts = [r".*?\.\s*?"]
-sPrefixes = [r"(?<=\.\s)\s*?[ЁА-ЯA-Z]", r"(?<=^)\s*?[ёЁА-ЯA-Zа-яa-z]",
-             r"(?<=\ufeff)\s*?[ёЁА-ЯA-Zа-яa-z]"]
-sPostfixes = [r"(?=\s[ЁА-ЯA-Z])", r"(?=$)"]
-sRegexpes = []
-for pr in sPrefixes:
-    for mp in sMainParts:
-        for ps in sPostfixes:
-            sRegexpes.append(pr + mp + ps)
-sBigRegexp = '(?:' + '|'.join(sRegexpes) + ')'
-sentencePattern = re.compile(sBigRegexp)
+_sentencePattern = re.compile(r"""
+    (?:
+    (?<=\.\s)\s*?[ЁА-ЯA-Z].*?(?:\w{2}|[-–—]\w|
+    ["»')])\.\s*?(?=(?:\s)[ЁА-ЯA-Z]\w*\s+\S|$)
+    |
+    (?<=^)\s*?[ёЁА-ЯA-Zа-яa-z].*?(?:\w{2}|[-–—]\w|
+    ["»')])\.\s*?(?=\s[ЁА-ЯA-Z]\w*\s+\S|$)
+    |
+    (?<=\.\s)\s*?[ЁА-ЯA-Z].*?$
+    |
+    (?<=^)\s*?[ёЁА-ЯA-Zа-яa-z].*?$
+    )
+    """, re.VERBOSE | re.DOTALL)
 
 
 def _sentenceSeparator(text: str):  # -> Iterator[SRE_MATCH_TYPE]:
-    return sentencePattern.finditer(text)
+    return _sentencePattern.finditer(text)
 
 
 _parsersDict = {
