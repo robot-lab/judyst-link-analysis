@@ -4,6 +4,7 @@ from typing import Dict, List, Union, Type, Set, Tuple, Iterator
 if __package__:
     from link_analysis.models import Header, RoughLink, Positions, CleanLink, \
          LinkGraph
+    from link_analysis import wc_interface
 else:
     from models import Header, RoughLink, Positions, CleanLink, LinkGraph
     import wc_interface

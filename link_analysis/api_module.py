@@ -19,6 +19,7 @@ if __package__:
     from link_analysis import visualizer
     from link_analysis import converters
     from link_analysis import link_handler
+    from link_analysis import wc_interface
 else:
     import models
     import visualizer
