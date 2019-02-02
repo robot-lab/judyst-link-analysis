@@ -15,7 +15,7 @@ def init(folderName='', databaseSource=None):
     if isInitialized:
         return
     print("web_crawler sources initialization was started, it may take some"
-          "time if headers is not downloaded.")
+          "time if headers are not downloaded.")
     if __package__:
         if databaseSource is None:
             raise RuntimeError('DatabaseSource should be given')
@@ -40,7 +40,8 @@ def get_all_headers(sendRequestToUpdatingHeadersInBaseFromSite=False,
     '''
     # TODO: using param 'whichSupertypeUpdateFromSite' not implemented
     headers = Crawler.get_data_source(KSRFSOURCE).\
-        get_all_data(DataType.DOCUMENT_HEADER, whichSupertypeUpdateFromSite)
+        get_all_data(DataType.DOCUMENT_HEADER,
+                     sendRequestToUpdatingHeadersInBaseFromSite)
     return headers
 
 

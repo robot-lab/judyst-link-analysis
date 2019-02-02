@@ -1,18 +1,9 @@
-# coding=utf-8
-# Coded by Aleksandr Rodionov
-# rexarrior@yandex.ru
-
-
-# other imports---------------------------------------------------------
-import os.path
+import os
 import datetime
+import time
 
 import dateutil.parser
 # License: Apache Software License, BSD License (Dual License)
-
-# imports Core modules--------------------------------------------------
-from web_crawler import ksrf
-import web_crawler
 
 if __package__:
     from link_analysis import models
@@ -26,14 +17,17 @@ else:
     import converters
     import wc_interface
     import link_handler
-# methods---------------------------------------------------------------
 
-# internal methods------------------------------------------------------
 DECISIONS_FOLDER_NAME = 'Decision files'
 JSON_HEADERS_FILENAME = 'DecisionHeaders.json'
+JSON_HEADERS_FOR_CHECKING_LINKS_FILENAME = \
+    'ForCheckingLinksDecisionHeaders.jsonlines'
 PICKLE_HEADERS_FILENAME = 'DecisionHeaders.pickle'
 PATH_TO_JSON_HEADERS = os.path.join(DECISIONS_FOLDER_NAME,
                                     JSON_HEADERS_FILENAME)
+PATH_TO_JSON_HEADERS_FOR_CHECKING_LINKS_FILENAME = \
+    os.path.join('Decision files',
+                 'ForCheckingLinksDecisionHeaders.jsonlines')
 PATH_TO_PICKLE_HEADERS = os.path.join(DECISIONS_FOLDER_NAME,
                                       PICKLE_HEADERS_FILENAME)
 RESULTS_FOLDER_NAME = 'Results'
@@ -64,7 +58,6 @@ def load_and_visualize(pathTograph=PATH_TO_JSON_GRAPH):
 
 # api methods-----------------------------------------------------------
 
-
 def process_period(
         firstDateOfDocsForProcessing=None, lastDateOfDocsForProcessing=None,
         supertypesForProcessing=None,
@@ -78,8 +71,8 @@ def process_period(
         firstDateTo=None, lastDateTo=None, docTypesTo=None,
         supertypesTo=None,
         weightsRange=None,
-        graphOutputFilePath=PATH_TO_JSON_GRAPH, showPicture=True,
-        takeHeadersFromLocalStorage=True,
+        graphOutputFilePath=PATH_TO_JSON_GRAPH, showPicture=False,
+        takeHeadersFromLocalStorage=False,
         sendRequestToUpdatingHeadersInBaseFromSite=False,
         whichSupertypeUpdateFromSite=None):
     '''
@@ -140,13 +133,14 @@ def process_period(
         jsonHeaders = converters.load_json(PATH_TO_JSON_HEADERS)
     else:
         #TODO: using param 'whichSupertypeReloadFromSite' isn't implemented
+        print("Started to getting Headers from web_crawler.")
         jsonHeaders = wc_interface.get_all_headers(
             sendRequestToUpdatingHeadersInBaseFromSite,
             whichSupertypeUpdateFromSite)
-
+        print("Finished getting Headers from web_crawler.")
         converters.save_json(jsonHeaders, PATH_TO_JSON_HEADERS)
 
-    if not jsonHeaders:
+    if jsonHeaders is None:
         raise ValueError("Where's the document headers, Lebowski?")
 
     decisionsHeaders = converters.convert_to_class_format(
@@ -165,13 +159,12 @@ def process_period(
 
     clLinks = link_handler.parse(usingHeaders, decisionsHeaders,
                                  SUPERTYPES_TO_PARSE)
+    jsonLinks = \
+        converters.convert_dict_list_cls_to_json_serializable_format(clLinks)
 
     if MY_DEBUG:
         converters.save_pickle(clLinks, os.path.join(RESULTS_FOLDER_NAME,
                                                      'сleanLinks.pickle'))
-        jsonLinks = \
-            converters.convert_dict_list_cls_to_json_serializable_format(
-                clLinks)
         converters.save_json(jsonLinks, os.path.join(
             RESULTS_FOLDER_NAME, 'cleanLinks.json'))
 
@@ -223,8 +216,8 @@ def start_process_with(
         firstDateTo=None, lastDateTo=None, docTypesTo=None,
         supertypesTo=None,
         weightsRange=None,
-        graphOutputFilePath=PATH_TO_JSON_GRAPH, showPicture=True,
-        takeHeadersFromLocalStorage=True,
+        graphOutputFilePath=PATH_TO_JSON_GRAPH, showPicture=False,
+        takeHeadersFromLocalStorage=False,
         sendRequestToUpdatingHeadersInBaseFromSite=False,
         whichSupertypeUpdateFromSite=None,
         visualizerParameters=(20, 1, (40, 40))):
@@ -275,12 +268,14 @@ def start_process_with(
         jsonHeaders = converters.load_json(PATH_TO_JSON_HEADERS)
     else:
         #TODO: using param 'whichSupertypeReloadFromSite' is not implemented
+        print("Started to getting Headers from web_crawler.")
         jsonHeaders = wc_interface.get_all_headers(
             sendRequestToUpdatingHeadersInBaseFromSite,
             whichSupertypeUpdateFromSite)
+        print("Finished getting Headers from web_crawler.")
         converters.save_json(jsonHeaders, PATH_TO_JSON_HEADERS)
 
-    if not jsonHeaders:
+    if jsonHeaders is None:
         raise ValueError(
             "Where's the document headers, Lebowski?")
 
@@ -310,12 +305,12 @@ def start_process_with(
                     toProcess[docID] = decisionsHeaders[docID]
 
     linkGraph = link_handler.get_link_graph(allLinks)
+    jsonLinks = \
+        converters.convert_dict_list_cls_to_json_serializable_format(allLinks)
+
     if MY_DEBUG:
         converters.save_pickle(allLinks, os.path.join(
             RESULTS_FOLDER_NAME, 'processedWithсleanLinks.pickle'))
-        jsonLinks = \
-            converters.convert_dict_list_cls_to_json_serializable_format(
-                allLinks)
         converters.save_json(jsonLinks, os.path.join(
             RESULTS_FOLDER_NAME, 'processedWithcleanLinks.json'))
         converters.save_pickle(linkGraph, os.path.join(
@@ -350,68 +345,68 @@ def start_process_with(
                                         visualizerParameters[2])
 # end of start_process_with---------------------------------------------
 
-if __name__ == "__main__":
-    import time
+
+def get_all_links_from_all_headers(
+        sendRequestToUpdatingHeadersInBaseFromSite=False,
+        whichSupertypeUpdateFromSite=False):
+
+    print("Started to getting Headers from web_crawler.")
     start_time = time.time()
-    # process_period("18.06.1980", "18.07.2020", showPicture=False,
-    #                sendRequestToUpdatingHeadersInBaseFromSite=False,
-    #                includeIsolatedNodes=True,
-    #                takeHeadersFromLocalStorage=True)
-    # process_period("18.06.1980", "18.07.2020", showPicture=False,
-    #                sendRequestToUpdatingHeadersInBaseFromSite=False,
-    #                includeIsolatedNodes=True,
-    # takeHeadersFromLocalStorage=True)
-    process_period(
-        firstDateOfDocsForProcessing='18.03.2013',
-        lastDateOfDocsForProcessing='14.08.2018',
-        docTypesForProcessing={'КСРФ/О', 'КСРФ/П'},
-        firstDateForNodes='18.03.2014', lastDateForNodes='14.08.2017',
-        nodesIndegreeRange=(0, 25), nodesOutdegreeRange=(0, 25),
-        nodesTypes={'КСРФ/О', 'КСРФ/П'},
-        includeIsolatedNodes=False,
-        firstDateFrom='18.03.2016', lastDateFrom='14.08.2016',
-        docTypesFrom={'КСРФ/О', 'КСРФ/П'},
-        firstDateTo='18.03.2015', lastDateTo='14.08.2015',
-        docTypesTo={'КСРФ/О', 'КСРФ/П'},
-        weightsRange=(1, 5),
-        graphOutputFilePath=PATH_TO_JSON_GRAPH,
-        showPicture=True, sendRequestToUpdatingHeadersInBaseFromSite=False,
-        takeHeadersFromLocalStorage=True)
+    jsonHeaders = wc_interface.get_all_headers(
+            sendRequestToUpdatingHeadersInBaseFromSite,
+            whichSupertypeUpdateFromSite)
+    print("Finished getting Headers from web_crawler. "
+          f"It spent {time.time()-start_time} seconds.")
 
-    # start_process_with(decisionID='КСРФ/1-П/2015', depth=3)
+    if jsonHeaders is None:
+        raise ValueError("Where's the document headers, Lebowski?")
 
-    # load_and_visualize()
+    decisionsHeaders = converters.convert_to_class_format(
+        jsonHeaders, models.DocumentHeader)
 
-    # start_process_with(
-    #     decisionID='КСРФ/1-П/2015', depth=10,
-    #     firstDateForNodes='18.03.2014', lastDateForNodes='14.08.2018',
-    #     nodesIndegreeRange=(0, 25), nodesOutdegreeRange=(0, 25),
-    #     nodesTypes={'КСРФ/О', 'КСРФ/П'},
-    #     includeIsolatedNodes=False,
-    #     firstDateFrom='18.03.2011', lastDateFrom='14.08.2019',
-    #     docTypesFrom={'КСРФ/О', 'КСРФ/П'},
-    #     firstDateTo='18.03.2011', lastDateTo='14.08.2018',
-    #     docTypesTo={'КСРФ/О', 'КСРФ/П'},
-    #     weightsRange=(1, 5),
-    #     graphOutputFilePath=PATH_TO_JSON_GRAPH,
-    #     showPicture=True, sendRequestToUpdatingHeadersInBaseFromSite=False,
-    #     takeHeadersFromLocalStorage=True)
+    clLinks = link_handler.parse(decisionsHeaders, decisionsHeaders,
+                                 SUPERTYPES_TO_PARSE)
+    jsonLinks = \
+        converters.convert_dict_list_cls_to_json_serializable_format(clLinks)
 
-    # source = web_crawler.Crawler.get_data_source('LocalFileStorage')
-    # text=source.get_data('КСРФ/19-П/2014',
-    #                       web_crawler.DataType.DOCUMENT_TEXT)
-    # text = wc_interface.get_text('КСРФ/1010-О-О/2008')
-    # process_period("01.09.2018", "18.07.2019", showPicture=True,
-    #                sendRequestToUpdatingHeadersInBaseFromSite=False,
-    #                includeIsolatedNodes=True,
-    #                takeHeadersFromLocalStorage=False)
-    # process_period("12.04.2018", "12.04.2018", showPicture=True,
-    #                sendRequestToUpdatingHeadersInBaseFromSite=False,
-    #                includeIsolatedNodes=True,
-    #                takeHeadersFromLocalStorage=False)
-    # cl1 = converters.load_pickle("Results0\сleanLinks.pickle")
-    # cl2 = converters.load_pickle("Results\сleanLinks.pickle")
-    # import my_funs
-    # my_funs.compare_clealinks(cl1, cl2)
-    print(f"Headers collection spent {time.time()-start_time} seconds.")
-    print('press any key...')
+    return jsonLinks
+
+
+def get_CODE_links_from_all_headers(
+        sendRequestToUpdatingHeadersInBaseFromSite=False,
+        whichSupertypeUpdateFromSite=False):
+
+    print("Started to getting Headers from web_crawler.")
+    start_time = time.time()
+    jsonHeaders = wc_interface.get_all_headers(
+            sendRequestToUpdatingHeadersInBaseFromSite,
+            whichSupertypeUpdateFromSite)
+    print("Finished getting Headers from web_crawler. "
+          f"It spent {time.time()-start_time} seconds.")
+
+    if jsonHeaders is None:
+        raise ValueError("Where's the document headers, Lebowski?")
+
+    decisionsHeaders = converters.convert_to_class_format(
+        jsonHeaders, models.DocumentHeader)
+
+    clLinks = link_handler.parse(decisionsHeaders, decisionsHeaders,
+                                 {'ГКРФ', 'НКРФ', 'КОАПРФ', 'УКРФ'})
+    jsonLinks = \
+        converters.convert_dict_list_cls_to_json_serializable_format(clLinks)
+
+    return jsonLinks
+
+if __name__ == "__main__":
+    start_time = time.time()
+
+    # response = get_all_links_from_all_headers()
+    # converters.save_json(response, 'cleanLinks.json')
+    # print(f"\nFound links: {len(response)}. "
+    #       f"Time: {time.time()-start_time} seconds.")
+
+    response = get_CODE_links_from_all_headers()
+    print(f"\nFound links: {len(response)}. "
+          f"Time: {time.time()-start_time} seconds.")
+    converters.save_json(response, r'ГКРФ_НКРФ_КоАП_УК_cleanLinks.json')
+    input('press any key...')

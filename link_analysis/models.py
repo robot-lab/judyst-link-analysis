@@ -151,7 +151,7 @@ class Header(DocumentHeader):
         if not isinstance(other, type(self)):
             raise TypeError("Compared objects must be of the same type:"
                             f"{type(self)} or {type(other)}")
-        return (super().__eq__(self) and
+        return (super().__eq__(other) and
                 self.supertype == other.supertype and
                 self.doc_type == other.doc_type and
                 self.title == other.title and
